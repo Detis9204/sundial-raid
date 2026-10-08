@@ -83,6 +83,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .dmg .bar span{display:block;height:100%;background:var(--brass)}
 .dmg .n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px}
 body{margin:0}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -296,7 +297,14 @@ function createRoom(tries) {
   destroyPeer();
   const peer = new Peer(ID_PREFIX + code, { debug: 0 });
   net.peer = peer;
+  const timer = setTimeout(() => {
+    if (net.peer !== peer || net.mode === "host") return;
+    setBusy(false); destroyPeer();
+    setStatus("연결 서버가 응답하지 않습니다. 잠시 뒤 다시 시도하거나 다른 네트워크에서 시도해 보세요.", true);
+  }, 12000);
   peer.on("open", id => {
+    clearTimeout(timer);
+    if (net.peer !== peer) return;
     net.mode = "host"; net.code = code; myPeer = id;
     setBusy(false); enterGame();
   });
