@@ -149,6 +149,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <dt>Space</dt><dd>대시 · 짧은 무적 (재사용 2초)</dd>
         <dt>범위 색</dt><dd><span class="y">노랑</span>은 막기 가능, <span class="r">빨강</span>은 피해야 함</dd>
         <dt>부활</dt><dd>쓰러진 동료 곁에 2.5초 머무르기</dd>
+        <dt>M</dt><dd>소리 끄기 · 켜기</dd>
       </dl>
     </div>
   </div>
@@ -157,6 +158,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <span class="dot" id="connDot"></span>
     <span id="barLabel">방</span>
     <span class="codeTxt" id="barCode"></span>
+    <button class="btn" id="muteBtn">소리 끄기</button>
     <button class="btn" id="copyBtn">코드 복사</button>
     <button class="btn" id="leaveBtn">나가기</button>
   </div>
@@ -266,6 +268,83 @@ function inAtk(a, px, py) {
   return false;
 }
 function quadOf(dx, dy) { const t = (Math.atan2(dy, dx) + Math.PI / 2 + TAU) % TAU; return Math.floor(t / (Math.PI / 2)) % 4; }
+
+/* ---------- temporary sound (synthesized with Web Audio; swap for real assets later) ---------- */
+const SFX = (() => {
+  let ac = null, master = null, noiseBuf = null, drone = null;
+  let muted = false; try { muted = localStorage.getItem("sr.mute") === "1"; } catch (e) {}
+  function init() {
+    if (ac) { if (ac.state === "suspended") ac.resume(); return; }
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; return; }
+    master = ac.createGain(); master.gain.value = muted ? 0 : .6; master.connect(ac.destination);
+    noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  function env(g, t, vol, a, dur) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(.0002, vol), t + a); g.gain.exponentialRampToValueAtTime(.0001, t + dur); }
+  function tone(f, dur, type, vol, f2, delay, attack) {
+    if (!ac) return; const t = ac.currentTime + (delay || 0);
+    const o = ac.createOscillator(), g = ac.createGain(); o.type = type || "sine";
+    o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    env(g, t, vol, attack || .005, dur); o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .05);
+  }
+  function noise(dur, vol, ftype, f, f2, q, delay) {
+    if (!ac) return; const t = ac.currentTime + (delay || 0);
+    const s = ac.createBufferSource(), fl = ac.createBiquadFilter(), g = ac.createGain();
+    s.buffer = noiseBuf; fl.type = ftype || "bandpass"; fl.Q.value = q || 1;
+    fl.frequency.setValueAtTime(f, t); if (f2) fl.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    env(g, t, vol, .004, dur); s.connect(fl); fl.connect(g); g.connect(master); s.start(t, Math.random() * .5); s.stop(t + dur + .05);
+  }
+  const lib = {
+    swing: (v, k) => { const p = k === "rogue" ? 1.5 : k === "paladin" ? .7 : 1; noise(.13, .28 * v, "bandpass", 2400 * p, 500 * p, 1.2); },
+    hit: v => { tone(180, .08, "square", .12 * v, 90); noise(.05, .25 * v, "highpass", 2500); },
+    crit: v => { tone(180, .1, "square", .15 * v, 80); tone(1320, .35, "triangle", .14 * v); tone(1980, .3, "triangle", .07 * v, null, .03); },
+    clank: v => { tone(900, .15, "square", .05 * v); tone(1350, .2, "triangle", .06 * v); },
+    spin: v => { noise(.3, .3 * v, "bandpass", 600, 3000, 2); noise(.3, .2 * v, "bandpass", 3000, 600, 2, .08); },
+    lunge: v => { noise(.25, .35 * v, "bandpass", 500, 2500, 1.5); },
+    quake: v => { tone(90, .5, "sine", .5 * v, 35); noise(.45, .35 * v, "lowpass", 900, 120); },
+    stab: v => { noise(.06, .22 * v, "highpass", 3500); },
+    blink: v => { tone(1400, .18, "sine", .14 * v, 260); noise(.12, .12 * v, "highpass", 5000); },
+    exec: v => { noise(.18, .3 * v, "bandpass", 4000, 900, 2); tone(220, .4, "sawtooth", .12 * v, 110, .05); tone(1100, .45, "triangle", .1 * v, null, .05); },
+    bash: v => { tone(130, .15, "square", .2 * v, 70); noise(.1, .25 * v, "lowpass", 1200); },
+    ward: v => { tone(660, .7, "triangle", .12 * v, null, 0, .04); tone(990, .7, "triangle", .09 * v, null, .06, .04); tone(1320, .7, "sine", .06 * v, null, .12, .04); },
+    hammer: v => { tone(70, .6, "sine", .55 * v, 30); noise(.5, .35 * v, "lowpass", 1400, 100); tone(880, .6, "triangle", .08 * v, null, .1); },
+    dash: v => { noise(.18, .2 * v, "bandpass", 900, 3500, 1); },
+    guard: v => { tone(500, .06, "square", .05 * v); },
+    parry: v => { tone(1500, .5, "triangle", .2 * v); tone(2250, .4, "triangle", .1 * v); tone(750, .2, "square", .06 * v); },
+    evade: v => { noise(.12, .14 * v, "highpass", 4000, 1500); },
+    hurt: v => { tone(200, .25, "sawtooth", .2 * v, 70); noise(.15, .2 * v, "lowpass", 1500); },
+    heal: v => { [523, 659, 784].forEach((f, i) => tone(f, .35, "sine", .1 * v, null, i * .07)); },
+    revive: v => { [392, 523, 659, 784].forEach((f, i) => tone(f, .4, "triangle", .12 * v, null, i * .09)); },
+    warnY: v => { tone(740, .25, "triangle", .12 * v); tone(740, .25, "triangle", .1 * v, null, .14); },
+    warnR: v => { tone(300, .14, "square", .07 * v); tone(300, .14, "square", .07 * v, null, .18); tone(300, .14, "square", .07 * v, null, .36); },
+    toll: v => { [0, .5, 1.0].forEach(d => { tone(196, 1.2, "sine", .25 * v, null, d); tone(392, 1.0, "triangle", .06 * v, null, d); }); },
+    impact: v => { tone(110, .3, "sine", .35 * v, 45); noise(.25, .3 * v, "lowpass", 1100, 150); },
+    gong: v => { tone(98, 2.2, "sine", .3 * v, null, 0, .01); tone(147, 2.0, "sine", .15 * v); tone(196, 1.6, "triangle", .07 * v); noise(.6, .08 * v, "bandpass", 300, 120, 3); },
+    tick: v => { noise(.03, .07 * v, "highpass", 5000); tone(1800, .03, "sine", .03 * v); },
+    win: v => { [523, 659, 784, 1047].forEach((f, i) => tone(f, .6, "triangle", .14 * v, null, i * .13)); tone(262, 1.4, "sine", .15 * v, null, .5); },
+    wipe: v => { [392, 330, 262, 196].forEach((f, i) => tone(f, .7, "sine", .14 * v, null, i * .22)); },
+    ui: v => { tone(660, .05, "triangle", .08 * v); },
+  };
+  function startDrone(ph) {
+    if (!ac || drone) return;
+    const g = ac.createGain(); g.gain.value = 0; g.connect(master);
+    const o1 = ac.createOscillator(), o2 = ac.createOscillator(), lp = ac.createBiquadFilter();
+    o1.type = "sawtooth"; o2.type = "sawtooth"; o1.frequency.value = 55; o2.frequency.value = 55.6;
+    lp.type = "lowpass"; lp.frequency.value = 260; o1.connect(lp); o2.connect(lp); lp.connect(g);
+    o1.start(); o2.start(); g.gain.linearRampToValueAtTime(.045, ac.currentTime + 2);
+    drone = { g, o1, o2, lp };
+  }
+  function setDrone(ph) { if (!drone) return; const f = [55, 58.3, 61.7][ph] || 55; drone.o1.frequency.setTargetAtTime(f, ac.currentTime, .5); drone.o2.frequency.setTargetAtTime(f * 1.011, ac.currentTime, .5); drone.lp.frequency.setTargetAtTime(260 + ph * 140, ac.currentTime, .5); }
+  function stopDrone() { if (!drone) return; const d = drone; drone = null; d.g.gain.setTargetAtTime(0, ac.currentTime, .4); setTimeout(() => { try { d.o1.stop(); d.o2.stop(); } catch (e) {} }, 1500); }
+  return {
+    init,
+    play(name, vol, k) { if (!ac || muted || !lib[name]) return; try { lib[name](vol == null ? 1 : vol, k); } catch (e) {} },
+    get muted() { return muted; },
+    toggle() { muted = !muted; try { localStorage.setItem("sr.mute", muted ? "1" : "0"); } catch (e) {} if (master) master.gain.setTargetAtTime(muted ? 0 : .6, ac.currentTime, .05); return muted; },
+    startDrone, setDrone, stopDrone,
+  };
+})();
+const FX_SOUND = ["swing", "parry", "spin", "lunge", "quake", "stab", "blink", "exec", "bash", "ward", "hammer"];
 
 /* ---------- storage (per-viewer convenience) ---------- */
 function load(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
@@ -396,6 +475,7 @@ function leaveGame() {
   net.mode = "off";
   destroyPeer();
   isHost = false; HS = null; hostH = null; others = []; disp.clear(); fxList = []; floats = [];
+  SFX.stopDrone(); aud.st = "";
   $("#bar").hidden = true; $("#lobby").hidden = true; $("#result").hidden = true; $("#menuWrap").hidden = false;
   setBusy(false);
   if (!wasClient) setStatus(window.Peer ? "방을 만들거나 친구에게 받은 코드로 들어가세요." : "혼자 연습은 가능합니다.");
@@ -574,21 +654,21 @@ function myPresence() {
 function float(x, y, txt, col, big) { floats.push({ x: x + (Math.random() - .5) * 30, y, txt: String(txt), col, t: 0, big: !!big }); }
 function hurt(n) {
   me.hp = Math.max(0, me.hp - n); me.ifr = 1.0; me.hitT = .35; shake = .25;
-  float(me.x, me.y - 30, "-" + n, "#ff6f7d");
+  float(me.x, me.y - 30, "-" + n, "#ff6f7d"); SFX.play("hurt");
   if (me.hp <= 0) { me.dn = 1; me.rv = null; me.cast = null; me.move = null; me.multi = null; me.guardT = 0; }
 }
 function bossHit(a) {
   const def = ATK[a.k];
   if (me.dn) return;
-  if (me.dashT > 0 || me.ifr > 0) { float(me.x, me.y - 30, "회피", "#9fd8ff"); return; }
+  if (me.dashT > 0 || me.ifr > 0) { float(me.x, me.y - 30, "회피", "#9fd8ff"); SFX.play("evade"); return; }
   if (me.guardT > 0 && def.g) {
     me.counterT = 3; me.ifr = .3; float(me.x, me.y - 34, "막기! 반격 준비", "#ffd166", true);
-    spawnFx(1, me.x, me.y, me.a, myColor); return;
+    spawnFx(1, me.x, me.y, me.a, myColor); SFX.play("parry"); return;
   }
-  if (me.wardUntil > nowS()) { me.wardUntil = 0; me.ifr = .4; float(me.x, me.y - 30, "결계", "#9fd8ff"); return; }
+  if (me.wardUntil > nowS()) { me.wardUntil = 0; me.ifr = .4; float(me.x, me.y - 30, "결계", "#9fd8ff"); SFX.play("ward", .6); return; }
   hurt(def.dmg);
 }
-function emitFx(type) { me.fx = [++me.fxN, type, Math.round(me.x), Math.round(me.y), Math.round(me.a * 100) / 100]; spawnFx(type, me.x, me.y, me.a, myColor, myClass); }
+function emitFx(type) { me.fx = [++me.fxN, type, Math.round(me.x), Math.round(me.y), Math.round(me.a * 100) / 100]; spawnFx(type, me.x, me.y, me.a, myColor, myClass); SFX.play(FX_SOUND[type], 1, myClass); }
 
 /* effects: 0 swing,1 guard flash,2 spin,3 lunge,4 quake,5 stab,6 blink,7 exec,8 bash,9 ward,10 hammer */
 function spawnFx(type, x, y, a, col, k) { fxList.push({ type, x, y, a, col, k: k || "knight", t: 0 }); }
@@ -606,8 +686,8 @@ function deal(base) {
   const S = curS, T = curT;
   bossFlash = .08;
   const bx = bossDisp.x, by = bossDisp.y - 70;
-  if (!S || S.st !== "fight") { float(bx, by, Math.round(base), "#8f97b3"); return; }
-  if (T < S.ps + TRANS) { float(bx, by, "보호막", "#f3e6c8"); return; }
+  if (!S || S.st !== "fight") { float(bx, by, Math.round(base), "#8f97b3"); SFX.play("hit", .6); return; }
+  if (T < S.ps + TRANS) { float(bx, by, "보호막", "#f3e6c8"); SFX.play("clank"); return; }
   if (S.hp <= 0) return;
   let mult = 1, tag = "", col = "#f3e6c8";
   if (me.counterT > 0) { mult *= 2; me.counterT = 0; tag = "반격 "; col = "#ffd166"; }
@@ -616,6 +696,7 @@ function deal(base) {
   const d = Math.round(base * mult);
   me.dm += d;
   float(bx, by, tag + d, col, mult >= 2);
+  SFX.play(mult >= 2 ? "crit" : "hit");
 }
 function startMove(dur, tx, ty, onTick, onEnd) {
   tx = clamp(tx, 14, AW - 14); ty = clamp(ty, 14, AH - 14);
@@ -719,8 +800,8 @@ function updateMe(dt, T, S) {
     if (keys.has("KeyW") || keys.has("ArrowUp")) iy--;
     if (keys.has("KeyS") || keys.has("ArrowDown")) iy++;
     const l = Math.hypot(ix, iy); if (l) { ix /= l; iy /= l; }
-    if (queued.has("KeyG") && me.guardCd <= 0 && !me.cast) { me.guardT = C.guard.dur; me.guardCd = C.guard.cd; }
-    if (queued.has("Space") && me.dashCd <= 0 && l && !me.cast && !me.move) { me.dashT = .16; me.ddx = ix; me.ddy = iy; me.dashCd = DASH_CD; me.ifr = Math.max(me.ifr, .3); }
+    if (queued.has("KeyG") && me.guardCd <= 0 && !me.cast) { me.guardT = C.guard.dur; me.guardCd = C.guard.cd; SFX.play("guard"); }
+    if (queued.has("Space") && me.dashCd <= 0 && l && !me.cast && !me.move) { me.dashT = .16; me.ddx = ix; me.ddy = iy; me.dashCd = DASH_CD; me.ifr = Math.max(me.ifr, .3); SFX.play("dash"); }
     if (queued.has("KeyQ")) useSkill(0);
     if (queued.has("KeyE")) useSkill(1);
     if (queued.has("KeyR")) useSkill(2);
@@ -735,7 +816,7 @@ function updateMe(dt, T, S) {
     if (me.cast) { me.cast.t -= dt; if (me.cast.t <= 0) { const c = me.cast; me.cast = null; c.done(); } }
     if (me.multi) { me.multi.t -= dt; if (me.multi.t <= 0) { me.multi.t = .1; me.multi.left--; emitFx(5); if (bossRange(85, 45 * Math.PI / 180)) deal(me.multi.dmg); if (me.multi.left <= 0) me.multi = null; } }
     if (mouse.down && !me.cast && !me.move && !me.multi && me.atkCd <= 0 && me.guardT <= 0) {
-      me.atkCd = C.atk.cd; me.sw++; spawnFx(0, me.x, me.y, me.a, myColor, myClass);
+      me.atkCd = C.atk.cd; me.sw++; spawnFx(0, me.x, me.y, me.a, myColor, myClass); SFX.play("swing", 1, myClass);
       if (bossRange(C.atk.range, C.atk.arc * Math.PI / 360)) deal(C.atk.dmg);
     }
     // keep out of the boss body
@@ -753,8 +834,8 @@ function updateMe(dt, T, S) {
   // ward / heal from teammates
   for (const p of others) {
     const pr = p.presence;
-    if (pr.wd && seenWd.get(p.peer) !== pr.wd[0]) { const first = !seenWd.has(p.peer); seenWd.set(p.peer, pr.wd[0]); if (!first && !me.dn && dist(me.x, me.y, pr.wd[1], pr.wd[2]) <= 170) { me.wardUntil = nowS() + 5; float(me.x, me.y - 30, "결계", "#9fd8ff"); } }
-    if (pr.hl && seenHl.get(p.peer) !== pr.hl[0]) { const first = !seenHl.has(p.peer); seenHl.set(p.peer, pr.hl[0]); if (!first && !me.dn && me.hp < me.mh && dist(me.x, me.y, pr.hl[1], pr.hl[2]) <= 170) { me.hp++; float(me.x, me.y - 30, "+1", "#7fd3a3"); } }
+    if (pr.wd && seenWd.get(p.peer) !== pr.wd[0]) { const first = !seenWd.has(p.peer); seenWd.set(p.peer, pr.wd[0]); if (!first && !me.dn && dist(me.x, me.y, pr.wd[1], pr.wd[2]) <= 170) { me.wardUntil = nowS() + 5; float(me.x, me.y - 30, "결계", "#9fd8ff"); SFX.play("ward", .7); } }
+    if (pr.hl && seenHl.get(p.peer) !== pr.hl[0]) { const first = !seenHl.has(p.peer); seenHl.set(p.peer, pr.hl[0]); if (!first && !me.dn && me.hp < me.mh && dist(me.x, me.y, pr.hl[1], pr.hl[2]) <= 170) { me.hp++; float(me.x, me.y - 30, "+1", "#7fd3a3"); SFX.play("heal"); } }
   }
   // revive
   me.rv = null;
@@ -765,7 +846,7 @@ function updateMe(dt, T, S) {
     else { me.rvT = null; me.rvP = 0; }
   }
   if (fighting && me.dn) {
-    for (const p of others) { const rv = p.presence.rv; if (Array.isArray(rv) && rv[0] === myPeer && rv[1] >= 1) { me.dn = 0; me.hp = 2; me.ifr = 2; break; } }
+    for (const p of others) { const rv = p.presence.rv; if (Array.isArray(rv) && rv[0] === myPeer && rv[1] >= 1) { me.dn = 0; me.hp = 2; me.ifr = 2; SFX.play("revive"); break; } }
   }
 }
 function updateOthers(dt) {
@@ -775,9 +856,9 @@ function updateOthers(dt) {
     let d = disp.get(p.peer); if (!d) { d = { x: pr.x, y: pr.y }; disp.set(p.peer, d); }
     d.x += (pr.x - d.x) * k; d.y += (pr.y - d.y) * k;
     const lastSw = seenSw.get(p.peer);
-    if (lastSw !== undefined && pr.sw !== lastSw) spawnFx(0, d.x, d.y, pr.a, pr.c, pr.k);
+    if (lastSw !== undefined && pr.sw !== lastSw) { spawnFx(0, d.x, d.y, pr.a, pr.c, pr.k); SFX.play("swing", .22, pr.k); }
     seenSw.set(p.peer, pr.sw);
-    if (pr.fx) { const lf = seenFx.get(p.peer); if (lf !== undefined && lf !== pr.fx[0]) spawnFx(pr.fx[1], pr.fx[2], pr.fx[3], pr.fx[4], pr.c, pr.k); seenFx.set(p.peer, pr.fx[0]); }
+    if (pr.fx) { const lf = seenFx.get(p.peer); if (lf !== undefined && lf !== pr.fx[0]) { spawnFx(pr.fx[1], pr.fx[2], pr.fx[3], pr.fx[4], pr.c, pr.k); SFX.play(FX_SOUND[pr.fx[1]], .35, pr.k); } seenFx.set(p.peer, pr.fx[0]); }
   }
   for (const key of disp.keys()) if (!seen.has(key)) disp.delete(key);
   for (const f of fxList) f.t += dt;
@@ -1043,6 +1124,31 @@ function updateUi(now, S, players, T) {
   }
 }
 
+/* ---------- audio cues from shared state ---------- */
+const aud = { seenCast: new Set(), seenImpact: new Set(), st: "", ph: -1, run: -1, tick: 0, dn: 0 };
+function audioEvents(S, T) {
+  const st = S ? S.st : "lobby";
+  if (S && S.run !== aud.run) { aud.run = S.run; aud.seenCast.clear(); aud.seenImpact.clear(); aud.ph = -1; }
+  if (st !== aud.st) {
+    if (st === "fight") { SFX.startDrone(); }
+    else SFX.stopDrone();
+    if (st === "win") SFX.play("win");
+    if (st === "wipe") SFX.play("wipe");
+    aud.st = st;
+  }
+  if (st !== "fight") return;
+  if (S.ph !== aud.ph) { aud.ph = S.ph; SFX.play("gong"); SFX.setDrone(S.ph); }
+  for (const a of S.atk || []) {
+    const ck = a.t0 + ":" + a.k;
+    if (!aud.seenCast.has(ck) && T < a.th) { aud.seenCast.add(ck); SFX.play(a.k === "clock" ? "toll" : (ATK[a.k].g ? "warnY" : "warnR")); }
+    if (T >= a.th && T - a.th < .3 && !aud.seenImpact.has(ck)) { aud.seenImpact.add(ck); SFX.play("impact", a.k === "mark" ? .6 : 1); }
+  }
+  const per = [1, .75, .5][S.ph] || 1, k = Math.floor(T / per);
+  if (k !== aud.tick) { aud.tick = k; SFX.play("tick"); }
+  if (me.dn && !aud.dn) SFX.play("wipe", .4);
+  aud.dn = me.dn;
+}
+
 /* ---------- main loop ---------- */
 let last = performance.now();
 function frame(now) {
@@ -1054,6 +1160,7 @@ function frame(now) {
   let T = 0;
   if (S && S.st !== "lobby") T = isHost ? (now - fsLocal) / 1000 : (estOff != null ? now / 1000 - estOff : (S.ft || 0));
   curS = S; curT = T;
+  if (on) audioEvents(S, T);
   updateBoss(dt, S, idleT);
   if (on) { updateMe(dt, T, S); updateOthers(dt); }
   bossFlash = Math.max(0, bossFlash - dt); shake = Math.max(0, shake - dt);
@@ -1100,6 +1207,12 @@ COLORS.forEach((c, i) => {
   b.addEventListener("click", () => { myColor = c; save("sr.color", c); sw.querySelectorAll(".sw").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); });
   sw.appendChild(b);
 });
+["#createBtn", "#joinBtn", "#soloBtn", "#startBtn", "#againBtn"].forEach(id => $(id).addEventListener("click", () => SFX.init()));
+cv.addEventListener("pointerdown", () => SFX.init());
+function syncMuteBtn() { $("#muteBtn").textContent = SFX.muted ? "소리 켜기" : "소리 끄기"; }
+syncMuteBtn();
+$("#muteBtn").addEventListener("click", () => { SFX.init(); SFX.toggle(); syncMuteBtn(); });
+addEventListener("keydown", e => { if (e.code === "KeyM" && inGame() && e.target.tagName !== "INPUT" && !e.repeat) { SFX.init(); SFX.toggle(); syncMuteBtn(); } });
 $("#createBtn").addEventListener("click", () => createRoom(0));
 $("#joinBtn").addEventListener("click", () => joinRoom($("#code").value));
 $("#code").addEventListener("keydown", e => { if (e.key === "Enter") joinRoom($("#code").value); });
