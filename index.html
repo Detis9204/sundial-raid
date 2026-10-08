@@ -17,6 +17,7 @@
   --brass:#e8b45a;
   --bone:#f3e6c8;
   --rose:#ff6f7d;
+  --gold:#ffd166;
   --muted:#8f97b3;
   --f-display:"Marcellus SC","Gowun Batang",Georgia,serif;
   --f-ko:"Gowun Batang","Apple SD Gothic Neo",serif;
@@ -25,24 +26,38 @@
   color-scheme:dark;
 }
 html,body{height:100%}
-body{background:var(--night);color:var(--bone);font-family:var(--f-body);overflow:hidden}
+body{margin:0;background:var(--night);color:var(--bone);font-family:var(--f-body);overflow:hidden}
+[hidden]{display:none!important}
 #stage{position:relative;height:100%;width:100%}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair;touch-action:none}
-.panel{background:color-mix(in srgb,var(--ink) 92%,transparent);border:1px solid var(--line);border-top:2px solid var(--brass);border-radius:6px;box-shadow:0 18px 50px rgba(0,0,0,.45)}
-#menuWrap{position:absolute;inset:0;overflow:auto;display:grid;place-items:center;padding-inline:16px;padding-block:24px;background:radial-gradient(ellipse at 50% 40%,rgba(13,18,34,.35),rgba(13,18,34,.85))}
-#menu{width:100%;max-width:470px;padding:26px 26px 22px;display:flex;flex-direction:column;gap:18px}
+.panel{background:color-mix(in srgb,var(--ink) 93%,transparent);border:1px solid var(--line);border-top:2px solid var(--brass);border-radius:6px;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+#menuWrap{position:absolute;inset:0;overflow:auto;display:grid;place-items:center;padding-inline:16px;padding-block:24px;background:radial-gradient(ellipse at 50% 40%,rgba(13,18,34,.35),rgba(13,18,34,.88))}
+#menu{width:100%;max-width:640px;padding:26px 26px 22px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box}
 .eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
 h1{margin:0;font-family:var(--f-ko);font-weight:700;font-size:34px;line-height:1.1;text-wrap:balance}
 h1 small{display:block;font-family:var(--f-display);font-weight:400;font-size:15px;letter-spacing:.2em;color:var(--muted);margin-top:6px}
-.lede{margin:0;color:#c9cbd6;line-height:1.6;font-size:14px;max-width:60ch}
+.lede{margin:0;color:#c9cbd6;line-height:1.6;font-size:14px;max-width:62ch}
 .field{display:flex;flex-direction:column;gap:6px}
 .field label,.lbl{font-size:12px;color:var(--muted);letter-spacing:.04em}
 input[type=text]{font:500 15px var(--f-body);color:var(--bone);background:var(--night);border:1px solid var(--line);border-radius:4px;padding:10px 12px;width:100%;box-sizing:border-box}
 input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 #code{font-family:var(--f-mono);letter-spacing:.3em;text-transform:uppercase}
+.two{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:end}
+@media (max-width:520px){.two{grid-template-columns:1fr}}
 .swatches{display:flex;gap:8px;flex-wrap:wrap}
 .sw{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
 .sw[aria-pressed="true"]{border-color:var(--bone);box-shadow:0 0 0 2px var(--night) inset}
+.classes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (max-width:560px){.classes{grid-template-columns:1fr}}
+.cls{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid var(--line);border-radius:5px;background:var(--night);min-width:0}
+.cls:hover{border-color:#4a557f}
+.cls[aria-pressed="true"]{border-color:var(--brass);background:#1a1f36}
+.cls:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.cls b{font-family:var(--f-ko);font-size:17px}
+.cls .role{font-size:11.5px;color:var(--brass);letter-spacing:.02em}
+.cls p{margin:0;font-size:12px;color:#b9bccb;line-height:1.5}
+.cls ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;font-size:12px;color:#d9dbe4}
+.cls ol li span{font-family:var(--f-mono);font-size:10.5px;color:var(--muted);margin-right:6px}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row > *{flex:1 1 auto}
 button.btn{font:600 14px var(--f-body);border-radius:4px;padding:11px 14px;cursor:pointer;border:1px solid var(--line);background:var(--ink-2);color:var(--bone)}
@@ -55,6 +70,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;color:#c9cbd6;margin:0;padding-top:14px;border-top:1px solid var(--line)}
 .keys dt{font-family:var(--f-mono);font-size:12px;color:var(--brass);white-space:nowrap}
 .keys dd{margin:0}
+.keys .y{color:var(--gold)} .keys .r{color:var(--rose)}
 .touchnote{display:none;font-size:12.5px;color:var(--rose)}
 @media (pointer:coarse){.touchnote{display:block}}
 
@@ -64,30 +80,29 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .dot.on{background:#7fd3a3}
 
-#lobby{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);width:min(560px,calc(100% - 32px));padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+#lobby{position:absolute;left:50%;top:84px;transform:translateX(-50%);width:min(560px,calc(100% - 32px));padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
 #lobby .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
 #lobby h2{margin:0;font-family:var(--f-ko);font-size:18px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{display:flex;align-items:center;gap:6px;font-size:12.5px;background:var(--night);border:1px solid var(--line);border-radius:99px;padding:4px 10px 4px 6px}
 .chip i{width:12px;height:12px;border-radius:50%;display:block}
 .chip b{font-weight:500}
+.chip small{color:var(--muted);font-size:11px}
 .chip em{font-style:normal;font-family:var(--f-mono);font-size:10px;color:var(--brass);letter-spacing:.08em}
 
-#result{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,calc(100% - 32px));padding:22px;display:flex;flex-direction:column;gap:14px;text-align:left}
+#result{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,calc(100% - 32px));padding:22px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box}
 #result h2{margin:0;font-family:var(--f-ko);font-size:28px}
 #result .time{font-family:var(--f-mono);color:var(--brass);font-size:13px;letter-spacing:.06em}
 .dmg{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
 .dmg li{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center;font-size:13px}
 .dmg li i{width:10px;height:10px;border-radius:50%}
+.dmg li small{color:var(--muted);margin-left:4px}
 .dmg .bar{grid-column:2 / 4;height:4px;background:var(--night);border-radius:2px;overflow:hidden}
 .dmg .bar span{display:block;height:100%;background:var(--brass)}
 .dmg .n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px}
-body{margin:0}
-[hidden]{display:none!important}
 </style>
 </head>
 <body>
-
 <div id="stage">
   <canvas id="cv" aria-label="보스 전투 화면"></canvas>
 
@@ -95,16 +110,24 @@ body{margin:0}
     <div id="menu" class="panel">
       <div class="eyebrow">협동 보스 레이드 · 프로토타입</div>
       <h1>해시계 레이드<small>HORA · THE SUNDIAL WARDEN</small></h1>
-      <p class="lede">시간을 다스리는 수호자 호라를 친구들과 함께 쓰러뜨리세요. 체력이 70%와 40% 아래로 떨어질 때마다 패턴이 바뀌고, 쓰러진 동료는 곁에 서 있으면 일으킬 수 있습니다.</p>
+      <p class="lede">수호자 호라는 공격하기 전에 바닥에 범위를 그립니다. 범위를 피하거나 막아낸 뒤, 공격이 끝나고 생기는 빈틈에 파고들어 베세요. 체력 70%와 40%에서 패턴이 늘어납니다.</p>
 
       <div class="field">
-        <label for="name">이름</label>
-        <input id="name" type="text" maxlength="12" autocomplete="off" placeholder="최대 12자">
+        <span class="lbl" id="clsLbl">직업</span>
+        <div class="classes" id="classes" role="group" aria-labelledby="clsLbl"></div>
       </div>
-      <div class="field">
-        <span class="lbl" id="colLbl">색상</span>
-        <div class="swatches" id="swatches" role="group" aria-labelledby="colLbl"></div>
+
+      <div class="two">
+        <div class="field">
+          <label for="name">이름</label>
+          <input id="name" type="text" maxlength="12" autocomplete="off" placeholder="최대 12자">
+        </div>
+        <div class="field">
+          <span class="lbl" id="colLbl">색상</span>
+          <div class="swatches" id="swatches" role="group" aria-labelledby="colLbl"></div>
+        </div>
       </div>
+
       <div class="field">
         <label for="code">방 코드</label>
         <div class="row">
@@ -116,13 +139,15 @@ body{margin:0}
         <button class="btn primary" id="createBtn" disabled>새 방 만들기</button>
         <button class="btn" id="soloBtn">혼자 연습</button>
       </div>
-      <div class="status" id="status">함께하기 기능을 확인하는 중…</div>
+      <div class="status" id="status">연결 라이브러리를 불러오는 중…</div>
       <p class="touchnote">이 프로토타입은 키보드와 마우스가 있는 컴퓨터에서 플레이할 수 있어요.</p>
       <dl class="keys">
         <dt>W A S D</dt><dd>이동 (방향키도 가능)</dd>
-        <dt>마우스 왼쪽</dt><dd>누르고 있으면 커서 방향으로 공격</dd>
-        <dt>Space</dt><dd>대시 · 짧은 무적</dd>
-        <dt>Shift</dt><dd>정밀 이동 · 피격 판정점 표시</dd>
+        <dt>마우스 왼쪽</dt><dd>누르고 있으면 커서 방향으로 기본 공격 (근접)</dd>
+        <dt>Q · E · R</dt><dd>직업 스킬 (약 · 중 · 강)</dd>
+        <dt>G</dt><dd>방어. <span class="y">노란 범위</span> 공격을 막으면 3초 동안 다음 공격 피해 2배</dd>
+        <dt>Space</dt><dd>대시 · 짧은 무적 (재사용 2초)</dd>
+        <dt>범위 색</dt><dd><span class="y">노랑</span>은 막기 가능, <span class="r">빨강</span>은 피해야 함</dd>
         <dt>부활</dt><dd>쓰러진 동료 곁에 2.5초 머무르기</dd>
       </dl>
     </div>
@@ -163,97 +188,92 @@ body{margin:0}
 (() => {
 "use strict";
 const AW = 1280, AH = 720, TAU = Math.PI * 2;
-const TRANS = 1.6;           // seconds of shielded transition at each phase start
-const MARK_WARN = 1.5, MARK_BLAST = 0.3, MARK_R = 85;
+const TRANS = 2.0;              // shielded transition at fight / phase start
+const BOSS_R = 58;
+const DASH_CD = 2.0;            // doubled from 1.0
 const COLORS = ["#7fd3c7", "#f28b6b", "#b9a0ff", "#8ecbff", "#ff9ecf", "#a8e07a"];
-const BC = { amber: "#e8b45a", bone: "#f3e6c8", rose: "#ff6f7d", sky: "#9fd8ff" };
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const ease = t => t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t);
+const angDiff = (a, b) => { let d = (a - b) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return Math.abs(d); };
+const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+function safeCol(c) { return /^#[0-9a-f]{6}$/i.test(c) ? c : "#8f97b3"; }
+
+/* ---------- classes ---------- */
+const CLASSES = {
+  knight: {
+    name: "검사", role: "균형형 · 넓은 베기",
+    desc: "넓게 휘두르는 기본기와 돌진으로 빈틈을 놓치지 않는 정석 딜러.",
+    mh: 5, atk: { dmg: 34, cd: .45, range: 95, arc: 110 }, guard: { dur: .4, cd: 2.0 },
+    skills: [
+      { name: "회전베기", tier: "약", cd: 4, dmg: 70 },
+      { name: "돌진 찌르기", tier: "중", cd: 9, dmg: 150 },
+      { name: "대지 가르기", tier: "강", cd: 18, dmg: 340 },
+    ] },
+  rogue: {
+    name: "쌍검사", role: "고속 딜러 · 백어택",
+    desc: "체력이 낮지만 빠르게 벤다. 보스 등 뒤에서 때리면 피해 1.4배.",
+    mh: 4, atk: { dmg: 20, cd: .26, range: 75, arc: 70 }, guard: { dur: .35, cd: 2.0 },
+    skills: [
+      { name: "연속 찌르기", tier: "약", cd: 4, dmg: 84 },
+      { name: "그림자 습격", tier: "중", cd: 10, dmg: 160 },
+      { name: "처형", tier: "강", cd: 18, dmg: 360 },
+    ] },
+  paladin: {
+    name: "수호기사", role: "방어 · 지원",
+    desc: "체력과 방어 시간이 길고, 동료에게 결계와 회복을 나눠 준다.",
+    mh: 6, atk: { dmg: 44, cd: .62, range: 90, arc: 120 }, guard: { dur: .6, cd: 1.5 },
+    skills: [
+      { name: "방패 강타", tier: "약", cd: 4, dmg: 60 },
+      { name: "수호의 결계", tier: "중", cd: 12, dmg: 40 },
+      { name: "심판의 망치", tier: "강", cd: 20, dmg: 300 },
+    ] },
+};
+const SKILL_NOTES = {
+  knight: ["주변 360°", "앞으로 돌진하며 관통", "0.5초 기 모은 뒤 전방 큰 범위"],
+  rogue: ["0.3초간 3연타", "보스 등 뒤로 순간이동", "보스 체력 30% 이하면 1.5배"],
+  paladin: ["피해 + 짧은 방어", "주변 동료 1회 피해 무효", "도약 후 착지 피해 + 회복"],
+};
+
+/* ---------- boss attacks ---------- */
+const ATK = {
+  cleave: { name: "해시계 내려찍기", g: true,  warn: 1.1, rec: 1.0, dmg: 1, hint: "막기 가능" },
+  spin:   { name: "시곗바늘 휩쓸기", g: false, warn: 1.4, rec: 1.3, dmg: 1, hint: "멀리 벗어나기" },
+  donut:  { name: "정오의 빛",       g: false, warn: 2.0, rec: 1.4, dmg: 1, hint: "보스 곁으로" },
+  mark:   { name: "그림자 표식",     g: true,  warn: 1.6, rec: 0.7, dmg: 1, hint: "흩어지거나 막기" },
+  charge: { name: "자정의 돌진",     g: false, warn: 1.2, rec: 1.7, dmg: 1, hint: "옆으로 피하기" },
+  heavy:  { name: "시간의 철퇴",     g: true,  warn: 0.9, rec: 0.9, dmg: 2, hint: "막기 가능 · 2칸" },
+  clock:  { name: "사분면 심판",     g: false, warn: 2.4, rec: 2.6, dmg: 2, hint: "빈 사분면으로" },
+};
+const POOLS = [
+  [["cleave", 3], ["spin", 2], ["donut", 1], ["mark", 2]],
+  [["cleave", 2], ["spin", 2], ["donut", 1], ["mark", 2], ["charge", 2], ["heavy", 2]],
+  [["cleave", 2], ["spin", 1], ["donut", 1], ["mark", 2], ["charge", 2], ["heavy", 2], ["clock", 2]],
+];
+const SPIN_R = 200, DONUT_R = 150, CLEAVE_R = 270, CLEAVE_HALF = 50 * Math.PI / 180, MARK_R = 90, HEAVY_R = 75, CHARGE_W = 55;
+function inAtk(a, px, py) {
+  const dx = px - a.x, dy = py - a.y, d = Math.hypot(dx, dy), pad = 8;
+  switch (a.k) {
+    case "cleave": return d <= CLEAVE_R + pad && angDiff(Math.atan2(dy, dx), a.a) <= CLEAVE_HALF + Math.atan2(pad, Math.max(d, 1));
+    case "spin": return d <= SPIN_R + pad;
+    case "donut": return d >= DONUT_R - pad;
+    case "mark": return d <= MARK_R + pad;
+    case "heavy": return d <= HEAVY_R + pad;
+    case "charge": { const ux = Math.cos(a.a), uy = Math.sin(a.a), pr = dx * ux + dy * uy; return pr >= -BOSS_R && pr <= a.l + BOSS_R && Math.abs(dx * uy - dy * ux) <= CHARGE_W + pad; }
+    case "clock": return quadOf(dx, dy) !== a.s;
+  }
+  return false;
+}
+function quadOf(dx, dy) { const t = (Math.atan2(dy, dx) + Math.PI / 2 + TAU) % TAU; return Math.floor(t / (Math.PI / 2)) % 4; }
 
 /* ---------- storage (per-viewer convenience) ---------- */
 function load(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
 function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-
 let myName = load("sr.name", "") || ("모험가" + Math.floor(Math.random() * 90 + 10));
 let myColor = load("sr.color", COLORS[Math.floor(Math.random() * COLORS.length)]);
 if (!COLORS.includes(myColor)) myColor = COLORS[0];
-
-/* ---------- deterministic helpers ---------- */
-function hash(a, b) {
-  let h = Math.imul(a | 0, 374761393) ^ Math.imul(b | 0, 668265263);
-  h = Math.imul(h ^ (h >>> 13), 1274126177);
-  h ^= h >>> 16;
-  return (h >>> 0) / 4294967296;
-}
-const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
-const ease = t => t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t);
-
-/* ---------- boss motion & patterns (pure functions of fight time) ---------- */
-function bossPos(T, ph) {
-  if (ph === 0) return [640 + 260 * Math.sin(.35 * T), 190 + 40 * Math.sin(.7 * T)];
-  if (ph === 1) return [640 + 90 * Math.sin(.5 * T), 300 + 50 * Math.sin(1.0 * T)];
-  return [640 + 180 * Math.sin(.5 * T), 240 + 60 * Math.sin(1.1 * T)];
-}
-function pushB(out, x, y, a, s, c, r, col, dt) {
-  let px, py;
-  if (Math.abs(c) < 1e-4) { px = x + Math.cos(a) * s * dt; py = y + Math.sin(a) * s * dt; }
-  else { const a2 = a + c * dt; px = x + s / c * (Math.sin(a2) - Math.sin(a)); py = y - s / c * (Math.cos(a2) - Math.cos(a)); }
-  if (px < -30 || px > AW + 30 || py < -30 || py > AH + 30) return;
-  out.push({ x: px, y: py, r, col });
-}
-const PHASES = [
-  { name: "I", pats: [
-    { per: .09, st: 0, life: 6, gen(k, ts, dt, out) { const [x, y] = bossPos(ts, 0); const a = k * .23;
-        for (let i = 0; i < 2; i++) pushB(out, x, y, a + i * Math.PI, 170, 0, 7, BC.amber, dt); } },
-    { per: 3.2, st: 1, life: 7, gen(k, ts, dt, out) { const [x, y] = bossPos(ts, 0); const o = hash(k, 11) * TAU;
-        for (let i = 0; i < 28; i++) pushB(out, x, y, o + i * TAU / 28, 125, 0, 9, BC.bone, dt); } },
-  ] },
-  { name: "II", pats: [
-    { per: .075, st: 0, life: 5, gen(k, ts, dt, out) { const [x, y] = bossPos(ts, 1); const kt = k * .075;
-        const a1 = .9 * kt, a2 = -.65 * kt + .7;
-        pushB(out, x, y, a1, 230, 0, 6, BC.amber, dt); pushB(out, x, y, a1 + Math.PI, 230, 0, 6, BC.amber, dt);
-        pushB(out, x, y, a2, 230, 0, 6, BC.sky, dt); pushB(out, x, y, a2 + Math.PI, 230, 0, 6, BC.sky, dt); } },
-    { per: 2.6, st: .8, life: 7, gen(k, ts, dt, out) { const [x, y] = bossPos(ts, 1); const o = hash(k, 5) * TAU;
-        for (let i = 0; i < 18; i++) pushB(out, x, y, o + i * TAU / 18, 150, (i % 2 ? 1 : -1) * .55, 8, BC.bone, dt); } },
-  ] },
-  { name: "III", pats: [
-    { per: 1.5, st: 0, life: 7, gen(k, ts, dt, out) { const [x, y] = bossPos(ts, 2); const n = 44; const g = Math.floor(hash(k, 3) * n);
-        for (let i = 0; i < n; i++) { const d = Math.min((i - g + n) % n, (g - i + n) % n); if (d <= 3) continue;
-          pushB(out, x, y, k * .13 + i * TAU / n, 140, 0, 8, BC.rose, dt); } } },
-    { per: .13, st: .5, life: 7, gen(k, ts, dt, out) { const [x, y] = bossPos(ts, 2); const a = k * .31;
-        for (let i = 0; i < 3; i++) pushB(out, x, y, a + i * TAU / 3, 115, .35, 7, BC.amber, dt); } },
-  ] },
-];
-function liveBullets(T, S, out) {
-  out.length = 0;
-  if (!S || S.st !== "fight") return out;
-  const ph = S.ph | 0, base = S.ps + TRANS;
-  for (const p of PHASES[ph].pats) {
-    const t0 = base + p.st, tau = T - t0; if (tau < 0) continue;
-    const kmax = Math.floor(tau / p.per), kmin = Math.max(0, Math.ceil((tau - p.life) / p.per));
-    for (let k = kmin; k <= kmax; k++) { const ts = t0 + k * p.per; p.gen(k, ts, T - ts, out); }
-  }
-  return out;
-}
-function lasers(T, S) {
-  if (!S || S.st !== "fight" || S.ph !== 2) return [];
-  const tau = T - (S.ps + TRANS) - 2; if (tau < 0) return [];
-  const per = 7, k = Math.floor(tau / per), u = tau - k * per;
-  const a0 = Math.PI / 2 + (hash(k, 7) - .5) * 1.6, w = hash(k, 9) < .5 ? 1 : -1;
-  if (u < 1.2) return [{ a: a0 - .45, on: false, u }, { a: a0 + .45, on: false, u }];
-  if (u < 3.4) { const a = a0 + w * .55 * (u - 1.2); return [{ a: a - .45, on: true }, { a: a + .45, on: true }]; }
-  return [];
-}
-function bossAt(T, S, idleT) {
-  if (!S || S.st === "lobby") return [640, 230 + 10 * Math.sin(idleT * 1.2)];
-  if (S.st !== "fight") return lastBoss;
-  const ph = S.ph | 0, ps = S.ps;
-  const p = bossPos(T, ph);
-  if (ph > 0 && T < ps + TRANS) { const q = bossPos(ps, ph - 1), k = ease((T - ps) / TRANS); return [q[0] + (p[0] - q[0]) * k, q[1] + (p[1] - q[1]) * k]; }
-  if (ph === 0 && T < TRANS) { const q = [640, 230], k = ease(T / TRANS); return [q[0] + (p[0] - q[0]) * k, q[1] + (p[1] - q[1]) * k]; }
-  return p;
-}
-let lastBoss = [640, 230];
+let myClass = load("sr.class", "knight"); if (!CLASSES[myClass]) myClass = "knight";
 
 /* ---------- networking (PeerJS, star topology: host relays everyone's state) ---------- */
 const ID_PREFIX = "sundial-raid-v1-";
@@ -264,11 +284,9 @@ let hostPeer = null, hostH = null, lastHostFt = null, estOff = null;
 let lastSend = 0;
 
 (() => {
-  const st = $("#status");
-  if (window.Peer) { st.textContent = "방을 만들거나 친구에게 받은 코드로 들어가세요."; $("#createBtn").disabled = false; $("#joinBtn").disabled = false; }
-  else { st.textContent = "연결 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침하세요. 혼자 연습은 가능합니다."; st.className = "status err"; }
+  if (window.Peer) { setStatus("방을 만들거나 친구에게 받은 코드로 들어가세요."); $("#createBtn").disabled = false; $("#joinBtn").disabled = false; }
+  else setStatus("연결 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침하세요. 혼자 연습은 가능합니다.", true);
 })();
-
 function setStatus(t, err) { const st = $("#status"); st.textContent = t; st.className = "status" + (err ? " err" : ""); }
 function setBusy(b) { net.connecting = b; $("#createBtn").disabled = b || !window.Peer; $("#joinBtn").disabled = b || !window.Peer; $("#soloBtn").disabled = b; }
 function newCode() { const a = "abcdefghjkmnpqrstuvwxyz23456789"; let s = ""; for (let i = 0; i < 4; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
@@ -277,16 +295,19 @@ function destroyPeer() { if (net.peer) { try { net.peer.destroy(); } catch (e) {
 function sanitize(p) {
   if (!p || typeof p !== "object") return null;
   const num = (v, a, b, d) => (typeof v === "number" && isFinite(v)) ? clamp(v, a, b) : d;
-  const out = {
+  const trip = v => (Array.isArray(v) && v.length >= 3) ? [num(v[0], 0, 1e9, 0), num(v[1], 0, AW, 0), num(v[2], 0, AH, 0)] : null;
+  return {
     n: String(p.n == null ? "?" : p.n).replace(/[\u0000-\u001f​-‏‪-‮]/g, "").slice(0, 12) || "?",
-    c: safeCol(String(p.c)),
+    c: safeCol(String(p.c)), k: CLASSES[p.k] ? p.k : "knight",
     x: num(p.x, 0, AW, 640), y: num(p.y, 0, AH, 600), a: num(p.a, -7, 7, 0),
-    f: p.f ? 1 : 0, hp: Math.round(num(p.hp, 0, 5, 5)), dn: p.dn ? 1 : 0,
-    dm: Math.round(num(p.dm, 0, 1e7, 0)), r: Math.round(num(p.r, -1, 1e6, -1)),
+    hp: Math.round(num(p.hp, 0, 6, 5)), mh: Math.round(num(p.mh, 1, 6, 5)), dn: p.dn ? 1 : 0,
+    dm: Math.round(num(p.dm, 0, 1e8, 0)), r: Math.round(num(p.r, -1, 1e6, -1)),
     rv: (Array.isArray(p.rv) && typeof p.rv[0] === "string") ? [p.rv[0].slice(0, 64), num(p.rv[1], 0, 1, 0)] : null,
-    fo: p.fo ? 1 : 0,
+    gd: p.gd ? 1 : 0, bk: p.bk ? 1 : 0, ct: p.ct ? 1 : 0,
+    sw: Math.round(num(p.sw, 0, 1e9, 0)),
+    fx: (Array.isArray(p.fx) && p.fx.length >= 5) ? [num(p.fx[0], 0, 1e9, 0), Math.round(num(p.fx[1], 0, 20, 0)), num(p.fx[2], -100, AW + 100, 0), num(p.fx[3], -100, AH + 100, 0), num(p.fx[4], -7, 7, 0)] : null,
+    wd: trip(p.wd), hl: trip(p.hl),
   };
-  return out;
 }
 
 function createRoom(tries) {
@@ -317,9 +338,9 @@ function createRoom(tries) {
     conn.on("error", () => net.conns.delete(conn.peer));
   });
   peer.on("error", e => {
-    if (e.type === "unavailable-id" && tries < 4) { createRoom(tries + 1); return; }
-    if (net.mode === "host") { return; }
-    setBusy(false); destroyPeer();
+    if (e.type === "unavailable-id" && tries < 4 && net.peer === peer) { clearTimeout(timer); createRoom(tries + 1); return; }
+    if (net.mode === "host") return;
+    clearTimeout(timer); setBusy(false); destroyPeer();
     setStatus("방을 만들지 못했습니다 (" + (e.type || "오류") + "). 잠시 뒤 다시 시도하세요.", true);
   });
   peer.on("disconnected", () => { if (net.mode === "host") { try { peer.reconnect(); } catch (e) {} } });
@@ -334,7 +355,7 @@ function joinRoom(code) {
   const peer = new Peer({ debug: 0 });
   net.peer = peer;
   let opened = false;
-  const fail = msg => { if (opened) return; setBusy(false); destroyPeer(); setStatus(msg, true); };
+  const fail = msg => { if (opened) return; clearTimeout(timer); setBusy(false); destroyPeer(); setStatus(msg, true); };
   const timer = setTimeout(() => fail("방장과 연결하지 못했습니다. 코드를 확인하거나, 회사·학교 네트워크라면 다른 네트워크에서 시도해 보세요."), 12000);
   peer.on("open", id => {
     myPeer = id;
@@ -354,14 +375,10 @@ function joinRoom(code) {
   });
   peer.on("error", e => {
     if (net.mode === "client") { if (e.type === "peer-unavailable" || e.type === "network") hostLost(); return; }
-    clearTimeout(timer);
     fail(e.type === "peer-unavailable" ? "그 코드의 방이 없습니다. 방장이 방을 열어 두었는지 확인하세요." : "연결 오류가 났습니다 (" + (e.type || "오류") + ").");
   });
 }
-function hostLost() {
-  leaveGame();
-  setStatus("방장과 연결이 끊겼습니다. 방장이 방을 다시 열면 새 코드로 들어오세요.", true);
-}
+function hostLost() { leaveGame(); setStatus("방장과 연결이 끊겼습니다. 방장이 방을 다시 열면 새 코드로 들어오세요.", true); }
 
 function enterGame() {
   $("#menuWrap").hidden = true;
@@ -372,19 +389,19 @@ function enterGame() {
   isHost = false; HS = null; hostH = null; estOff = null; lastHostFt = null;
   if (net.mode === "solo") myPeer = "me";
   me.run = -1; resetMe();
-  if (net.mode === "solo" || net.mode === "host") becomeHost(performance.now());
+  if (net.mode === "solo" || net.mode === "host") becomeHost();
 }
 function leaveGame() {
   const wasClient = net.mode === "client";
   net.mode = "off";
   destroyPeer();
-  isHost = false; HS = null; hostH = null; others = []; disp.clear(); cosmetic = [];
+  isHost = false; HS = null; hostH = null; others = []; disp.clear(); fxList = []; floats = [];
   $("#bar").hidden = true; $("#lobby").hidden = true; $("#result").hidden = true; $("#menuWrap").hidden = false;
   setBusy(false);
   if (!wasClient) setStatus(window.Peer ? "방을 만들거나 친구에게 받은 코드로 들어가세요." : "혼자 연습은 가능합니다.");
 }
 
-function readNet(now) {
+function readNet() {
   others = [];
   if (net.mode === "host") {
     for (const [pid, e] of net.conns) if (e.pr && e.conn.open) others.push({ peer: pid, presence: e.pr, updatedAt: e.at });
@@ -397,12 +414,10 @@ function readNet(now) {
     }
   }
 }
-function becomeHost(now) {
-  isHost = true;
-  HS = { st: "lobby", run: 0, ft: 0, ph: 0, ps: 0, mhp: 1, hp: 1, dm: {}, names: {}, mk: [], nx: 0, n: 1, end: 0, hb: 0 };
-}
+function lobbyState() { return { st: "lobby", run: 0, ft: 0, ph: 0, ps: 0, mhp: 1, hp: 1, dm: {}, names: {}, n: 1, end: 0, bx: 640, by: 280, bf: Math.PI / 2, bs: "idle", bt: 0, cur: "", atk: [], aid: 0 }; }
+function becomeHost() { isHost = true; HS = lobbyState(); }
 let lastSnapSeen = null;
-function syncHost(now) {
+function syncHost() {
   if (isHost) { hostPeer = myPeer; return; }
   const hp = others.find(p => p.peer === hostPeer);
   const h = hp && hp.presence.h;
@@ -438,68 +453,229 @@ function playersList() {
   for (const p of others) list.push({ peer: p.peer, pr: p.presence, me: false });
   return list;
 }
+
+/* ---------- host: fight state & boss AI ---------- */
 function startFight(now) {
   const n = Math.max(1, playersList().length);
-  const mhp = Math.round(6000 * (1 + .75 * (n - 1)));
-  HS = { st: "fight", run: (HS && HS.run || 0) + 1, ft: 0, ph: 0, ps: 0, mhp, hp: mhp, dm: {}, names: {}, mk: [], nx: TRANS + 3, n, end: 0, hb: 0 };
+  const mhp = Math.round(9000 * (1 + .8 * (n - 1)));
+  HS = Object.assign(lobbyState(), { st: "fight", run: (HS && HS.run || 0) + 1, mhp, hp: mhp, n, bs: "shield", bt: TRANS, bx: 640, by: 260 });
   fsLocal = now;
 }
-function hostTick(now) {
-  if (!HS) return;
-  HS.hb = Math.floor(Date.now() / 400) % 100000;
-  if (HS.st !== "fight") return;
-  const T = (now - fsLocal) / 1000; HS.ft = Math.round(T * 1000) / 1000;
-  const pl = playersList().filter(p => p.pr.r === HS.run);
-  let sum = 0;
-  for (const p of pl) { HS.dm[p.peer] = Math.max(HS.dm[p.peer] || 0, p.pr.dm | 0); HS.names[p.peer] = [String(p.pr.n).slice(0, 12), String(p.pr.c).slice(0, 9)]; }
-  for (const k in HS.dm) sum += HS.dm[k];
-  HS.hp = Math.max(0, HS.mhp - sum);
-  const frac = HS.hp / HS.mhp, target = frac > .7 ? 0 : frac > .4 ? 1 : 2;
-  if (target > HS.ph) { HS.ph = target; HS.ps = HS.ft; HS.mk = []; HS.nx = T + TRANS + 2.5; }
-  if (T >= HS.nx && T > HS.ps + TRANS) {
-    const alive = pl.filter(p => !p.pr.dn);
-    const cnt = [1, 1, 2][HS.ph];
-    for (let i = 0; i < cnt && alive.length; i++) {
-      const t = alive[Math.floor(Math.random() * alive.length)].pr;
-      let x = t.x, y = t.y;
-      if (i > 0) { x += (Math.random() - .5) * 260; y += (Math.random() - .5) * 200; }
-      HS.mk.push([HS.ft + i * .35, clamp(x, 40, AW - 40) | 0, clamp(y, 40, AH - 40) | 0]);
-    }
-    HS.nx = T + [5, 4, 3][HS.ph];
+let hostTarget = null, lastKind = "", forceKind = "", comboUsed = false, chargeFrom = null;
+function pickKind(ph) {
+  if (forceKind) { const k = forceKind; forceKind = ""; return k; }
+  const pool = POOLS[ph].filter(([k]) => k !== lastKind);
+  let tot = 0; for (const [, w] of pool) tot += w;
+  let r = Math.random() * tot;
+  for (const [k, w] of pool) { r -= w; if (r <= 0) return k; }
+  return pool[0][0];
+}
+function castAttack(kind, T, alive) {
+  const H = HS, bx = H.bx, by = H.by;
+  let tgt = alive.find(p => p.peer === hostTarget) || alive[0];
+  if (kind === "cleave" || kind === "heavy") { let bd = 1e9; for (const p of alive) { const d = dist(p.pr.x, p.pr.y, bx, by); if (d < bd) { bd = d; tgt = p; } } }
+  const face = Math.atan2(tgt.pr.y - by, tgt.pr.x - bx);
+  H.bf = Math.round(face * 1000) / 1000;
+  const def = ATK[kind];
+  const warn = def.warn * (H.ph === 2 && kind !== "clock" ? .85 : 1);
+  const th = Math.round((T + warn) * 1000) / 1000, t0 = Math.round(T * 1000) / 1000;
+  const base = { k: kind, t0, th, x: Math.round(bx), y: Math.round(by), a: H.bf };
+  if (kind === "mark") {
+    for (const p of alive) H.atk.push(Object.assign({}, base, { i: ++H.aid, x: Math.round(p.pr.x), y: Math.round(p.pr.y) }));
+  } else if (kind === "heavy") {
+    H.atk.push(Object.assign(base, { i: ++H.aid, x: Math.round(tgt.pr.x), y: Math.round(tgt.pr.y) }));
+  } else if (kind === "charge") {
+    let L = 720; const ux = Math.cos(face), uy = Math.sin(face);
+    for (let s = 0; s < 720; s += 10) { const x = bx + ux * s, y = by + uy * s; if (x < 80 || x > AW - 80 || y < 90 || y > AH - 70) { L = s; break; } }
+    H.atk.push(Object.assign(base, { i: ++H.aid, l: Math.max(60, L) }));
+    chargeFrom = { x: bx, y: by, ex: bx + ux * Math.max(60, L), ey: by + uy * Math.max(60, L), th };
+  } else if (kind === "clock") {
+    H.atk.push(Object.assign(base, { i: ++H.aid, s: Math.floor(Math.random() * 4) }));
+  } else {
+    H.atk.push(Object.assign(base, { i: ++H.aid }));
   }
-  HS.mk = HS.mk.filter(m => m[0] > T - 2.5);
-  if (HS.hp <= 0) { HS.st = "win"; HS.end = HS.ft; }
-  else if (T > 2 && pl.length && pl.every(p => p.pr.dn)) { HS.st = "wipe"; HS.end = HS.ft; }
+  H.cur = kind; H.bs = "cast"; H.bt = th + (kind === "charge" ? .35 : .05);
+  lastKind = kind;
+}
+function hostTick(now) {
+  if (!HS || HS.st !== "fight") return;
+  const H = HS, T = (now - fsLocal) / 1000; H.ft = Math.round(T * 1000) / 1000;
+  const pl = playersList().filter(p => p.pr.r === H.run);
+  let sum = 0;
+  for (const p of pl) { H.dm[p.peer] = Math.max(H.dm[p.peer] || 0, p.pr.dm | 0); H.names[p.peer] = [p.pr.n, p.pr.c, p.pr.k]; }
+  for (const k in H.dm) sum += H.dm[k];
+  H.hp = Math.max(0, H.mhp - sum);
+  const frac = H.hp / H.mhp, target = frac > .7 ? 0 : frac > .4 ? 1 : 2;
+  if (target > H.ph) {
+    H.ph = target; H.ps = H.ft; H.atk = []; H.bs = "shield"; H.bt = T + TRANS; H.cur = ""; chargeFrom = null;
+    forceKind = target === 2 ? "clock" : "charge"; comboUsed = false;
+  }
+  if (H.hp <= 0) { H.st = "win"; H.end = H.ft; H.atk = []; return; }
+  if (T > 2 && pl.length && pl.every(p => p.pr.dn)) { H.st = "wipe"; H.end = H.ft; return; }
+  const alive = pl.filter(p => !p.pr.dn);
+  H.atk = H.atk.filter(a => a.th > T - .7);
+  if (!alive.length) return;
+  const dt = Math.min(.05, (now - (hostTick.last || now)) / 1000); hostTick.last = now;
+  switch (H.bs) {
+    case "shield":
+      if (T >= H.bt) { H.bs = "move"; H.bt = T + .8; hostTarget = alive[Math.floor(Math.random() * alive.length)].peer; }
+      break;
+    case "move": {
+      const tg = alive.find(p => p.peer === hostTarget) || alive[0];
+      const dx = tg.pr.x - H.bx, dy = tg.pr.y - H.by, d = Math.hypot(dx, dy);
+      H.bf = Math.round(Math.atan2(dy, dx) * 1000) / 1000;
+      const sp = [85, 100, 120][H.ph];
+      if (d > 120) { H.bx += dx / d * sp * dt; H.by += dy / d * sp * dt; }
+      H.bx = clamp(H.bx, 80, AW - 80); H.by = clamp(H.by, 90, AH - 70);
+      if (d <= 140 || T >= H.bt) castAttack(pickKind(H.ph), T, alive);
+      break;
+    }
+    case "cast":
+      if (H.cur === "charge" && chargeFrom && T >= chargeFrom.th) {
+        const k = ease((T - chargeFrom.th) / .3);
+        H.bx = chargeFrom.x + (chargeFrom.ex - chargeFrom.x) * k; H.by = chargeFrom.y + (chargeFrom.ey - chargeFrom.y) * k;
+      }
+      if (T >= H.bt) {
+        chargeFrom = null;
+        if (H.ph === 2 && !comboUsed && H.cur !== "clock" && Math.random() < .4) { comboUsed = true; castAttack(pickKind(2), T, alive); }
+        else { comboUsed = false; H.bs = "rec"; H.bt = T + ATK[H.cur].rec; }
+      }
+      break;
+    case "rec":
+      if (T >= H.bt) { H.bs = "move"; H.bt = T + .8 + Math.random() * .8; H.cur = ""; hostTarget = alive[Math.floor(Math.random() * alive.length)].peer; }
+      break;
+  }
+  H.bx = Math.round(H.bx * 10) / 10; H.by = Math.round(H.by * 10) / 10;
 }
 
 /* ---------- local player ---------- */
-const me = { x: 640, y: 600, hp: 5, dn: 0, ifr: 0, dashT: 0, dashCd: 0, ddx: 0, ddy: 0, fireCd: 0, dm: 0, run: -1, a: -Math.PI / 2, firing: false, focus: false, rv: null, rvT: null, rvP: 0, hitT: 0 };
-let shots = [], resolved = new Set(), cosmetic = [], cosAcc = new Map(), disp = new Map();
+const me = { x: 640, y: 600, hp: 5, mh: 5, dn: 0, ifr: 0, dashT: 0, ddx: 0, ddy: 0, dm: 0, run: -1, a: -Math.PI / 2,
+  cd: [0, 0, 0], atkCd: 0, dashCd: 0, guardT: 0, guardCd: 0, counterT: 0, wardUntil: 0,
+  cast: null, move: null, multi: null, sw: 0, fx: null, fxN: 0, wd: null, hl: null, evId: 0,
+  rv: null, rvT: null, rvP: 0, hitT: 0 };
+let resolved = new Set(), fxList = [], floats = [], disp = new Map(), seenSw = new Map(), seenFx = new Map(), seenWd = new Map(), seenHl = new Map();
 let shake = 0, bossFlash = 0;
+const bossDisp = { x: 640, y: 280, f: Math.PI / 2 };
 function resetMe() {
-  me.x = 460 + Math.random() * 360; me.y = 610; me.hp = 5; me.dn = 0; me.ifr = 1; me.dm = 0;
-  me.dashT = 0; me.dashCd = 0; me.rv = null; me.rvT = null; me.rvP = 0;
-  shots = []; resolved = new Set();
+  const C = CLASSES[myClass];
+  me.mh = C.mh; me.hp = C.mh; me.dn = 0; me.ifr = 1; me.dm = 0;
+  me.x = 460 + Math.random() * 360; me.y = 610;
+  me.cd = [0, 0, 0]; me.atkCd = 0; me.dashCd = 0; me.dashT = 0; me.guardT = 0; me.guardCd = 0; me.counterT = 0; me.wardUntil = 0;
+  me.cast = null; me.move = null; me.multi = null; me.rv = null; me.rvT = null; me.rvP = 0;
+  resolved = new Set();
 }
+function nowS() { return performance.now() / 1000; }
 function myPresence() {
-  return { n: myName, c: myColor, x: Math.round(me.x), y: Math.round(me.y), a: Math.round(me.a * 100) / 100,
-    f: (me.firing && !me.dn) ? 1 : 0, hp: me.hp, dn: me.dn, dm: me.dm, r: me.run, rv: me.rv, fo: me.focus ? 1 : 0 };
+  return { n: myName, c: myColor, k: myClass, x: Math.round(me.x), y: Math.round(me.y), a: Math.round(me.a * 100) / 100,
+    hp: me.hp, mh: me.mh, dn: me.dn, dm: me.dm, r: me.run, rv: me.rv,
+    gd: me.guardT > 0 ? 1 : 0, bk: me.wardUntil > nowS() ? 1 : 0, ct: me.counterT > 0 ? 1 : 0,
+    sw: me.sw, fx: me.fx, wd: me.wd, hl: me.hl };
 }
-function hurt() {
-  if (me.dn || me.ifr > 0 || me.dashT > 0) return;
-  me.hp--; me.ifr = 1.2; me.hitT = .35; shake = .25;
-  if (me.hp <= 0) { me.hp = 0; me.dn = 1; me.rv = null; }
+function float(x, y, txt, col, big) { floats.push({ x: x + (Math.random() - .5) * 30, y, txt: String(txt), col, t: 0, big: !!big }); }
+function hurt(n) {
+  me.hp = Math.max(0, me.hp - n); me.ifr = 1.0; me.hitT = .35; shake = .25;
+  float(me.x, me.y - 30, "-" + n, "#ff6f7d");
+  if (me.hp <= 0) { me.dn = 1; me.rv = null; me.cast = null; me.move = null; me.multi = null; me.guardT = 0; }
+}
+function bossHit(a) {
+  const def = ATK[a.k];
+  if (me.dn) return;
+  if (me.dashT > 0 || me.ifr > 0) { float(me.x, me.y - 30, "회피", "#9fd8ff"); return; }
+  if (me.guardT > 0 && def.g) {
+    me.counterT = 3; me.ifr = .3; float(me.x, me.y - 34, "막기! 반격 준비", "#ffd166", true);
+    spawnFx(1, me.x, me.y, me.a, myColor); return;
+  }
+  if (me.wardUntil > nowS()) { me.wardUntil = 0; me.ifr = .4; float(me.x, me.y - 30, "결계", "#9fd8ff"); return; }
+  hurt(def.dmg);
+}
+function emitFx(type) { me.fx = [++me.fxN, type, Math.round(me.x), Math.round(me.y), Math.round(me.a * 100) / 100]; spawnFx(type, me.x, me.y, me.a, myColor, myClass); }
+
+/* effects: 0 swing,1 guard flash,2 spin,3 lunge,4 quake,5 stab,6 blink,7 exec,8 bash,9 ward,10 hammer */
+function spawnFx(type, x, y, a, col, k) { fxList.push({ type, x, y, a, col, k: k || "knight", t: 0 }); }
+
+/* ---------- combat helpers ---------- */
+function bossRange(range, half) {
+  const d = dist(me.x, me.y, bossDisp.x, bossDisp.y);
+  if (d - BOSS_R > range) return false;
+  if (half >= Math.PI) return true;
+  const ang = Math.atan2(bossDisp.y - me.y, bossDisp.x - me.x);
+  return angDiff(ang, me.a) <= half + Math.asin(Math.min(1, BOSS_R / Math.max(d, 1)));
+}
+let curS = null, curT = 0;
+function deal(base) {
+  const S = curS, T = curT;
+  bossFlash = .08;
+  const bx = bossDisp.x, by = bossDisp.y - 70;
+  if (!S || S.st !== "fight") { float(bx, by, Math.round(base), "#8f97b3"); return; }
+  if (T < S.ps + TRANS) { float(bx, by, "보호막", "#f3e6c8"); return; }
+  if (S.hp <= 0) return;
+  let mult = 1, tag = "", col = "#f3e6c8";
+  if (me.counterT > 0) { mult *= 2; me.counterT = 0; tag = "반격 "; col = "#ffd166"; }
+  if (S.bs === "rec") mult *= 1.2;
+  if (myClass === "rogue" && angDiff(Math.atan2(me.y - bossDisp.y, me.x - bossDisp.x), S.bf) > 2.1) { mult *= 1.4; tag += "백어택 "; if (col === "#f3e6c8") col = "#b9a0ff"; }
+  const d = Math.round(base * mult);
+  me.dm += d;
+  float(bx, by, tag + d, col, mult >= 2);
+}
+function startMove(dur, tx, ty, onTick, onEnd) {
+  tx = clamp(tx, 14, AW - 14); ty = clamp(ty, 14, AH - 14);
+  me.move = { t: 0, dur, x0: me.x, y0: me.y, tx, ty, onTick, onEnd };
+}
+function useSkill(i) {
+  const C = CLASSES[myClass], sk = C.skills[i];
+  if (me.dn || me.cd[i] > 0 || me.cast || me.move || me.multi) return;
+  me.cd[i] = sk.cd;
+  const a = me.a, ux = Math.cos(a), uy = Math.sin(a);
+  if (myClass === "knight") {
+    if (i === 0) { emitFx(2); if (bossRange(120, Math.PI)) deal(sk.dmg); }
+    else if (i === 1) {
+      emitFx(3); me.ifr = Math.max(me.ifr, .3); let hit = false;
+      startMove(.2, me.x + ux * 230, me.y + uy * 230, () => { if (!hit && dist(me.x, me.y, bossDisp.x, bossDisp.y) < BOSS_R + 34) { hit = true; deal(sk.dmg); } });
+    } else {
+      me.cast = { t: .5, max: .5, done: () => { emitFx(4); shake = .2; if (bossRange(200, 35 * Math.PI / 180)) deal(sk.dmg); } };
+    }
+  } else if (myClass === "rogue") {
+    if (i === 0) { me.multi = { left: 3, t: 0, dmg: sk.dmg / 3 }; }
+    else if (i === 1) {
+      const d = dist(me.x, me.y, bossDisp.x, bossDisp.y);
+      emitFx(6);
+      if (d < 340) {
+        const f = curS && curS.st === "fight" ? curS.bf : bossDisp.f;
+        me.x = clamp(bossDisp.x - Math.cos(f) * (BOSS_R + 22), 14, AW - 14); me.y = clamp(bossDisp.y - Math.sin(f) * (BOSS_R + 22), 14, AH - 14);
+        me.a = Math.atan2(bossDisp.y - me.y, bossDisp.x - me.x);
+        emitFx(6); deal(sk.dmg);
+      } else { me.x = clamp(me.x + ux * 200, 14, AW - 14); me.y = clamp(me.y + uy * 200, 14, AH - 14); emitFx(6); }
+      me.ifr = Math.max(me.ifr, .3);
+    } else {
+      me.cast = { t: .3, max: .3, done: () => { emitFx(7); const low = curS && curS.st === "fight" && curS.hp / curS.mhp < .3; if (bossRange(95, 45 * Math.PI / 180)) deal(sk.dmg * (low ? 1.5 : 1)); } };
+    }
+  } else {
+    if (i === 0) { emitFx(8); me.guardT = Math.max(me.guardT, .35); if (bossRange(95, 55 * Math.PI / 180)) deal(sk.dmg); }
+    else if (i === 1) {
+      emitFx(9); me.wd = [++me.evId, Math.round(me.x), Math.round(me.y)]; me.wardUntil = nowS() + 5; float(me.x, me.y - 30, "결계", "#9fd8ff");
+      if (bossRange(160, Math.PI)) deal(sk.dmg);
+    } else {
+      const d = Math.min(260, dist(me.x, me.y, mouse.x, mouse.y));
+      me.ifr = Math.max(me.ifr, .4);
+      startMove(.35, me.x + ux * d, me.y + uy * d, null, () => {
+        emitFx(10); shake = .25;
+        if (bossRange(120, Math.PI)) deal(sk.dmg);
+        me.hl = [++me.evId, Math.round(me.x), Math.round(me.y)];
+        if (!me.dn && me.hp < me.mh) { me.hp++; float(me.x, me.y - 30, "+1", "#7fd3a3"); }
+      });
+    }
+  }
 }
 
 /* ---------- input ---------- */
 const keys = new Set();
 const mouse = { x: 640, y: 300, down: false };
-let dashQueued = false;
+let queued = new Set();
 function inGame() { return net.mode !== "off"; }
 addEventListener("keydown", e => {
   if (!inGame() || e.target.tagName === "INPUT") return;
   if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
-  if (e.code === "Space" && !e.repeat) dashQueued = true;
+  if (!e.repeat) queued.add(e.code);
   keys.add(e.code);
 });
 addEventListener("keyup", e => keys.delete(e.code));
@@ -511,7 +687,6 @@ cv.addEventListener("pointerdown", e => { if (e.button === 0 && inGame()) { mous
 addEventListener("pointerup", e => { if (e.button === 0) mouse.down = false; });
 addEventListener("pointermove", e => { [mouse.x, mouse.y] = toArena(e.clientX, e.clientY); });
 cv.addEventListener("contextmenu", e => e.preventDefault());
-
 function resize() {
   const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
   cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr));
@@ -521,12 +696,22 @@ function resize() {
 addEventListener("resize", resize); resize();
 
 /* ---------- update ---------- */
-const bullets = [];
-function updateMe(dt, T, S, B) {
+function updateBoss(dt, S, idleT) {
+  let tx = 640, ty = 280 + 8 * Math.sin(idleT * 1.2), tf = Math.PI / 2;
+  if (S && S.st !== "lobby") { tx = S.bx; ty = S.by; tf = S.bf; }
+  if (isHost) { bossDisp.x = tx; bossDisp.y = ty; bossDisp.f = tf; return; }
+  const k = 1 - Math.exp(-dt * 14);
+  bossDisp.x += (tx - bossDisp.x) * k; bossDisp.y += (ty - bossDisp.y) * k;
+  let df = tf - bossDisp.f; while (df > Math.PI) df -= TAU; while (df < -Math.PI) df += TAU; bossDisp.f += df * k;
+}
+function updateMe(dt, T, S) {
   if (S && S.run !== me.run) { me.run = S.run; resetMe(); }
-  const fighting = S && S.st === "fight";
-  me.ifr = Math.max(0, me.ifr - dt); me.dashCd = Math.max(0, me.dashCd - dt); me.fireCd = Math.max(0, me.fireCd - dt); me.hitT = Math.max(0, me.hitT - dt);
-  me.focus = keys.has("ShiftLeft") || keys.has("ShiftRight");
+  const C = CLASSES[myClass], fighting = S && S.st === "fight";
+  me.ifr = Math.max(0, me.ifr - dt); me.dashCd = Math.max(0, me.dashCd - dt); me.atkCd = Math.max(0, me.atkCd - dt);
+  me.guardT = Math.max(0, me.guardT - dt); me.guardCd = Math.max(0, me.guardCd - dt); me.counterT = Math.max(0, me.counterT - dt); me.hitT = Math.max(0, me.hitT - dt);
+  for (let i = 0; i < 3; i++) me.cd[i] = Math.max(0, me.cd[i] - dt);
+  if (!me.cast) me.a = Math.atan2(mouse.y - me.y, mouse.x - me.x);
+
   if (!me.dn) {
     let ix = 0, iy = 0;
     if (keys.has("KeyA") || keys.has("ArrowLeft")) ix--;
@@ -534,50 +719,48 @@ function updateMe(dt, T, S, B) {
     if (keys.has("KeyW") || keys.has("ArrowUp")) iy--;
     if (keys.has("KeyS") || keys.has("ArrowDown")) iy++;
     const l = Math.hypot(ix, iy); if (l) { ix /= l; iy /= l; }
-    if (dashQueued && me.dashCd <= 0 && l) { me.dashT = .16; me.ddx = ix; me.ddy = iy; me.dashCd = 1.0; me.ifr = Math.max(me.ifr, .3); }
-    if (me.dashT > 0) { me.dashT -= dt; me.x += me.ddx * 760 * dt; me.y += me.ddy * 760 * dt; }
-    else { const sp = me.focus ? 120 : 270; me.x += ix * sp * dt; me.y += iy * sp * dt; }
+    if (queued.has("KeyG") && me.guardCd <= 0 && !me.cast) { me.guardT = C.guard.dur; me.guardCd = C.guard.cd; }
+    if (queued.has("Space") && me.dashCd <= 0 && l && !me.cast && !me.move) { me.dashT = .16; me.ddx = ix; me.ddy = iy; me.dashCd = DASH_CD; me.ifr = Math.max(me.ifr, .3); }
+    if (queued.has("KeyQ")) useSkill(0);
+    if (queued.has("KeyE")) useSkill(1);
+    if (queued.has("KeyR")) useSkill(2);
+
+    if (me.move) {
+      const m = me.move; m.t += dt; const k = ease(Math.min(1, m.t / m.dur));
+      me.x = m.x0 + (m.tx - m.x0) * k; me.y = m.y0 + (m.ty - m.y0) * k;
+      if (m.onTick) m.onTick();
+      if (m.t >= m.dur) { me.move = null; if (m.onEnd) m.onEnd(); }
+    } else if (me.dashT > 0) { me.dashT -= dt; me.x += me.ddx * 760 * dt; me.y += me.ddy * 760 * dt; }
+    else if (!me.cast) { const sp = me.guardT > 0 ? 90 : 250; me.x += ix * sp * dt; me.y += iy * sp * dt; }
+    if (me.cast) { me.cast.t -= dt; if (me.cast.t <= 0) { const c = me.cast; me.cast = null; c.done(); } }
+    if (me.multi) { me.multi.t -= dt; if (me.multi.t <= 0) { me.multi.t = .1; me.multi.left--; emitFx(5); if (bossRange(85, 45 * Math.PI / 180)) deal(me.multi.dmg); if (me.multi.left <= 0) me.multi = null; } }
+    if (mouse.down && !me.cast && !me.move && !me.multi && me.atkCd <= 0 && me.guardT <= 0) {
+      me.atkCd = C.atk.cd; me.sw++; spawnFx(0, me.x, me.y, me.a, myColor, myClass);
+      if (bossRange(C.atk.range, C.atk.arc * Math.PI / 360)) deal(C.atk.dmg);
+    }
+    // keep out of the boss body
+    const bd = dist(me.x, me.y, bossDisp.x, bossDisp.y), minD = BOSS_R + 14;
+    if (bd < minD && bd > .01 && !me.move) { me.x = bossDisp.x + (me.x - bossDisp.x) / bd * minD; me.y = bossDisp.y + (me.y - bossDisp.y) / bd * minD; }
     me.x = clamp(me.x, 14, AW - 14); me.y = clamp(me.y, 14, AH - 14);
   }
-  dashQueued = false;
-  me.a = Math.atan2(mouse.y - me.y, mouse.x - me.x);
-  me.firing = mouse.down;
-  if (me.firing && !me.dn && me.fireCd <= 0) {
-    const s = 920, sp = (Math.random() - .5) * .04;
-    shots.push({ x: me.x + Math.cos(me.a) * 14, y: me.y + Math.sin(me.a) * 14, vx: Math.cos(me.a + sp) * s, vy: Math.sin(me.a + sp) * s, life: .9 });
-    me.fireCd = .11;
-  }
-  const shielded = !fighting || T < S.ps + TRANS;
-  for (const s of shots) {
-    s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
-    if (Math.hypot(s.x - B[0], s.y - B[1]) < 62 && (!S || S.st === "fight" || S.st === "lobby")) {
-      s.life = 0; bossFlash = .08;
-      if (fighting && !shielded && S.hp > 0) me.dm += 12;
-    }
-  }
-  shots = shots.filter(s => s.life > 0 && s.x > -20 && s.x < AW + 20 && s.y > -20 && s.y < AH + 20);
+  queued.clear();
 
-  if (fighting && !me.dn) {
-    for (const b of bullets) { const rr = b.r * .75 + 3; if ((b.x - me.x) ** 2 + (b.y - me.y) ** 2 < rr * rr) { hurt(); break; } }
-    for (const L of lasers(T, S)) {
-      if (!L.on) continue;
-      const ux = Math.cos(L.a), uy = Math.sin(L.a), dx = me.x - B[0], dy = me.y - B[1];
-      if (dx * ux + dy * uy > 0 && Math.abs(dx * uy - dy * ux) < 16) hurt();
+  if (fighting) {
+    for (const a of (S.atk || [])) {
+      if (T >= a.th && !resolved.has(a.i)) { resolved.add(a.i); if (T - a.th < .5 && inAtk(a, me.x, me.y)) bossHit(a); }
     }
-    for (const m of (S.mk || [])) {
-      const u = T - m[0], key = m[0] + ":" + m[1];
-      if (u >= MARK_WARN && u < MARK_WARN + .12 && !resolved.has(key)) {
-        resolved.add(key);
-        if (Math.hypot(me.x - m[1], me.y - m[2]) < MARK_R) hurt();
-      }
-    }
-    if (Math.hypot(me.x - B[0], me.y - B[1]) < 52) hurt();
+  }
+  // ward / heal from teammates
+  for (const p of others) {
+    const pr = p.presence;
+    if (pr.wd && seenWd.get(p.peer) !== pr.wd[0]) { const first = !seenWd.has(p.peer); seenWd.set(p.peer, pr.wd[0]); if (!first && !me.dn && dist(me.x, me.y, pr.wd[1], pr.wd[2]) <= 170) { me.wardUntil = nowS() + 5; float(me.x, me.y - 30, "결계", "#9fd8ff"); } }
+    if (pr.hl && seenHl.get(p.peer) !== pr.hl[0]) { const first = !seenHl.has(p.peer); seenHl.set(p.peer, pr.hl[0]); if (!first && !me.dn && me.hp < me.mh && dist(me.x, me.y, pr.hl[1], pr.hl[2]) <= 170) { me.hp++; float(me.x, me.y - 30, "+1", "#7fd3a3"); } }
   }
   // revive
   me.rv = null;
   if (fighting && !me.dn) {
-    let best = null, bd = 70;
-    for (const p of others) { const pr = p.presence; if (pr.r !== S.run || !pr.dn) continue; const d = Math.hypot(pr.x - me.x, pr.y - me.y); if (d < bd) { bd = d; best = p.peer; } }
+    let best = null, bdist = 70;
+    for (const p of others) { const pr = p.presence; if (pr.r !== S.run || !pr.dn) continue; const d = dist(pr.x, pr.y, me.x, me.y); if (d < bdist) { bdist = d; best = p.peer; } }
     if (best) { if (me.rvT !== best) { me.rvT = best; me.rvP = 0; } me.rvP = Math.min(1, me.rvP + dt / 2.5); me.rv = [best, Math.round(me.rvP * 100) / 100]; }
     else { me.rvT = null; me.rvP = 0; }
   }
@@ -585,27 +768,28 @@ function updateMe(dt, T, S, B) {
     for (const p of others) { const rv = p.presence.rv; if (Array.isArray(rv) && rv[0] === myPeer && rv[1] >= 1) { me.dn = 0; me.hp = 2; me.ifr = 2; break; } }
   }
 }
-function updateOthers(dt, B) {
+function updateOthers(dt) {
   const k = 1 - Math.exp(-dt * 16), seen = new Set();
   for (const p of others) {
     const pr = p.presence; seen.add(p.peer);
     let d = disp.get(p.peer); if (!d) { d = { x: pr.x, y: pr.y }; disp.set(p.peer, d); }
     d.x += (pr.x - d.x) * k; d.y += (pr.y - d.y) * k;
-    if (pr.f && !pr.dn) {
-      let acc = (cosAcc.get(p.peer) || 0) + dt;
-      while (acc > .11) { acc -= .11; const a = +pr.a || 0; cosmetic.push({ x: d.x + Math.cos(a) * 14, y: d.y + Math.sin(a) * 14, vx: Math.cos(a) * 920, vy: Math.sin(a) * 920, life: .9, c: pr.c }); }
-      cosAcc.set(p.peer, acc);
-    }
+    const lastSw = seenSw.get(p.peer);
+    if (lastSw !== undefined && pr.sw !== lastSw) spawnFx(0, d.x, d.y, pr.a, pr.c, pr.k);
+    seenSw.set(p.peer, pr.sw);
+    if (pr.fx) { const lf = seenFx.get(p.peer); if (lf !== undefined && lf !== pr.fx[0]) spawnFx(pr.fx[1], pr.fx[2], pr.fx[3], pr.fx[4], pr.c, pr.k); seenFx.set(p.peer, pr.fx[0]); }
   }
   for (const key of disp.keys()) if (!seen.has(key)) disp.delete(key);
-  for (const s of cosmetic) { s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; if (Math.hypot(s.x - B[0], s.y - B[1]) < 62) { s.life = 0; bossFlash = .06; } }
-  cosmetic = cosmetic.filter(s => s.life > 0 && s.x > -20 && s.x < AW + 20 && s.y > -20 && s.y < AH + 20);
+  for (const f of fxList) f.t += dt;
+  fxList = fxList.filter(f => f.t < .45);
+  for (const f of floats) { f.t += dt; f.y -= 34 * dt; }
+  floats = floats.filter(f => f.t < 1);
 }
 
 /* ---------- render ---------- */
 const ROMAN = ["XII", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI"];
 function drawFloor(T) {
-  const cx = 640, cy = 400;
+  const cx = 640, cy = 380;
   ctx.fillStyle = "#0d1222"; ctx.fillRect(0, 0, AW, AH);
   const g = ctx.createRadialGradient(cx, cy, 40, cx, cy, 640);
   g.addColorStop(0, "#1a2140"); g.addColorStop(1, "#0d1222");
@@ -617,114 +801,215 @@ function drawFloor(T) {
   for (let i = 0; i < 24; i++) { const a = rot + i * TAU / 24; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 140, Math.sin(a) * 140); ctx.lineTo(Math.cos(a) * (i % 2 ? 440 : 560), Math.sin(a) * (i % 2 ? 440 : 560)); ctx.stroke(); }
   ctx.fillStyle = "rgba(232,180,90,.16)"; ctx.font = '22px "Marcellus SC", Georgia, serif'; ctx.textAlign = "center"; ctx.textBaseline = "middle";
   for (let i = 0; i < 12; i++) { const a = rot + i * TAU / 12 - Math.PI / 2; ctx.save(); ctx.translate(Math.cos(a) * 500, Math.sin(a) * 500); ctx.rotate(a + Math.PI / 2); ctx.fillText(ROMAN[i], 0, 0); ctx.restore(); }
-  // gnomon shadow
-  const sa = (REDUCED ? 0 : T * .12) - Math.PI / 2;
-  ctx.fillStyle = "rgba(0,0,0,.22)"; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(sa - .05) * 520, Math.sin(sa - .05) * 520); ctx.lineTo(Math.cos(sa + .05) * 520, Math.sin(sa + .05) * 520); ctx.closePath(); ctx.fill();
   ctx.restore();
 }
-function drawBoss(B, T, S, idleT) {
+function teleCol(a, al) { return (ATK[a.k].g ? "rgba(255,209,102," : "rgba(255,111,125,") + al + ")"; }
+function pathCone(x, y, r, a, half) { ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r, a - half, a + half); ctx.closePath(); }
+function drawTele(a, T) {
+  const p = clamp((T - a.t0) / Math.max(.01, a.th - a.t0), 0, 1);
+  const flash = T >= a.th ? 1 - (T - a.th) / .35 : -1;
+  if (T >= a.th && flash <= 0) return;
+  const shape = (scale) => {
+    switch (a.k) {
+      case "cleave": pathCone(a.x, a.y, CLEAVE_R * scale, a.a, CLEAVE_HALF); return true;
+      case "spin": ctx.beginPath(); ctx.arc(a.x, a.y, SPIN_R * scale, 0, TAU); return true;
+      case "mark": ctx.beginPath(); ctx.arc(a.x, a.y, MARK_R * scale, 0, TAU); return true;
+      case "heavy": ctx.beginPath(); ctx.arc(a.x, a.y, HEAVY_R * scale, 0, TAU); return true;
+      case "donut": ctx.beginPath(); ctx.rect(-50, -50, AW + 100, AH + 100); ctx.moveTo(a.x + DONUT_R, a.y); ctx.arc(a.x, a.y, DONUT_R, 0, TAU, true); return "evenodd";
+      case "charge": { ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.a); ctx.beginPath(); ctx.rect(-BOSS_R, -CHARGE_W, (a.l + BOSS_R * 2) * scale, CHARGE_W * 2); ctx.restore(); return true; }
+      case "clock": { ctx.beginPath(); for (let q = 0; q < 4; q++) { if (q === a.s) continue; const s0 = -Math.PI / 2 + q * Math.PI / 2; ctx.moveTo(a.x, a.y); ctx.arc(a.x, a.y, 1500 * scale, s0, s0 + Math.PI / 2); ctx.closePath(); } return true; }
+    }
+    return false;
+  };
+  const fillShape = (al, scale) => { const r = shape(scale); if (!r) return; ctx.fillStyle = teleCol(a, al); if (r === "evenodd") ctx.fill("evenodd"); else ctx.fill(); };
+  if (flash > 0) { fillShape(.55 * flash, 1); return; }
+  fillShape(.12, 1);
+  const r = shape(1); if (r) { ctx.strokeStyle = teleCol(a, .85); ctx.lineWidth = 2; ctx.stroke(); }
+  if (a.k === "donut") fillShape(.12 + .3 * p, 1);
+  else if (a.k === "clock") fillShape(.25 * p, 1);
+  else fillShape(.28, p);
+  if (a.k === "clock") {
+    const s0 = -Math.PI / 2 + a.s * Math.PI / 2 + Math.PI / 4;
+    ctx.fillStyle = "rgba(127,211,163,.9)"; ctx.font = '600 15px "IBM Plex Sans KR", sans-serif'; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("안전", a.x + Math.cos(s0) * 170, a.y + Math.sin(s0) * 170);
+  }
+}
+function drawBoss(T, S, idleT) {
   let alpha = 1, scale = 1;
   if (S && S.st === "win") { const u = Math.max(0, T - S.end); alpha = Math.max(0, 1 - u / 1.6); scale = 1 + u * .4; }
   if (alpha <= 0) return;
-  const ph = S && S.st === "fight" ? S.ph : 0;
-  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(B[0], B[1]); ctx.scale(scale, scale);
-  const auraCol = ["rgba(232,180,90,", "rgba(243,230,200,", "rgba(255,111,125,"][ph];
-  const pulse = .18 + .08 * Math.sin(idleT * 4);
-  const ag = ctx.createRadialGradient(0, 0, 50, 0, 0, 110); ag.addColorStop(0, auraCol + pulse + ")"); ag.addColorStop(1, auraCol + "0)");
-  ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(0, 0, 110, 0, TAU); ctx.fill();
+  const fighting = S && S.st === "fight", ph = fighting ? S.ph : 0;
+  const x = bossDisp.x, y = bossDisp.y, f = bossDisp.f;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(scale, scale);
+  const casting = fighting && S.bs === "cast", rec = fighting && S.bs === "rec";
+  const auraCol = casting ? (ATK[S.cur] && ATK[S.cur].g ? "rgba(255,209,102," : "rgba(255,111,125,") : ["rgba(232,180,90,", "rgba(243,230,200,", "rgba(255,111,125,"][ph];
+  const pulse = (casting ? .35 : .16) + .08 * Math.sin(idleT * (casting ? 12 : 4));
+  const ag = ctx.createRadialGradient(0, 0, 50, 0, 0, 115); ag.addColorStop(0, auraCol + pulse + ")"); ag.addColorStop(1, auraCol + "0)");
+  ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(0, 0, 115, 0, TAU); ctx.fill();
+  // gnomon (facing)
+  ctx.save(); ctx.rotate(f);
+  ctx.fillStyle = "#c48f3c"; ctx.beginPath(); ctx.moveTo(BOSS_R + 26, 0); ctx.lineTo(BOSS_R - 6, -16); ctx.lineTo(BOSS_R - 6, 16); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = "#3a2a12"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
   const bg = ctx.createRadialGradient(-16, -18, 8, 0, 0, 60); bg.addColorStop(0, "#f6d595"); bg.addColorStop(.6, "#c48f3c"); bg.addColorStop(1, "#7a5220");
-  ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(0, 0, 58, 0, TAU); ctx.fill();
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(0, 0, BOSS_R, 0, TAU); ctx.fill();
   ctx.lineWidth = 3; ctx.strokeStyle = "#3a2a12"; ctx.stroke();
-  ctx.fillStyle = "#181d33"; ctx.beginPath(); ctx.arc(0, 0, 41, 0, TAU); ctx.fill();
+  ctx.fillStyle = rec ? "#2a2f45" : "#181d33"; ctx.beginPath(); ctx.arc(0, 0, 41, 0, TAU); ctx.fill();
   ctx.strokeStyle = "#e8b45a"; ctx.lineWidth = 2;
   for (let i = 0; i < 12; i++) { const a = i * TAU / 12; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 34, Math.sin(a) * 34); ctx.lineTo(Math.cos(a) * 39, Math.sin(a) * 39); ctx.stroke(); }
-  const dormant = !S || S.st === "lobby";
-  const ht = dormant ? idleT * .15 : T;
+  const ht = fighting ? T : idleT * .15;
   ctx.lineCap = "round";
   ctx.strokeStyle = "#f3e6c8"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(ht * .5 - 1.57) * 20, Math.sin(ht * .5 - 1.57) * 20); ctx.stroke();
   ctx.strokeStyle = ph === 2 ? "#ff6f7d" : "#e8b45a"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(ht * 3 - 1.57) * 32, Math.sin(ht * 3 - 1.57) * 32); ctx.stroke();
   ctx.fillStyle = "#e8b45a"; ctx.beginPath(); ctx.arc(0, 0, 4, 0, TAU); ctx.fill();
-  if (bossFlash > 0) { ctx.fillStyle = "rgba(255,255,255," + (bossFlash * 4) + ")"; ctx.beginPath(); ctx.arc(0, 0, 58, 0, TAU); ctx.fill(); }
-  const shielded = S && S.st === "fight" && T < S.ps + TRANS;
-  if (shielded || dormant) {
-    ctx.strokeStyle = dormant ? "rgba(143,151,179,.5)" : "rgba(243,230,200,.8)"; ctx.lineWidth = 2; ctx.setLineDash([10, 8]); ctx.lineDashOffset = -idleT * 30;
+  if (bossFlash > 0) { ctx.fillStyle = "rgba(255,255,255," + (bossFlash * 4) + ")"; ctx.beginPath(); ctx.arc(0, 0, BOSS_R, 0, TAU); ctx.fill(); }
+  const shielded = !S || S.st === "lobby" || (fighting && S.bs === "shield");
+  if (shielded) {
+    ctx.strokeStyle = fighting ? "rgba(243,230,200,.8)" : "rgba(143,151,179,.5)"; ctx.lineWidth = 2; ctx.setLineDash([10, 8]); ctx.lineDashOffset = -idleT * 30;
     ctx.beginPath(); ctx.arc(0, 0, 76, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
   }
   ctx.restore();
+  if (rec) {
+    ctx.font = '700 15px "Gowun Batang", serif'; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = "#7fd3a3";
+    ctx.fillText("빈틈 · 받는 피해 +20%", x, y - BOSS_R - 22);
+  }
 }
-function drawPlayer(x, y, col, name, pr, isMe) {
-  const down = pr.dn;
+function drawPlayer(x, y, pr, isMe, peer) {
+  const col = safeCol(pr.c), k = pr.k;
   ctx.save(); ctx.translate(x, y);
-  if (isMe && me.ifr > 0 && !down && Math.floor(me.ifr * 14) % 2 === 0) ctx.globalAlpha = .45;
-  if (!down) {
-    ctx.strokeStyle = col; ctx.globalAlpha *= .5; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(Math.cos(pr.a) * 16, Math.sin(pr.a) * 16); ctx.lineTo(Math.cos(pr.a) * 26, Math.sin(pr.a) * 26); ctx.stroke(); ctx.globalAlpha /= .5;
-    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 0, 11, 0, TAU); ctx.fill();
-    ctx.strokeStyle = "#0d1222"; ctx.lineWidth = 2.5; ctx.stroke();
-    if (pr.fo || isMe) { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(0, 0, pr.fo ? 3.5 : 2.5, 0, TAU); ctx.fill(); }
+  if (isMe && me.ifr > 0 && !pr.dn && Math.floor(me.ifr * 14) % 2 === 0) ctx.globalAlpha = .5;
+  if (!pr.dn) {
+    if (pr.bk) { ctx.strokeStyle = "rgba(159,216,255,.8)"; ctx.lineWidth = 2; ctx.beginPath(); for (let i = 0; i <= 6; i++) { const a = i * TAU / 6; ctx.lineTo(Math.cos(a) * 20, Math.sin(a) * 20); } ctx.stroke(); }
+    if (pr.ct) { ctx.strokeStyle = "rgba(255,209,102,.9)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 16 + Math.sin(performance.now() / 80) * 2, 0, TAU); ctx.stroke(); }
+    ctx.save(); ctx.rotate(pr.a);
+    // weapon
+    ctx.strokeStyle = "#dfe3ee"; ctx.lineCap = "round";
+    if (k === "knight") { ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(8, 6); ctx.lineTo(30, 6); ctx.stroke(); }
+    else if (k === "rogue") { ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(8, 8); ctx.lineTo(22, 10); ctx.moveTo(8, -8); ctx.lineTo(22, -10); ctx.stroke(); }
+    else { ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(6, 9); ctx.lineTo(24, 9); ctx.stroke(); ctx.fillStyle = "#dfe3ee"; ctx.fillRect(20, 4, 8, 10); }
+    // body
+    ctx.fillStyle = col; ctx.strokeStyle = "#0d1222"; ctx.lineWidth = 2.5;
+    if (k === "knight") { ctx.beginPath(); ctx.arc(0, 0, 12, 0, TAU); ctx.fill(); ctx.stroke(); }
+    else if (k === "rogue") { ctx.beginPath(); ctx.moveTo(15, 0); ctx.lineTo(-10, -11); ctx.lineTo(-5, 0); ctx.lineTo(-10, 11); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.moveTo(-12, -12); ctx.lineTo(8, -12); ctx.quadraticCurveTo(16, 0, 8, 12); ctx.lineTo(-12, 12); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    if (pr.gd) { ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, 21, -1.1, 1.1); ctx.stroke(); }
+    ctx.restore();
   } else {
-    ctx.fillStyle = "rgba(143,151,179,.35)"; ctx.beginPath(); ctx.arc(0, 0, 11, 0, TAU); ctx.fill();
+    ctx.fillStyle = "rgba(143,151,179,.35)"; ctx.beginPath(); ctx.arc(0, 0, 12, 0, TAU); ctx.fill();
     ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-6, -6); ctx.lineTo(6, 6); ctx.moveTo(6, -6); ctx.lineTo(-6, 6); ctx.stroke();
-    let prog = 0; const target = isMe ? myPeer : null;
-    for (const o of others) { const rv = o.presence.rv; if (Array.isArray(rv) && (rv[0] === (isMe ? myPeer : pr._peer))) prog = Math.max(prog, +rv[1] || 0); }
-    if (!isMe && me.rvT === pr._peer) prog = Math.max(prog, me.rvP);
+    let prog = 0; const id = isMe ? myPeer : peer;
+    for (const o of others) { const rv = o.presence.rv; if (Array.isArray(rv) && rv[0] === id) prog = Math.max(prog, +rv[1] || 0); }
+    if (!isMe && me.rvT === peer) prog = Math.max(prog, me.rvP);
     ctx.strokeStyle = "rgba(127,211,163,.35)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 22, 0, TAU); ctx.stroke();
     if (prog > 0) { ctx.strokeStyle = "#7fd3a3"; ctx.beginPath(); ctx.arc(0, 0, 22, -Math.PI / 2, -Math.PI / 2 + TAU * prog); ctx.stroke(); }
   }
+  if (isMe && me.cast) { ctx.strokeStyle = "#f3e6c8"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + TAU * (1 - me.cast.t / me.cast.max)); ctx.stroke(); }
   ctx.font = '500 12px "IBM Plex Sans KR", system-ui, sans-serif'; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
-  ctx.fillStyle = "rgba(13,18,34,.7)"; const w = ctx.measureText(name).width + 10; ctx.fillRect(-w / 2, -36, w, 17);
-  ctx.fillStyle = isMe ? "#f3e6c8" : col; ctx.fillText(name, 0, -21);
+  const name = pr.n;
+  ctx.fillStyle = "rgba(13,18,34,.7)"; const w = ctx.measureText(name).width + 10; ctx.fillRect(-w / 2, -40, w, 17);
+  ctx.fillStyle = isMe ? "#f3e6c8" : col; ctx.fillText(name, 0, -25);
   ctx.restore();
 }
+function drawFx() {
+  ctx.lineCap = "round";
+  for (const f of fxList) {
+    const u = f.t, C = CLASSES[f.k] || CLASSES.knight;
+    ctx.save(); ctx.translate(f.x, f.y);
+    switch (f.type) {
+      case 0: { const al = 1 - u / .18; if (al <= 0) break; const half = C.atk.arc * Math.PI / 360, r = C.atk.range + 10;
+        ctx.fillStyle = "rgba(243,230,200," + al * .22 + ")"; pathCone(0, 0, r, f.a, half); ctx.fill();
+        ctx.strokeStyle = f.col; ctx.globalAlpha = al; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, r, f.a - half, f.a + half); ctx.stroke(); break; }
+      case 1: { const al = 1 - u / .35; if (al <= 0) break; ctx.strokeStyle = "rgba(255,209,102," + al + ")"; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, 0, 24 + u * 60, 0, TAU); ctx.stroke(); break; }
+      case 2: { const al = 1 - u / .3; if (al <= 0) break; ctx.strokeStyle = f.col; ctx.globalAlpha = al; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(0, 0, 60 + u * 250, 0, TAU); ctx.stroke(); break; }
+      case 3: { const al = 1 - u / .35; if (al <= 0) break; ctx.strokeStyle = f.col; ctx.globalAlpha = al * .7; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(f.a) * 230, Math.sin(f.a) * 230); ctx.stroke(); break; }
+      case 4: { const al = 1 - u / .4; if (al <= 0) break; ctx.fillStyle = "rgba(243,230,200," + al * .45 + ")"; pathCone(0, 0, 200 + 30 * u, f.a, 35 * Math.PI / 180); ctx.fill(); ctx.strokeStyle = f.col; ctx.globalAlpha = al; ctx.lineWidth = 3; ctx.stroke(); break; }
+      case 5: { const al = 1 - u / .12; if (al <= 0) break; ctx.strokeStyle = f.col; ctx.globalAlpha = al; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(Math.cos(f.a) * 20, Math.sin(f.a) * 20); ctx.lineTo(Math.cos(f.a) * 95, Math.sin(f.a) * 95); ctx.stroke(); break; }
+      case 6: { const al = 1 - u / .3; if (al <= 0) break; ctx.fillStyle = "rgba(185,160,255," + al * .5 + ")"; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(Math.cos(i * 1.3) * 14 * (1 + u * 3), Math.sin(i * 1.3) * 14 * (1 + u * 3), 6, 0, TAU); ctx.fill(); } break; }
+      case 7: { const al = 1 - u / .35; if (al <= 0) break; ctx.rotate(f.a); ctx.strokeStyle = "rgba(255,255,255," + al + ")"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(30, -60); ctx.lineTo(130, 60); ctx.stroke(); ctx.strokeStyle = f.col; ctx.globalAlpha = al; ctx.lineWidth = 2; ctx.stroke(); break; }
+      case 8: { const al = 1 - u / .2; if (al <= 0) break; ctx.fillStyle = "rgba(255,209,102," + al * .35 + ")"; pathCone(0, 0, 105, f.a, 55 * Math.PI / 180); ctx.fill(); break; }
+      case 9: { const al = 1 - u / .45; if (al <= 0) break; ctx.strokeStyle = "rgba(159,216,255," + al + ")"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, 30 + u * 310, 0, TAU); ctx.stroke(); break; }
+      case 10: { const al = 1 - u / .45; if (al <= 0) break; ctx.fillStyle = "rgba(255,209,102," + al * .35 + ")"; ctx.beginPath(); ctx.arc(0, 0, 120, 0, TAU); ctx.fill(); ctx.strokeStyle = "rgba(127,211,163," + al + ")"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 60 + u * 250, 0, TAU); ctx.stroke(); break; }
+    }
+    ctx.restore();
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (const f of floats) {
+    ctx.globalAlpha = 1 - f.t;
+    ctx.font = (f.big ? '700 22px' : '600 15px') + ' "IBM Plex Sans KR", system-ui, sans-serif';
+    ctx.lineWidth = 3; ctx.strokeStyle = "rgba(13,18,34,.85)"; ctx.strokeText(f.txt, f.x, f.y);
+    ctx.fillStyle = f.col; ctx.fillText(f.txt, f.x, f.y);
+  }
+  ctx.globalAlpha = 1;
+}
+function drawSlot(x, y, key, name, sub, cdLeft, cdMax, active) {
+  const w = 76, h = 54;
+  ctx.fillStyle = "rgba(13,18,34,.85)"; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = active ? "#ffd166" : (cdLeft <= 0 ? "#e8b45a" : "#2c3558"); ctx.lineWidth = active ? 2 : 1; ctx.strokeRect(x + .5, y + .5, w - 1, h - 1);
+  if (cdLeft > 0) { ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.fillRect(x, y + h * (1 - cdLeft / cdMax), w, h * cdLeft / cdMax); }
+  ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.font = '500 11px "IBM Plex Mono", monospace'; ctx.fillStyle = "#e8b45a"; ctx.fillText(key, x + 5, y + 4);
+  if (sub) { ctx.textAlign = "right"; ctx.fillStyle = "#8f97b3"; ctx.fillText(sub, x + w - 5, y + 4); }
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = '500 11.5px "IBM Plex Sans KR", sans-serif'; ctx.fillStyle = cdLeft > 0 ? "#8f97b3" : "#f3e6c8";
+  ctx.fillText(name, x + w / 2, y + 26);
+  if (cdLeft > 0) { ctx.font = '500 12px "IBM Plex Mono", monospace'; ctx.fillStyle = "#f3e6c8"; ctx.fillText(cdLeft.toFixed(1), x + w / 2, y + 42); }
+}
 function drawHUD(T, S, players) {
-  // boss bar
   const x0 = AW / 2 - 360, y = 40, w = 720;
   const fighting = S && (S.st === "fight" || S.st === "win" || S.st === "wipe");
   const frac = fighting ? clamp(S.hp / S.mhp, 0, 1) : 1;
   ctx.font = '600 14px "Gowun Batang", serif'; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = "#f3e6c8";
   ctx.fillText("호라 · 해시계 수호자", x0, y - 10);
   ctx.textAlign = "right"; ctx.font = '500 13px "IBM Plex Mono", monospace'; ctx.fillStyle = "#e8b45a";
-  const phTxt = fighting ? "PHASE " + PHASES[S.ph | 0].name + "  " + (frac * 100).toFixed(1) + "%" : "대기 중";
-  ctx.fillText(phTxt, x0 + w, y - 10);
+  ctx.fillText(fighting ? "PHASE " + ROMAN[(S.ph | 0) + 1] + "  " + (frac * 100).toFixed(1) + "%" : "대기 중", x0 + w, y - 10);
   ctx.fillStyle = "rgba(13,18,34,.85)"; ctx.fillRect(x0 - 2, y - 2, w + 4, 14);
   ctx.fillStyle = "#2c3558"; ctx.fillRect(x0, y, w, 10);
   const bg = ctx.createLinearGradient(x0, 0, x0 + w, 0); bg.addColorStop(0, "#c48f3c"); bg.addColorStop(1, "#f0c879");
   ctx.fillStyle = S && S.ph === 2 && fighting ? "#ff6f7d" : bg; ctx.fillRect(x0, y, w * frac, 10);
   ctx.fillStyle = "#0d1222"; for (const t of [.7, .4]) ctx.fillRect(x0 + w * t - 1, y - 2, 2, 14);
+  if (S && S.st === "fight" && S.bs === "cast" && ATK[S.cur]) {
+    const d = ATK[S.cur];
+    ctx.textAlign = "center"; ctx.font = '700 16px "Gowun Batang", serif'; ctx.fillStyle = d.g ? "#ffd166" : "#ff6f7d";
+    ctx.fillText(d.name + "  ·  " + d.hint, AW / 2, y + 34);
+  }
   // party
   let py = 26; ctx.textAlign = "left";
   for (const p of players.slice(0, 8)) {
-    const pr = p.pr; ctx.fillStyle = pr.c; ctx.beginPath(); ctx.arc(26, py, 5, 0, TAU); ctx.fill();
+    const pr = p.pr; ctx.fillStyle = safeCol(pr.c); ctx.beginPath(); ctx.arc(26, py, 5, 0, TAU); ctx.fill();
     ctx.font = '500 12px "IBM Plex Sans KR", system-ui, sans-serif'; ctx.fillStyle = pr.dn ? "#8f97b3" : "#f3e6c8"; ctx.textBaseline = "middle";
-    ctx.fillText(pr.n + (p.me ? " (나)" : "") + (p.peer === hostPeer ? " ★" : ""), 38, py);
-    for (let i = 0; i < 5; i++) { ctx.fillStyle = i < pr.hp ? "#ff6f7d" : "#2c3558"; ctx.fillRect(200 + i * 9, py - 3, 6, 6); }
+    ctx.fillText(pr.n + " · " + CLASSES[pr.k].name + (p.me ? " (나)" : "") + (p.peer === hostPeer ? " ★" : ""), 38, py);
+    for (let i = 0; i < pr.mh; i++) { ctx.fillStyle = i < pr.hp ? "#ff6f7d" : "#2c3558"; ctx.fillRect(196 + i * 9, py - 3, 6, 6); }
     py += 20;
   }
-  // my hearts + dash
-  for (let i = 0; i < 5; i++) {
-    const hx = 30 + i * 24, hy = AH - 30;
-    ctx.save(); ctx.translate(hx, hy); ctx.rotate(Math.PI / 4);
+  // hearts
+  for (let i = 0; i < me.mh; i++) {
+    ctx.save(); ctx.translate(30 + i * 24, AH - 34); ctx.rotate(Math.PI / 4);
     ctx.fillStyle = i < me.hp ? "#ff6f7d" : "#2c3558"; ctx.fillRect(-7, -7, 14, 14); ctx.restore();
   }
-  const dx = 30 + 5 * 24 + 14, dy = AH - 30;
-  ctx.strokeStyle = "#2c3558"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(dx, dy, 10, 0, TAU); ctx.stroke();
-  ctx.strokeStyle = me.dashCd <= 0 ? "#9fd8ff" : "#5d7a96"; ctx.beginPath(); ctx.arc(dx, dy, 10, -Math.PI / 2, -Math.PI / 2 + TAU * (1 - me.dashCd / 1)); ctx.stroke();
-  ctx.font = '500 11px "IBM Plex Mono", monospace'; ctx.fillStyle = "#8f97b3"; ctx.textBaseline = "middle"; ctx.fillText("DASH", dx + 16, dy);
+  ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.font = '500 12px "IBM Plex Sans KR", sans-serif';
+  let sy = AH - 62;
+  if (me.counterT > 0) { ctx.fillStyle = "#ffd166"; ctx.fillText("반격 준비 · 다음 공격 2배 " + me.counterT.toFixed(1) + "초", 20, sy); sy -= 18; }
+  if (me.wardUntil > nowS()) { ctx.fillStyle = "#9fd8ff"; ctx.fillText("결계 · 피해 1회 무효", 20, sy); }
+  // skill bar
+  const C = CLASSES[myClass];
+  const sx = AW / 2 - (5 * 76 + 4 * 8) / 2, sY = AH - 66;
+  drawSlot(sx, sY, "SPC", "대시", "", me.dashCd, DASH_CD, false);
+  drawSlot(sx + 84, sY, "G", "방어", "", me.guardCd, C.guard.cd, me.guardT > 0);
+  for (let i = 0; i < 3; i++) drawSlot(sx + 168 + i * 84, sY, "QER"[i], C.skills[i].name, C.skills[i].tier, me.cd[i], C.skills[i].cd, false);
   if (S && S.st === "fight") {
-    ctx.textAlign = "right"; ctx.fillStyle = "#8f97b3"; ctx.font = '500 12px "IBM Plex Mono", monospace';
+    ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillStyle = "#8f97b3"; ctx.font = '500 12px "IBM Plex Mono", monospace';
     ctx.fillText(fmtTime(T) + "   피해 " + me.dm, AW - 22, AH - 26);
-    if (T - S.ps < TRANS + .6) {
-      const u = (T - S.ps) / (TRANS + .6), a = Math.sin(u * Math.PI);
-      ctx.textAlign = "center"; ctx.globalAlpha = a * .85; ctx.fillStyle = S.ph === 2 ? "#ff6f7d" : "#e8b45a";
-      ctx.font = '72px "Marcellus SC", Georgia, serif'; ctx.fillText(PHASES[S.ph].name, AW / 2, AH / 2 + 40);
+    if (T - S.ps < TRANS + .4) {
+      const u = (T - S.ps) / (TRANS + .4), al = Math.sin(u * Math.PI);
+      ctx.textAlign = "center"; ctx.globalAlpha = al * .85; ctx.fillStyle = S.ph === 2 ? "#ff6f7d" : "#e8b45a";
+      ctx.font = '72px "Marcellus SC", Georgia, serif'; ctx.fillText(ROMAN[S.ph + 1], AW / 2, AH / 2 + 40);
       ctx.font = '600 16px "Gowun Batang", serif'; ctx.fillStyle = "#f3e6c8";
-      ctx.fillText(S.ph === 0 ? "전투 개시" : "패턴 변화 · 탄막이 사라졌습니다", AW / 2, AH / 2 + 92);
+      ctx.fillText(S.ph === 0 ? "전투 개시" : (S.ph === 1 ? "새 패턴: 자정의 돌진 · 시간의 철퇴" : "새 패턴: 사분면 심판 · 연속 공격"), AW / 2, AH / 2 + 92);
       ctx.globalAlpha = 1;
     }
     if (me.dn) {
       ctx.textAlign = "center"; ctx.font = '600 18px "Gowun Batang", serif'; ctx.fillStyle = "#f3e6c8";
-      ctx.fillText("쓰러졌습니다", AW / 2, AH - 92);
+      ctx.fillText("쓰러졌습니다", AW / 2, AH - 120);
       ctx.font = '400 13px "IBM Plex Sans KR", sans-serif'; ctx.fillStyle = "#8f97b3";
-      ctx.fillText(others.length ? "동료가 곁에 2.5초 머무르면 다시 일어납니다" : "혼자서는 부활할 수 없어요", AW / 2, AH - 68);
+      ctx.fillText(others.length ? "동료가 곁에 2.5초 머무르면 다시 일어납니다" : "혼자서는 부활할 수 없어요", AW / 2, AH - 96);
     }
   }
 }
@@ -733,7 +1018,6 @@ function fmtTime(t) { t = Math.max(0, t); const m = Math.floor(t / 60), s = t - 
 /* ---------- DOM panels ---------- */
 let lastUi = 0;
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
-function safeCol(c) { return /^#[0-9a-f]{6}$/i.test(c) ? c : "#8f97b3"; }
 function updateUi(now, S, players, T) {
   if (now - lastUi < 200) return; lastUi = now;
   const live = net.mode === "solo" || (net.mode === "host" && net.peer && !net.peer.disconnected) || (net.mode === "client" && net.hostConn && net.hostConn.open && now - net.snapAt < 2000);
@@ -742,19 +1026,19 @@ function updateUi(now, S, players, T) {
   $("#lobby").hidden = st !== "lobby";
   $("#result").hidden = !(st === "win" || st === "wipe") || (T - S.end < 1.2);
   if (st === "lobby") {
-    $("#chips").innerHTML = players.map(p => '<span class="chip"><i style="background:' + safeCol(p.pr.c) + '"></i><b>' + esc(p.pr.n) + "</b>" + (p.peer === hostPeer ? "<em>방장</em>" : "") + (p.me ? "<em>나</em>" : "") + "</span>").join("");
+    $("#chips").innerHTML = players.map(p => '<span class="chip"><i style="background:' + safeCol(p.pr.c) + '"></i><b>' + esc(p.pr.n) + "</b><small>" + CLASSES[p.pr.k].name + "</small>" + (p.peer === hostPeer ? "<em>방장</em>" : "") + (p.me ? "<em>나</em>" : "") + "</span>").join("");
     $("#startBtn").hidden = !isHost;
     $("#lobbyHint").textContent = isHost
-      ? (net.mode === "solo" ? "준비되면 전투를 시작하세요. 보스를 쏘며 조작을 익혀도 됩니다." : players.length + "/" + MAX_PLAYERS + "명 · 방 코드를 알려주세요. 방장은 이 탭을 앞에 띄워 두세요")
-      : (hostPeer ? "방장이 전투를 시작하기를 기다리는 중" : "방장을 정하는 중…");
+      ? (net.mode === "solo" ? "보스를 때리며 조작을 익혀도 됩니다. 준비되면 시작하세요." : players.length + "/" + MAX_PLAYERS + "명 · 방장은 이 탭을 앞에 띄워 두세요")
+      : (hostH ? "방장이 전투를 시작하기를 기다리는 중" : "방장과 동기화하는 중…");
   }
   if (st === "win" || st === "wipe") {
-    $("#resEyebrow").textContent = "PHASE " + PHASES[S.ph | 0].name + " · " + (S.n || 1) + "인";
+    $("#resEyebrow").textContent = "PHASE " + ROMAN[(S.ph | 0) + 1] + " · " + (S.n || 1) + "인";
     $("#resTitle").textContent = st === "win" ? "토벌 성공" : "전멸";
     $("#resTime").textContent = "전투 시간 " + fmtTime(S.end) + (st === "wipe" ? "   남은 체력 " + (S.hp / S.mhp * 100).toFixed(1) + "%" : "");
-    const rows = Object.keys(S.dm || {}).map(k => ({ k, v: S.dm[k] | 0, nm: (S.names && S.names[k]) || ["?", "#8f97b3"] })).sort((a, b) => b.v - a.v);
+    const rows = Object.keys(S.dm || {}).map(k => ({ k, v: S.dm[k] | 0, nm: (S.names && S.names[k]) || ["?", "#8f97b3", "knight"] })).sort((a, b) => b.v - a.v);
     const tot = rows.reduce((a, r) => a + r.v, 0) || 1;
-    $("#resList").innerHTML = rows.map(r => '<li><i style="background:' + safeCol(r.nm[1]) + '"></i><span>' + esc(r.nm[0]) + (r.k === myPeer ? " (나)" : "") + '</span><span class="n">' + r.v + " · " + Math.round(r.v / tot * 100) + '%</span><div class="bar"><span style="width:' + (r.v / tot * 100).toFixed(1) + '%"></span></div></li>').join("");
+    $("#resList").innerHTML = rows.map(r => '<li><i style="background:' + safeCol(r.nm[1]) + '"></i><span>' + esc(r.nm[0]) + "<small>" + ((CLASSES[r.nm[2]] || CLASSES.knight).name) + (r.k === myPeer ? " · 나" : "") + '</small></span><span class="n">' + r.v + " · " + Math.round(r.v / tot * 100) + '%</span><div class="bar"><span style="width:' + (r.v / tot * 100).toFixed(1) + '%"></span></div></li>').join("");
     $("#resBtns").hidden = !isHost; $("#resWait").hidden = isHost;
   }
 }
@@ -764,78 +1048,55 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min(.033, (now - last) / 1000); last = now;
   const idleT = now / 1000;
-  readNet(now);
-  if (net.mode !== "off") { syncHost(now); if (isHost) hostTick(now); }
-  const S = net.mode === "off" ? null : (isHost ? HS : hostH);
+  const on = net.mode !== "off";
+  if (on) { readNet(); syncHost(); if (isHost) hostTick(now); }
+  const S = on ? (isHost ? HS : hostH) : null;
   let T = 0;
   if (S && S.st !== "lobby") T = isHost ? (now - fsLocal) / 1000 : (estOff != null ? now / 1000 - estOff : (S.ft || 0));
-  if (S && S.st === "fight") liveBullets(T, S, bullets); else bullets.length = 0;
-  const B = bossAt(T, S, idleT); if (S && S.st === "fight") lastBoss = B;
-  if (net.mode !== "off") { updateMe(dt, T, S, B); updateOthers(dt, B); }
+  curS = S; curT = T;
+  updateBoss(dt, S, idleT);
+  if (on) { updateMe(dt, T, S); updateOthers(dt); }
   bossFlash = Math.max(0, bossFlash - dt); shake = Math.max(0, shake - dt);
 
-  // draw
   const v = view; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = "#0a0e1b"; ctx.fillRect(0, 0, cv.width, cv.height);
-  let sx = 0, sy = 0; if (shake > 0 && !REDUCED) { sx = (Math.random() - .5) * 10 * shake * 4; sy = (Math.random() - .5) * 10 * shake * 4; }
+  let sx = 0, sy = 0; if (shake > 0 && !REDUCED) { sx = (Math.random() - .5) * 40 * shake; sy = (Math.random() - .5) * 40 * shake; }
   ctx.setTransform(v.dpr * v.s, 0, 0, v.dpr * v.s, v.dpr * (v.ox + sx), v.dpr * (v.oy + sy));
   ctx.save(); ctx.beginPath(); ctx.rect(0, 0, AW, AH); ctx.clip();
   drawFloor(S && S.st !== "lobby" ? T : idleT * .3);
-  if (S && S.st === "fight") {
-    for (const m of S.mk || []) {
-      const u = T - m[0]; if (u < -0.01 || u > MARK_WARN + MARK_BLAST) continue;
-      if (u < MARK_WARN) {
-        ctx.strokeStyle = "rgba(255,111,125,.75)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(m[1], m[2], MARK_R, 0, TAU); ctx.stroke();
-        ctx.fillStyle = "rgba(255,111,125,.16)"; ctx.beginPath(); ctx.arc(m[1], m[2], MARK_R * Math.max(0, u) / MARK_WARN, 0, TAU); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(m[1] - 10, m[2]); ctx.lineTo(m[1] + 10, m[2]); ctx.moveTo(m[1], m[2] - 10); ctx.lineTo(m[1], m[2] + 10); ctx.stroke();
-      } else {
-        const a = 1 - (u - MARK_WARN) / MARK_BLAST;
-        ctx.fillStyle = "rgba(255,180,160," + (a * .6) + ")"; ctx.beginPath(); ctx.arc(m[1], m[2], MARK_R, 0, TAU); ctx.fill();
-      }
-    }
-    for (const L of lasers(T, S)) {
-      const ex = B[0] + Math.cos(L.a) * 1700, ey = B[1] + Math.sin(L.a) * 1700;
-      if (!L.on) { ctx.strokeStyle = "rgba(255,111,125,.55)"; ctx.lineWidth = 2; ctx.setLineDash([12, 10]); ctx.beginPath(); ctx.moveTo(B[0], B[1]); ctx.lineTo(ex, ey); ctx.stroke(); ctx.setLineDash([]); }
-      else {
-        ctx.lineCap = "round";
-        ctx.strokeStyle = "rgba(255,111,125,.35)"; ctx.lineWidth = 34; ctx.beginPath(); ctx.moveTo(B[0], B[1]); ctx.lineTo(ex, ey); ctx.stroke();
-        ctx.strokeStyle = "#ffd9dc"; ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(B[0], B[1]); ctx.lineTo(ex, ey); ctx.stroke();
-      }
-    }
+  if (S && S.st === "fight") for (const a of S.atk || []) drawTele(a, T);
+  drawBoss(T, S, idleT);
+  const players = on ? playersList() : [];
+  if (on) {
+    for (const p of others) { const pr = p.presence; if (S && S.st === "fight" && pr.r !== me.run) continue; const d = disp.get(p.peer) || pr; drawPlayer(d.x, d.y, pr, false, p.peer); }
+    const mine = myPresence(); mine.a = me.a; drawPlayer(me.x, me.y, mine, true, myPeer);
   }
-  drawBoss(B, T, S, idleT);
-  // shots
-  ctx.lineCap = "round"; ctx.lineWidth = 3;
-  for (const s of cosmetic) { ctx.strokeStyle = s.c; ctx.globalAlpha = .55; ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - s.vx * .012, s.y - s.vy * .012); ctx.stroke(); }
-  ctx.globalAlpha = 1; ctx.strokeStyle = myColor;
-  for (const s of shots) { ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - s.vx * .014, s.y - s.vy * .014); ctx.stroke(); }
-  // players
-  const players = net.mode === "off" ? [] : playersList();
-  if (net.mode !== "off") {
-    for (const p of others) { const d = disp.get(p.peer) || p.presence; const pr = Object.assign({ _peer: p.peer }, p.presence); if (pr.r !== me.run && S && S.st === "fight") continue; drawPlayer(d.x, d.y, safeCol(pr.c), pr.n, pr, false); }
-    drawPlayer(me.x, me.y, myColor, myName, Object.assign(myPresence(), { a: me.a }), true);
-  }
-  // boss bullets on top
-  for (const b of bullets) {
-    ctx.fillStyle = b.col; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, TAU); ctx.fill();
-    ctx.fillStyle = "#fffaf0"; ctx.beginPath(); ctx.arc(b.x, b.y, b.r * .45, 0, TAU); ctx.fill();
-  }
+  drawFx();
   if (me.hitT > 0) { ctx.fillStyle = "rgba(255,111,125," + me.hitT * .6 + ")"; ctx.fillRect(0, 0, AW, AH); }
-  if (net.mode !== "off") drawHUD(T, S, players);
+  if (on) drawHUD(T, S, players);
   ctx.restore();
 
-  // presence
   if (net.mode === "host" || net.mode === "client") sendNet(now);
-  if (net.mode !== "off") updateUi(now, S, players, T);
+  if (on) updateUi(now, S, players, T);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 
 /* ---------- menu wiring ---------- */
+const clsBox = $("#classes");
+for (const key of Object.keys(CLASSES)) {
+  const C = CLASSES[key];
+  const b = document.createElement("button"); b.className = "cls"; b.id = "cls-" + key; b.type = "button";
+  b.setAttribute("aria-pressed", key === myClass ? "true" : "false");
+  b.innerHTML = "<b>" + C.name + '</b><span class="role">' + C.role + " · 체력 " + C.mh + "</span><p>" + C.desc + "</p><ol>" +
+    C.skills.map((s, i) => "<li><span>" + "QER"[i] + " " + s.tier + "</span>" + s.name + " · 피해 " + s.dmg + " · " + s.cd + "초<br><span>└</span>" + SKILL_NOTES[key][i] + "</li>").join("") + "</ol>";
+  b.addEventListener("click", () => { myClass = key; save("sr.class", key); clsBox.querySelectorAll(".cls").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); });
+  clsBox.appendChild(b);
+}
 const nameIn = $("#name"); nameIn.value = myName;
 nameIn.addEventListener("input", () => { myName = nameIn.value.replace(/[\u0000-\u001f​-‏‪-‮]/g, "").trim().slice(0, 12) || "모험가"; save("sr.name", myName); });
 const sw = $("#swatches");
 COLORS.forEach((c, i) => {
-  const b = document.createElement("button"); b.className = "sw"; b.id = "sw" + i; b.style.background = c; b.setAttribute("aria-label", "색상 " + (i + 1)); b.setAttribute("aria-pressed", c === myColor ? "true" : "false");
+  const b = document.createElement("button"); b.className = "sw"; b.id = "sw" + i; b.type = "button"; b.style.background = c; b.setAttribute("aria-label", "색상 " + (i + 1)); b.setAttribute("aria-pressed", c === myColor ? "true" : "false");
   b.addEventListener("click", () => { myColor = c; save("sr.color", c); sw.querySelectorAll(".sw").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); });
   sw.appendChild(b);
 });
@@ -851,7 +1112,7 @@ $("#copyBtn").addEventListener("click", () => {
 });
 $("#startBtn").addEventListener("click", () => { if (isHost) startFight(performance.now()); });
 $("#againBtn").addEventListener("click", () => { if (isHost) startFight(performance.now()); });
-$("#toLobbyBtn").addEventListener("click", () => { if (isHost && HS) { HS.st = "lobby"; } });
+$("#toLobbyBtn").addEventListener("click", () => { if (isHost) { const run = HS ? HS.run : 0; HS = lobbyState(); HS.run = run; } });
 })();
 </script>
 </body>
