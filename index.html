@@ -422,37 +422,43 @@ const CONFIG = {
               pools: [[["cleave", 3], ["spin", 2], ["donut", 1], ["mark", 2]],
                       [["cleave", 2], ["spin", 2], ["donut", 1], ["mark", 2], ["charge", 2], ["heavy", 2], ["warp", 1]],
                       [["cleave", 2], ["spin", 1], ["donut", 1], ["mark", 2], ["charge", 2], ["heavy", 2], ["clock", 2], ["hop", 1]]],
-              force: [null, "charge", "clock"], gimmicks: ["sweep"] },
+              force: [null, "charge", "clock"], gimmicks: ["sweep"],
+              move: { style: "orbit", radius: 150, orbit: 1.4, speedMul: 1.3 } },
     seka:   { name: "세카", title: "초침 사냥꾼", look: "blade", r: 50, speed: [130, 150, 170],
               pal: ["#eef0f6", "#9aa3b8", "#5a1622", "#1a1420", "#ff5d6c"], floor: "255,93,108",
               pools: [[["rush", 3], ["flurry", 3], ["cleave", 1]],
                       [["rush", 3], ["flurry", 3], ["pounce", 2], ["whirl", 2], ["hop", 2]],
                       [["rush", 2], ["flurry", 3], ["pounce", 2], ["whirl", 2], ["heavy", 2], ["hop", 2], ["warp", 1]]],
-              force: ["flurry", "pounce", "rush"], gimmicks: ["slash"] },
+              force: ["flurry", "pounce", "rush"], gimmicks: ["slash"],
+              move: { style: "dart", dash: .13, pause: [.3, .6], near: [90, 190], spread: 2.6, feint: [2, 3] } },
     klepsy: { name: "클렙시", title: "모래시계 여왕", look: "hourglass", r: 62, speed: [115, 130, 145],
               pal: ["#f7e1a8", "#c9a35a", "#3e6f70", "#14232a", "#f2c46b"], floor: "242,196,107",
               pools: [[["sandpool", 3], ["spin", 2], ["mark", 1]],
                       [["sandpool", 2], ["spin", 1], ["sandwall", 2], ["pull", 2], ["warp", 2]],
                       [["sandpool", 2], ["sandwall", 2], ["pull", 2], ["donut", 1], ["mark", 1], ["haven", 2]]],
-              force: ["sandpool", "sandwall", "pull"], gimmicks: ["sandwave"] },
+              force: ["sandpool", "sandwall", "pull"], gimmicks: ["sandwave"],
+              move: { style: "orbit", radius: 170, orbit: 1.8, speedMul: 1.6 } },
     mekan:  { name: "메카니카", title: "태엽 인형사", look: "gear", r: 60, speed: [80, 90, 100],
               pal: ["#f0b98a", "#b56a35", "#4d2a14", "#1c1612", "#ffae5c"], floor: "255,174,92",
               pools: [[["summon", 1], ["gear", 3], ["cleave", 2]],
                       [["summon", 1], ["gear", 2], ["cleave", 2], ["decoy", 1], ["spin", 1]],
                       [["summon", 1], ["gear", 2], ["decoy", 1], ["heavy", 2], ["spin", 1], ["cleave", 1], ["warp", 1]]],
-              force: ["summon", "decoy", "summon"], gimmicks: ["bomb"] },
+              force: ["summon", "decoy", "summon"], gimmicks: ["bomb"],
+              move: { style: "walk" } },
     dualis: { name: "듀얼리스", title: "쌍극의 시계", look: "dual", r: 60, speed: [95, 105, 115],
               pal: ["#fff1c9", "#d9b25c", "#5a3f9e", "#151229", "#b892ff"], floor: "184,146,255",
               pools: [[["stack", 2], ["spread", 2], ["cleave", 2], ["charge", 1]],
                       [["stack", 2], ["spread", 2], ["polarity", 3], ["cleave", 1], ["haven", 1], ["hop", 1]],
                       [["stack", 2], ["spread", 2], ["polarity", 2], ["donut", 1], ["heavy", 1], ["charge", 1], ["warp", 1]]],
-              force: ["stack", "polarity", "spread"], gimmicks: ["eclipse"] },
+              force: ["stack", "polarity", "spread"], gimmicks: ["eclipse"],
+              move: { style: "blink", pause: [.4, .7], near: [110, 220], spread: 3.2, feint: [2, 3] } },
     tollia: { name: "톨리아", title: "종탑의 집행자", look: "bell", r: 60, speed: [100, 112, 124],
               pal: ["#e6f4ff", "#7fb2d9", "#2b4a6e", "#101a2b", "#9fd8ff"], floor: "159,216,255",
               pools: [[["ring", 3], ["haven", 2], ["cleave", 2], ["mark", 1], ["warp", 1]],
                       [["ring", 3], ["haven", 2], ["spin", 1], ["heavy", 2], ["spread", 1], ["hop", 1]],
                       [["ring", 2], ["haven", 2], ["heavy", 2], ["charge", 1], ["clock", 1], ["stack", 1]]],
-              force: ["ring", "haven", "ring"], gimmicks: ["ripple"] },
+              force: ["ring", "haven", "ring"], gimmicks: ["ripple"],
+              move: { style: "pendulum", freq: 3, amp: 140 } },
   },
   /* invulnerable gimmick phases: boss walks to the centre, can't be hurt, runs a must-dodge sequence, then collapses (groggy) */
   gimmick: { every: 38, hardEveryMul: .8, moveTime: .9, groggy: 5.0, groggyBonus: .5 },
@@ -920,7 +926,7 @@ function startFight(now) {
   Object.assign(H, { st: "fight", run: H.run + 1, boss: sc.boss, mhp: Math.round(sc.hp * diffCfg().hpMul * (1 + CONFIG.scaling.perPlayerHp * (n - 1))), n,
     ft: 0, ph: 0, ps: 0, dm: {}, end: 0, bx: 640, by: 240, bf: Math.PI / 2, bs: "shield", bt: TRANS, cur: "", atk: [], aid: 0, pools: [], pid: 0, adds: [] });
   H.hp = H.mhp;
-  Object.assign(hostL, { target: null, lastKind: "", force: BOSSES[sc.boss].force[0] || "", combo: false, chain: null, anim: null, pending: [], addDm: {}, last: now, gimmickDue: false, nextGimmick: 1e9 });
+  Object.assign(hostL, { target: null, lastKind: "", force: BOSSES[sc.boss].force[0] || "", combo: false, chain: null, anim: null, pending: [], addDm: {}, last: now, gimmickDue: false, nextGimmick: 1e9, feints: null, nextMove: 0, orb: Math.random() * TAU, orbDir: Math.random() < .5 ? 1 : -1 });
   fsLocal = now;
 }
 function hostTick(now) {
@@ -956,7 +962,7 @@ function hostTick(now) {
   const frac = H.hp / H.mhp, PA = CONFIG.stageFlow.phaseAt, target = frac > PA[0] ? 0 : frac > PA[1] ? 1 : 2;
   if (target > H.ph) {
     H.ph = target; H.ps = H.ft; H.atk = []; H.pools = []; H.adds = []; H.bs = "shield"; H.bt = T + TRANS; H.cur = "";
-    Object.assign(hostL, { pending: [], anim: null, chain: null, combo: false, force: B.force[target] || "", gimmickDue: true });
+    Object.assign(hostL, { pending: [], anim: null, chain: null, combo: false, force: B.force[target] || "", gimmickDue: true, feints: null });
   }
   if (H.hp <= 0) {
     H.st = "clear"; H.end = H.ft; H.atk = []; H.pools = []; H.adds = []; H.tt = r3(H.tt + H.end);
@@ -1021,13 +1027,40 @@ function hostTick(now) {
       break;
     case "move": {
       const tg = alive.find(p => p.peer === hostL.target) || alive[0];
-      const dx = tg.pr.x - H.bx, dy = tg.pr.y - H.by, d = Math.hypot(dx, dy);
+      const tx = tg.pr.x, ty = tg.pr.y, dx = tx - H.bx, dy = ty - H.by, d = Math.hypot(dx, dy);
       H.bf = r3(Math.atan2(dy, dx));
-      const sp = B.speed[H.ph] / tempo;
-      if (d > 120) { H.bx += dx / d * sp * dt; H.by += dy / d * sp * dt; }
+      const sp = B.speed[H.ph] / tempo, M = B.move || { style: "walk" };
+      if (hostL.anim) break;   // mid-dash
+      if (M.style === "dart" || M.style === "blink") {
+        // quick bursts to a spot near the target from a random side, never standing still for long
+        if (T >= hostL.nextMove) {
+          const side = Math.atan2(H.by - ty, H.bx - tx) + (Math.random() - .5) * M.spread, R = M.near[0] + Math.random() * (M.near[1] - M.near[0]);
+          const x1 = clamp(tx + Math.cos(side) * R, 90, AW - 90), y1 = clamp(ty + Math.sin(side) * R, 140, AH - 80);
+          H.mv = [(H.mv ? H.mv[0] : 0) + 1, M.style === "blink" ? "b" : "d"];
+          if (M.style === "blink") { H.bx = x1; H.by = y1; } else hostL.anim = { t0: T, dur: M.dash, x0: H.bx, y0: H.by, x1, y1 };
+          hostL.nextMove = T + (M.style === "blink" ? 0 : M.dash) + (M.pause[0] + Math.random() * (M.pause[1] - M.pause[0])) * tempo;
+          if (hostL.feints != null) hostL.feints--;
+        }
+      } else if (M.style === "orbit") {
+        // circle around the target instead of walking straight in
+        hostL.orb += dt * M.orbit * hostL.orbDir;
+        if (Math.random() < dt * .25) hostL.orbDir *= -1;
+        const ox = tx + Math.cos(hostL.orb) * M.radius, oy = ty + Math.sin(hostL.orb) * M.radius, ddx = ox - H.bx, ddy = oy - H.by, dd = Math.hypot(ddx, ddy);
+        if (dd > 4) { const st2 = Math.min(dd, sp * M.speedMul * dt); H.bx += ddx / dd * st2; H.by += ddy / dd * st2; }
+      } else {
+        let vx = 0, vy = 0;
+        if (d > 120) { vx = dx / d * sp; vy = dy / d * sp; }
+        if (M.style === "pendulum") { const sw = Math.sin(T * M.freq) * M.amp; vx += -dy / (d || 1) * sw; vy += dx / (d || 1) * sw; }
+        H.bx += vx * dt; H.by += vy * dt;
+      }
       H.bx = clamp(H.bx, 90, AW - 90); H.by = clamp(H.by, 140, AH - 80);
-      if (hostL.gimmickDue || (H.ph >= 1 && T >= hostL.nextGimmick)) { startGimmick(T); break; }
-      if (d <= 140 || T >= H.bt) castAttack(pickKind(), T, alive);
+      if (hostL.gimmickDue || (H.ph >= 1 && T >= hostL.nextGimmick)) { hostL.feints = null; startGimmick(T); break; }
+      const ready = M.style === "walk" || M.style === "pendulum" ? (d <= 140 || T >= H.bt) : T >= H.bt;
+      if (M.feint) {
+        // confuse first: a few movement-only feints, then the real attack
+        if (hostL.feints == null) { if (ready) hostL.feints = M.feint[0] + Math.floor(Math.random() * (M.feint[1] - M.feint[0] + 1)) + diffCfg().extra; }
+        else if (hostL.feints <= 0 && T >= hostL.nextMove - .15) { hostL.feints = null; castAttack(pickKind(), T, alive); }
+      } else if (ready) castAttack(pickKind(), T, alive);
       break;
     }
     case "gimmick":
@@ -1691,12 +1724,21 @@ addEventListener("resize", resize); resize();
 /* =====================================================================
    UPDATE
    ===================================================================== */
+let moveSeen = -1;
 function updateBoss(dt, S, idleT) {
   let tx = 640, ty = 260 + 8 * Math.sin(idleT * 1.2), tf = Math.PI / 2;
   if (S && S.st !== "lobby" && S.st !== "augment") { tx = S.bx; ty = S.by; tf = S.bf; }
+  if (S && S.st === "fight" && Array.isArray(S.mv) && S.mv[0] !== moveSeen) {
+    const first = moveSeen === -1; moveSeen = S.mv[0];
+    if (!first) {
+      spawnFx(16, bossDisp.x, bossDisp.y, bossDisp.f, "#ffffff");
+      SFX.play(S.mv[1] === "b" ? "blink" : "dash", .55);
+      if (S.mv[1] === "b") { bossDisp.x = tx; bossDisp.y = ty; }
+    }
+  }
   if (isHost) { bossDisp.x = tx; bossDisp.y = ty; bossDisp.f = tf; }
   else {
-    const k = 1 - Math.exp(-dt * 14);
+    const k = 1 - Math.exp(-dt * 22);
     bossDisp.x += (tx - bossDisp.x) * k; bossDisp.y += (ty - bossDisp.y) * k;
     let df = tf - bossDisp.f; while (df > Math.PI) df -= TAU; while (df < -Math.PI) df += TAU; bossDisp.f += df * k;
   }
@@ -2231,6 +2273,9 @@ function drawFx() {
         if (u < .08) { ctx.fillStyle = "#fff3c4"; ctx.beginPath(); ctx.arc(c * 22, sn * 22 - 8, 12, 0, TAU); ctx.fill(); }
         ctx.globalAlpha = al; ctx.strokeStyle = f.col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(c * Math.max(18, p0 - 60), sn * Math.max(18, p0 - 60) - 8); ctx.lineTo(c * p0, sn * p0 - 8); ctx.stroke();
         ctx.fillStyle = "rgba(200,200,220," + al * .4 + ")"; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(-c * (10 + u * 60) + (i - 1.5) * 8, -sn * (10 + u * 60) + 6, 7 + u * 10, 0, TAU); ctx.fill(); } break; }
+      case 16: { const al = 1 - u / .4; if (al <= 0) break; const B = bossDef(curS);   // boss afterimage
+        ctx.globalAlpha = al * .45; ctx.fillStyle = B.pal[1]; ctx.beginPath(); ctx.arc(0, 0, B.r, 0, TAU); ctx.fill();
+        ctx.globalAlpha = al * .8; ctx.strokeStyle = B.pal[4]; ctx.lineWidth = 2; ctx.stroke(); break; }
       case 15: { const al = 1 - u / .4; if (al <= 0) break; const R = CONFIG.push.radius * (f.e || 1);
         ctx.fillStyle = "rgba(159,216,255," + al * .18 + ")"; ctx.beginPath(); ctx.arc(0, 0, R * Math.min(1, u / .12), 0, TAU); ctx.fill();
         ctx.strokeStyle = "rgba(220,240,255," + al + ")"; ctx.lineWidth = 5 * al + 1; ctx.beginPath(); ctx.arc(0, 0, R * Math.min(1, .3 + u / .15), 0, TAU); ctx.stroke(); break; }
