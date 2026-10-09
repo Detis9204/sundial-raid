@@ -1945,7 +1945,7 @@ function drawTele(a, T, S) {
     const n = alivePositions(true).filter(q => dist(q.x, q.y, c.x, c.y) <= a.r).length, ok = n >= a.need;
     ctx.fillStyle = teleCol(a, flash > 0 ? .5 * flash : .12 + .18 * p); ctx.beginPath(); ctx.arc(c.x, c.y, a.r, 0, TAU); ctx.fill();
     ctx.strokeStyle = teleCol(a, .9); ctx.lineWidth = 3; ctx.setLineDash([12, 8]); ctx.lineDashOffset = -T * 40; ctx.stroke(); ctx.setLineDash([]);
-    if (flash < 0) { label("모이기 " + n + "/" + a.need, c.x, c.y - a.r - 14, ok ? "#7fd3a3" : "#5fd6c4", true); label(ok ? "인원 충족 · 피해 없음" : "원 안에 " + a.need + "명 모이면 피해 없음", c.x, c.y + a.r + 16, ok ? "#7fd3a3" : "#f3e6c8"); }
+    if (flash < 0) { label(hideInfo() ? "모이기" : "모이기 " + n + "/" + a.need, c.x, c.y - a.r - 14, hideInfo() ? "#5fd6c4" : ok ? "#7fd3a3" : "#5fd6c4", true); label(ok ? "인원 충족 · 피해 없음" : "원 안에 " + a.need + "명 모이면 피해 없음", c.x, c.y + a.r + 16, ok ? "#7fd3a3" : "#f3e6c8"); }
     ctx.restore(); return;
   }
   if (a.k === "eclipse") {
