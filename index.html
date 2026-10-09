@@ -248,7 +248,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="chips" id="chips"></div>
     <div class="row" id="diffRow" role="group" aria-label="난이도">
       <button class="btn" type="button" id="diffNormal" aria-pressed="true">보통</button>
-      <button class="btn" type="button" id="diffHard" aria-pressed="false">어려움 · 예고 짧고 패턴 추가</button>
+      <button class="btn" type="button" id="diffHard" aria-pressed="false">어려움 · 예고 짧고 패턴 추가 · 도움말 숨김</button>
     </div>
     <button class="btn primary" id="startBtn" hidden>게임 시작 · 12 스테이지</button>
   </div>
@@ -337,7 +337,7 @@ const CONFIG = {
   /* 7. hard: shorter warnings and openings, harder hits, combos from phase II, one more of everything */
   difficulty: {
     normal: { name: "보통",   warnMul: 1.0, recMul: 1.0, dmgMul: 1.0,  hpMul: 1.0,  combo: .4, comboFrom: 2, extra: 0 },
-    hard:   { name: "어려움", warnMul: .8,  recMul: .8,  dmgMul: 1.25, hpMul: 1.15, combo: .7, comboFrom: 1, extra: 1 },
+    hard:   { name: "어려움", hideInfo: true, warnMul: .8,  recMul: .8,  dmgMul: 1.25, hpMul: 1.15, combo: .7, comboFrom: 1, extra: 1 },
   },
   /* atk = the class's main skill (W / left click). There is no basic attack. */
   classes: {
@@ -405,7 +405,7 @@ const CONFIG = {
     /* hora: the sundial's hands sweep the floor */
     sweep:    { name: "시침 회전",      gm: true, warn: .7,  rec: 0, dmg: 40, r: 900, half: 8, steps: 28, step: .18, beams: 2, hint: "무적 · 회전하는 시침을 따라 돌며 피하세요" },
     /* seka: the second hand slashes across the arena from wall to wall, chasing players */
-    slash:    { name: "초침 난무",      gm: true, warn: .75, rec: 0, dmg: 35, w: 45, count: 6, gap: 1.0, hint: "무적 · 세카가 그어 대는 직선을 피하세요" },
+    backstab: { name: "배후 참격",      gm: true, warn: .8,  rec: 0, dmg: 38, r: 240, half: 50, behind: 95, count: 6, gap: 1.05, hint: "무적 · 등 뒤에 나타나 베어 옵니다. 돌아서서 피하세요" },
     /* klepsy: walls of sand sweep across the arena; stand in the gap */
     sandwave: { name: "모래 해일",      gm: true, warn: 1.3, rec: 0, dmg: 40, bw: 80, gh: 170, waves: 3, waveGap: 2.6, band: .11, hint: "무적 · 모래벽의 틈에 서서 해일을 넘기세요" },
     /* mekan: numbered clockwork bombs go off in order */
@@ -429,8 +429,8 @@ const CONFIG = {
               pools: [[["rush", 3], ["flurry", 3], ["cleave", 1]],
                       [["rush", 3], ["flurry", 3], ["pounce", 2], ["whirl", 2], ["hop", 2]],
                       [["rush", 2], ["flurry", 3], ["pounce", 2], ["whirl", 2], ["heavy", 2], ["hop", 2], ["warp", 1]]],
-              force: ["flurry", "pounce", "rush"], gimmicks: ["slash"],
-              move: { style: "dart", dash: .13, pause: [.3, .6], near: [90, 190], spread: 2.6, feint: [2, 3] } },
+              force: ["flurry", "pounce", "rush"], gimmicks: ["backstab"],
+              move: { style: "dart", dash: .13, pause: [.3, .6], near: [90, 190], spread: 2.6, feint: [1, 2], maxMoves: 4 } },
     klepsy: { name: "클렙시", title: "모래시계 여왕", look: "hourglass", r: 62, speed: [115, 130, 145],
               pal: ["#f7e1a8", "#c9a35a", "#3e6f70", "#14232a", "#f2c46b"], floor: "242,196,107",
               pools: [[["sandpool", 3], ["spin", 2], ["mark", 1]],
@@ -900,6 +900,7 @@ function playersList() {
 /* =====================================================================
    HOST: game flow, boss AI
    ===================================================================== */
+function hideInfo() { const S = curS; return !!(S && (CONFIG.difficulty[S.diff] || {}).hideInfo); }
 function diffCfg() { return CONFIG.difficulty[(HS && HS.diff) || "normal"] || CONFIG.difficulty.normal; }
 function lobbyState(prev) {
   return { diff: prev && prev.diff || "normal", st: "lobby", game: prev ? prev.game : 0, stage: 0, run: prev ? prev.run : 0, akey: -1, adl: 0, boss: CONFIG.stages[0].boss,
@@ -1033,7 +1034,8 @@ function hostTick(now) {
       if (hostL.anim) break;   // mid-dash
       if (M.style === "dart" || M.style === "blink") {
         // quick bursts to a spot near the target from a random side, never standing still for long
-        if (T >= hostL.nextMove) {
+        if (T >= hostL.nextMove && !(M.maxMoves && hostL.moves >= M.maxMoves)) {
+          hostL.moves = (hostL.moves || 0) + 1;
           const side = Math.atan2(H.by - ty, H.bx - tx) + (Math.random() - .5) * M.spread, R = M.near[0] + Math.random() * (M.near[1] - M.near[0]);
           const x1 = clamp(tx + Math.cos(side) * R, 90, AW - 90), y1 = clamp(ty + Math.sin(side) * R, 140, AH - 80);
           H.mv = [(H.mv ? H.mv[0] : 0) + 1, M.style === "blink" ? "b" : "d"];
@@ -1060,6 +1062,7 @@ function hostTick(now) {
         // confuse first: a few movement-only feints, then the real attack
         if (hostL.feints == null) { if (ready) hostL.feints = M.feint[0] + Math.floor(Math.random() * (M.feint[1] - M.feint[0] + 1)) + diffCfg().extra; }
         else if (hostL.feints <= 0 && T >= hostL.nextMove - .15) { hostL.feints = null; castAttack(pickKind(), T, alive); }
+        if (M.maxMoves && hostL.moves >= M.maxMoves && T >= hostL.nextMove - .15) { hostL.feints = null; castAttack(pickKind(), T, alive); }
       } else if (ready) castAttack(pickKind(), T, alive);
       break;
     }
@@ -1123,18 +1126,20 @@ function startGimmick(T) {
       for (let b = 0; b < beams; b++) push({ t0: r3(th - warn), th: r3(th), a: r3(a0 + dir * k * Math.PI / steps + b * TAU / beams) });
       end = th;
     }
-  } else if (kind === "slash") {
+  } else if (kind === "backstab") {
     const n = def.count + X * 2, gap = def.gap * tempo * D.warnMul;
     for (let k = 0; k < n; k++) {
       const at = start + k * gap;
       hostL.pending.push({ at, fn: t => {
-        const ps = alivePts(), q = ps.length ? ps[Math.floor(Math.random() * ps.length)] : { x: 640, y: 360 };
-        const ang = Math.atan2(q.y - H.by, q.x - H.bx), L = lineLen(H.bx, H.by, ang, 1500);
-        push({ t0: r3(t), th: r3(t + warn), x: Math.round(H.bx), y: Math.round(H.by), a: r3(ang), l: L });
-        const x0 = H.bx, y0 = H.by, x1 = H.bx + Math.cos(ang) * L, y1 = H.by + Math.sin(ang) * L;
-        hostL.pending.push({ at: t + warn, fn: t2 => { hostL.anim = { t0: t2, dur: .2, x0, y0, x1, y1 }; } });
+        const ps = alivePts(); if (!ps.length) return;
+        const q = ps[Math.floor(Math.random() * ps.length)];
+        // appear behind the target: opposite the way they are looking
+        const bx = clamp(q.x - Math.cos(q.a) * def.behind, 70, AW - 70), by = clamp(q.y - Math.sin(q.a) * def.behind, 90, AH - 60);
+        H.bx = bx; H.by = by; H.bf = r3(Math.atan2(q.y - by, q.x - bx));
+        H.mv = [(H.mv ? H.mv[0] : 0) + 1, "b"];
+        push({ t0: r3(t), th: r3(t + warn), x: Math.round(bx), y: Math.round(by), a: H.bf });
       } });
-      end = at + warn + .2;
+      end = at + warn;
     }
   } else if (kind === "sandwave") {
     const waves = def.waves + X, wg = def.waveGap * tempo * D.warnMul, gh = def.gh - X * 30, n = Math.ceil(AW / def.bw);
@@ -1198,6 +1203,7 @@ function lineLen(x, y, a, max) {
   return max;
 }
 function castAttack(kind, T, alive) {
+  hostL.moves = 0;
   const H = HS, sc = CONFIG.stages[H.stage], def = ATK[kind], tempo = curTempo();
   const bx = H.bx, by = H.by;
   const pick = () => alive[Math.floor(Math.random() * alive.length)];
@@ -1516,7 +1522,7 @@ function posOf(peer) {
 function inAtk(a, px, py) {
   const def = ATK[a.k], dx = px - a.x, dy = py - a.y, d = Math.hypot(dx, dy), pad = 8;
   switch (a.k) {
-    case "cleave": case "flurry": return d <= def.r + pad && angDiff(Math.atan2(dy, dx), a.a) <= def.half * DEG + Math.atan2(pad, Math.max(d, 1));
+    case "cleave": case "flurry": case "backstab": return d <= def.r + pad && angDiff(Math.atan2(dy, dx), a.a) <= def.half * DEG + Math.atan2(pad, Math.max(d, 1));
     case "spin": case "whirl": case "mark": case "heavy": case "pounce": case "pull": case "mhit": case "warp": case "hop": return d <= def.r + pad;
     case "sweep": return angDiff(Math.atan2(dy, dx), a.a) <= def.half * DEG + Math.atan2(pad, Math.max(d, 1));
     case "bomb": return d <= def.r + pad;
@@ -1933,13 +1939,13 @@ function drawTele(a, T, S) {
   const flash = T >= a.th ? 1 - (T - a.th) / .35 : -1;
   if (T >= a.th && flash <= 0) return;
   ctx.save();
-  const label = (txt, x, y, col) => { ctx.font = '600 14px "IBM Plex Sans KR", sans-serif'; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(13,18,34,.85)"; ctx.strokeText(txt, x, y); ctx.fillStyle = col; ctx.fillText(txt, x, y); };
+  const label = (txt, x, y, col, keep) => { if (!keep && hideInfo()) return; ctx.font = '600 14px "IBM Plex Sans KR", sans-serif'; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(13,18,34,.85)"; ctx.strokeText(txt, x, y); ctx.fillStyle = col; ctx.fillText(txt, x, y); };
   if (a.k === "stack") {
     const c = posOf(a.tg); if (!c) { ctx.restore(); return; }
     const n = alivePositions(true).filter(q => dist(q.x, q.y, c.x, c.y) <= a.r).length, ok = n >= a.need;
     ctx.fillStyle = teleCol(a, flash > 0 ? .5 * flash : .12 + .18 * p); ctx.beginPath(); ctx.arc(c.x, c.y, a.r, 0, TAU); ctx.fill();
     ctx.strokeStyle = teleCol(a, .9); ctx.lineWidth = 3; ctx.setLineDash([12, 8]); ctx.lineDashOffset = -T * 40; ctx.stroke(); ctx.setLineDash([]);
-    if (flash < 0) { label("모이기 " + n + "/" + a.need, c.x, c.y - a.r - 14, ok ? "#7fd3a3" : "#5fd6c4"); label(ok ? "인원 충족 · 피해 없음" : "원 안에 " + a.need + "명 모이면 피해 없음", c.x, c.y + a.r + 16, ok ? "#7fd3a3" : "#f3e6c8"); }
+    if (flash < 0) { label("모이기 " + n + "/" + a.need, c.x, c.y - a.r - 14, ok ? "#7fd3a3" : "#5fd6c4", true); label(ok ? "인원 충족 · 피해 없음" : "원 안에 " + a.need + "명 모이면 피해 없음", c.x, c.y + a.r + 16, ok ? "#7fd3a3" : "#f3e6c8"); }
     ctx.restore(); return;
   }
   if (a.k === "eclipse") {
@@ -1976,9 +1982,9 @@ function drawTele(a, T, S) {
     ctx.fillStyle = "rgba(120,90,220," + al + ")"; ctx.fillRect(a.s === 0 ? AW / 2 : 0, 0, AW / 2, AH);
     ctx.strokeStyle = "rgba(243,230,200,.7)"; ctx.lineWidth = 2; ctx.setLineDash([10, 10]); ctx.beginPath(); ctx.moveTo(AW / 2, 0); ctx.lineTo(AW / 2, AH); ctx.stroke(); ctx.setLineDash([]);
     if (flash < 0) {
-      label("빛", a.s === 0 ? AW / 4 : AW * 3 / 4, 110, "#ffe6a0"); label("그림자", a.s === 0 ? AW * 3 / 4 : AW / 4, 110, "#b892ff");
+      label("빛", a.s === 0 ? AW / 4 : AW * 3 / 4, 110, "#ffe6a0", true); label("그림자", a.s === 0 ? AW * 3 / 4 : AW / 4, 110, "#b892ff", true);
       const mine = a.pol && a.pol[myPeer];
-      if (mine != null) label("내 색깔: " + (mine === 0 ? "빛" : "그림자"), me.x, me.y - 60, mine === 0 ? "#ffe6a0" : "#b892ff");
+      if (mine != null) label("내 색깔: " + (mine === 0 ? "빛" : "그림자"), me.x, me.y - 60, mine === 0 ? "#ffe6a0" : "#b892ff", true);
     }
     ctx.restore(); return;
   }
@@ -1995,7 +2001,7 @@ function drawTele(a, T, S) {
   }
   const shape = () => {
     switch (a.k) {
-      case "cleave": case "flurry": pathCone(a.x, a.y, def.r, a.a, def.half * DEG); return 1;
+      case "cleave": case "flurry": case "backstab": pathCone(a.x, a.y, def.r, a.a, def.half * DEG); return 1;
       case "spin": case "whirl": case "mark": case "heavy": case "pounce": case "pull": case "mhit": case "warp": case "hop": ctx.beginPath(); ctx.arc(a.x, a.y, def.r, 0, TAU); return 1;
       case "sweep": pathCone(a.x, a.y, def.r, a.a, def.half * DEG); return 1;
       case "bomb": ctx.beginPath(); ctx.arc(a.x, a.y, def.r, 0, TAU); return 1;
@@ -2014,11 +2020,11 @@ function drawTele(a, T, S) {
   if (shape()) { ctx.strokeStyle = a.k === "summon" ? "rgba(255,174,92,.9)" : teleCol(a, .85); ctx.lineWidth = 2; ctx.stroke(); }
   // filling progress: scale toward the hit time
   ctx.save();
-  if (["cleave", "flurry", "spin", "whirl", "mark", "heavy", "pounce", "pull", "mhit", "warp", "hop", "sweep", "bomb"].includes(a.k)) {
+  if (["cleave", "flurry", "spin", "whirl", "mark", "heavy", "pounce", "pull", "mhit", "warp", "hop", "sweep", "bomb", "backstab"].includes(a.k)) {
     const cx = a.x, cy = a.y; ctx.translate(cx, cy); ctx.scale(p, p); ctx.translate(-cx, -cy); fill(.3);
   } else fill(.08 + .28 * p);
   ctx.restore();
-  if (a.k === "bomb") { const left = Math.max(0, a.th - T); label(String(a.n), a.x, a.y - 4, left < .9 ? "#ffd166" : "#f3e6c8"); ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.fillStyle = "#f3e6c8"; ctx.fillText(left.toFixed(1), a.x, a.y + 14); }
+  if (a.k === "bomb") { const left = Math.max(0, a.th - T); label(String(a.n), a.x, a.y - 4, left < .9 ? "#ffd166" : "#f3e6c8", true); if (!hideInfo()) { ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.fillStyle = "#f3e6c8"; ctx.fillText(left.toFixed(1), a.x, a.y + 14); } }
   if (a.k === "sandwave" && a.a0 % (CONFIG.bossAttacks.sandwave.bw * 4) === 0) label("틈", a.a0 + (a.a1 - a.a0) / 2, (a.g0 + a.g1) / 2, "#7fd3a3");
   if (a.k === "clock") { const s0 = -Math.PI / 2 + a.s * Math.PI / 2 + Math.PI / 4; label("안전", a.x + Math.cos(s0) * 170, a.y + Math.sin(s0) * 170, "#7fd3a3"); }
   if (a.k === "pull") {
@@ -2107,7 +2113,7 @@ function drawBoss(T, S, idleT) {
     ctx.strokeStyle = "rgba(255,174,92,.8)"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, B.r + 10, 0, TAU); ctx.stroke();
   }
   ctx.restore();
-  if (rec || (fighting && S.bs === "gimmick")) {
+  if (!hideInfo() && (rec || (fighting && S.bs === "gimmick"))) {
     const groggy = S.bs === "groggy", gim = S.bs === "gimmick";
     const txt = gim ? "무적" : groggy ? "탈진 · 받는 피해 +" + Math.round(CONFIG.gimmick.groggyBonus * 100) + "% · " + Math.max(0, S.bt - T).toFixed(1) + "초" : "빈틈 · 받는 피해 +" + Math.round(CONFIG.combat.recDmgBonus * 100) + "%";
     ctx.font = '700 ' + (groggy ? 17 : 15) + 'px "Gowun Batang", serif'; ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -2369,7 +2375,7 @@ function drawHUD(T, S) {
   const bg = ctx.createLinearGradient(x0, 0, x0 + w, 0); bg.addColorStop(0, B.pal[1]); bg.addColorStop(1, B.pal[0]);
   ctx.fillStyle = S && S.ph === 2 && fighting ? "#ff6f7d" : bg; ctx.fillRect(x0, y, w * frac, 10);
   ctx.fillStyle = "#0d1222"; for (const t of CONFIG.stageFlow.phaseAt) ctx.fillRect(x0 + w * t - 1, y - 2, 2, 14);
-  if (S && S.st === "fight" && (S.bs === "cast" || S.bs === "gimmick") && ATK[S.cur]) {
+  if (S && S.st === "fight" && (S.bs === "cast" || S.bs === "gimmick") && ATK[S.cur] && !hideInfo()) {
     const d = ATK[S.cur];
     ctx.textAlign = "center"; ctx.font = '700 16px "Gowun Batang", serif'; ctx.lineWidth = 4; ctx.strokeStyle = "rgba(13,18,34,.9)"; ctx.strokeText(d.name + "  ·  " + d.hint, AW / 2, y + 34);
     ctx.fillStyle = d.gm ? "#ffb347" : d.c === "stack" || d.c === "haven" ? "#5fd6c4" : d.c ? "#b892ff" : "#ff6f7d";
@@ -2407,7 +2413,7 @@ function drawHUD(T, S) {
       ctx.textAlign = "center"; ctx.globalAlpha = al * .85; ctx.fillStyle = S.ph === 2 ? "#ff6f7d" : "#e8b45a";
       ctx.font = '64px "Marcellus SC", Georgia, serif'; ctx.fillText(S.ph === 0 ? "STAGE " + stageNo : "PHASE " + ROMAN[S.ph + 1], AW / 2, AH / 2 + 30);
       ctx.font = '600 17px "Gowun Batang", serif'; ctx.fillStyle = "#f3e6c8";
-      ctx.fillText(S.ph === 0 ? B.name + " · " + B.title : "새 패턴: " + ATK[B.force[S.ph] || "cleave"].name, AW / 2, AH / 2 + 78);
+      ctx.fillText(S.ph === 0 || hideInfo() ? B.name + " · " + B.title : "새 패턴: " + ATK[B.force[S.ph] || "cleave"].name, AW / 2, AH / 2 + 78);
       ctx.globalAlpha = 1;
     }
     if (me.dn === 1) {
@@ -2559,7 +2565,7 @@ let stChangeAt = performance.now();
 const aud = { bs: "", seenCast: new Set(), seenImpact: new Set(), st: "", ph: -1, run: -1, adds: 0, beep: -1 };
 const IMPACT = { cleave: "imp_slam", flurry: "imp_slam", mark: "imp_slam", pounce: "imp_slam", heavy: "imp_heavy", spin: "imp_sweep", whirl: "imp_sweep",
   donut: "imp_blast", clock: "imp_blast", pull: "imp_blast", stack: "imp_blast", spread: "imp_blast", polarity: "imp_blast",
-  charge: "imp_charge", rush: "imp_charge", warp: "imp_blast", hop: "imp_slam", sweep: "imp_small", slash: "imp_charge", sandwave: "imp_sand", bomb: "imp_heavy", eclipse: "imp_small", ripple: "imp_slam", ring: "imp_slam", haven: "imp_blast", sandpool: "imp_sand", sandwall: "imp_sand", gear: "imp_gear", decoy: "imp_decoy", mhit: "imp_small", summon: "summon" };
+  charge: "imp_charge", rush: "imp_charge", warp: "imp_blast", hop: "imp_slam", sweep: "imp_small", backstab: "imp_slam", slash: "imp_charge", sandwave: "imp_sand", bomb: "imp_heavy", eclipse: "imp_small", ripple: "imp_slam", ring: "imp_slam", haven: "imp_blast", sandpool: "imp_sand", sandwall: "imp_sand", gear: "imp_gear", decoy: "imp_decoy", mhit: "imp_small", summon: "summon" };
 function audioEvents(S, T) {
   const st = S ? S.st : "lobby";
   if (S && S.run !== aud.run) { aud.run = S.run; aud.seenCast.clear(); aud.seenImpact.clear(); aud.ph = -1; }
@@ -2574,7 +2580,7 @@ function audioEvents(S, T) {
   }
   if (st !== "fight") return;
   if (S.ph !== aud.ph) { aud.ph = S.ph; SFX.play("gong"); SFX.music({ ph: S.ph, stage: S.stage }); }
-  if (S.bs !== aud.bs) { if (S.bs === "gimmick") { SFX.play("gong"); SFX.play("summon", .6); } if (S.bs === "groggy") SFX.play("clear", .7); aud.bs = S.bs; }
+  if (S.bs !== aud.bs) { if (S.bs === "gimmick") { SFX.play("gong"); SFX.play("summon", .6); } if (S.bs === "groggy" && !hideInfo()) SFX.play("clear", .7); aud.bs = S.bs; }
   SFX.music({ low: !me.dn && me.hp / me.mh < CONFIG.audio.lowHpRatio });
   const minions = (S.adds || []).filter(a => a.k === "minion").length;
   if (minions > aud.adds) SFX.play("summon"); aud.adds = minions;
@@ -2585,7 +2591,7 @@ function audioEvents(S, T) {
       continue;
     }
     if (def.gm) {   // gimmick pieces: one gong at the start, light impacts after
-      if (T >= a.th && T - a.th < .3 && !aud.seenImpact.has(a.i)) { aud.seenImpact.add(a.i); const GV = { sweep: .5, slash: .9, sandwave: .35, bomb: .45, eclipse: .25, ripple: .45 }; if (!["sweep", "sandwave"].includes(a.k) || a.i % 2 === 0) SFX.play(IMPACT[a.k] || "imp_slam", GV[a.k] || .8); }
+      if (T >= a.th && T - a.th < .3 && !aud.seenImpact.has(a.i)) { aud.seenImpact.add(a.i); const GV = { sweep: .5, backstab: .9, slash: .9, sandwave: .35, bomb: .45, eclipse: .25, ripple: .45 }; if (!["sweep", "sandwave"].includes(a.k) || a.i % 2 === 0) SFX.play(IMPACT[a.k] || "imp_slam", GV[a.k] || .8); }
       continue;
     }
     if (!aud.seenCast.has(ck) && T < a.th && T >= a.t0) {
