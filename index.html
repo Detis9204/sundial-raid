@@ -315,7 +315,7 @@ const CONFIG = {
   /* 밀치기: no damage. Targets are flung away (speed), slow down with friction and bounce off the arena walls. */
   /* bossImmune: while casting these (dashes / leaps) the boss can't be pushed.
      bossCentered: telegraphs anchored on the boss move with it when it is pushed mid-cast; target-placed ones stay put. */
-  push: { bossImmune: ["charge", "rush", "pounce", "hop", "warp"], bossCentered: ["cleave", "flurry", "spin", "whirl", "donut", "pull", "clock", "ring", "gear"],
+  push: { bossImmune: ["charge", "rush", "pounce", "hop", "warp", "spring"], bossCentered: ["cleave", "flurry", "spin", "whirl", "donut", "pull", "clock", "ring", "gear", "crank"],
           cd: 7, radius: 110, speed: 950, friction: 5, bounce: .6, enemySpeedMul: .8, bossSpeedMul: .55, healPct: .06, maxTargets: 3 },
   channel: { overhold: 1.2, interruptCdRatio: .3, fizzleCd: 1.0, stageMul: [0, .45, .75, 1.0], flashTime: .35 },
   revive: { downedTime: 15, holdTime: 3, range: 80, hpRatio: .3 },
@@ -396,29 +396,31 @@ const CONFIG = {
     pull:     { name: "모래 소용돌이",  g: false, warn: 2.2, rec: 1.6, dmg: 32, r: 230, pull: 70, hint: "바깥으로 버티기" },
     summon:   { name: "태엽 병정 소환", g: false, warn: 1.4, rec: 1.8, dmg: 0, count: 2, hint: "병정을 먼저 처치" },
     decoy:    { name: "태엽 분신",      g: false, warn: 9.0, rec: 1.2, dmg: 12, count: 2, bigParty: 3, hint: "분신을 부숴야 함", fixed: true },
-    gear:     { name: "톱니 투척",      g: false, warn: 1.0, rec: .9,  dmg: 20, w: 40, len: 900, hint: "선 사이로" },
+    gear:     { name: "톱니 투척",      g: false, warn: 1.0, minWarn: .75, rec: .9,  dmg: 20, w: 40, len: 900, hint: "선 사이로" },
     stack:    { name: "공명",           g: false, warn: 2.6, rec: 1.3, dmg: 36, r: 110, need: 2, c: "stack", hint: "표시된 인원만큼 모이면 피해 없음" },
     spread:   { name: "반발",           g: false, warn: 2.2, rec: 1.0, dmg: 24, r: 100, c: "spread", hint: "서로 흩어지기" },
     polarity: { name: "명암 반전",      g: false, warn: 3.0, rec: 1.6, dmg: 34, c: "pol", hint: "내 색깔 쪽으로" },
-    haven:    { name: "피난처",         g: false, warn: 2.4, rec: 1.4, dmg: 30, r: 85, count: 2, c: "haven", hint: "초록 원 안으로 들어가기" },
-    ring:     { name: "종소리 파문",    g: false, warn: 1.3, rec: 1.3, dmg: 22, w: 110, count: 3, step: .55, hint: "파문이 지나간 자리로" },
+    haven:    { name: "피난처",         g: false, warn: 2.4, minWarn: 1.8, rec: 1.4, dmg: 30, r: 85, count: 2, near: [110, 230], c: "haven", hint: "초록 원 안으로 들어가기" },
+    ring:     { name: "종소리 파문",    g: false, warn: 1.3, minWarn: .9, rec: 1.3, dmg: 22, w: 110, count: 3, step: .55, minStep: .72, hint: "파문이 지나간 자리로" },
     /* boss movement skills */
     warp:     { name: "시간 도약",      g: false, warn: 1.2, rec: 1.2, dmg: 30, r: 120, hint: "보스가 나타날 자리에서 벗어나기" },
-    hop:      { name: "연속 도약",      g: false, warn: .9,  rec: 1.4, dmg: 24, r: 100, count: 3, step: .7, hint: "착지 지점 피하기" },
+    hop:      { name: "연속 도약",      g: false, warn: .9,  minWarn: .7, rec: 1.4, dmg: 24, r: 100, count: 3, step: .7, minStep: .5, hint: "착지 지점 피하기" },
     /* must-dodge gimmicks (gm): ignore 결계, boss is invulnerable while they run */
     /* hora: the sundial's hands sweep the floor */
-    sweep:    { name: "시침 회전",      gm: true, warn: .7,  rec: 0, dmg: 40, r: 900, half: 8, steps: 28, step: .18, beams: 2, hint: "무적 · 회전하는 시침을 따라 돌며 피하세요" },
+    sweep:    { name: "시침 회전",      gm: true, warn: .7,  rec: 0, dmg: 40, r: 900, half: 8, steps: 28, step: .18, minStep: .14, beams: 2, hint: "무적 · 회전하는 시침을 따라 돌며 피하세요" },
     /* seka: the second hand slashes across the arena from wall to wall, chasing players */
     /* minWarn: hard mode never shortens the warning below this; recover: free time after each slash before the next appears */
     backstab: { name: "배후 참격",      gm: true, warn: .9,  minWarn: .8, rec: 0, dmg: 38, r: 210, half: 38, behind: 95, count: 6, gap: 1.2, recover: .55, hint: "무적 · 등 뒤에 나타나 베어 옵니다. 돌아서서 피하세요" },
     /* klepsy: walls of sand sweep across the arena; stand in the gap */
-    sandwave: { name: "모래 해일",      gm: true, warn: 1.3, rec: 0, dmg: 40, bw: 80, gh: 170, waves: 3, waveGap: 2.6, band: .11, hint: "무적 · 모래벽의 틈에 서서 해일을 넘기세요" },
+    sandwave: { name: "모래 해일",      gm: true, warn: 1.3, minWarn: 1.1, rec: 0, dmg: 40, bw: 80, gh: 170, gapShift: 220, waves: 3, waveGap: 2.6, minWaveGap: 2.0, band: .11, hint: "무적 · 모래벽의 틈에 서서 해일을 넘기세요" },
     /* mekan: numbered clockwork bombs go off in order */
-    bomb:     { name: "시한 태엽 폭탄", gm: true, warn: 2.0, rec: 0, dmg: 40, r: 110, count: 14, groups: 4, step: .9, hint: "무적 · 숫자 순서대로 터집니다. 이미 터진 자리로" },
+    bomb:     { name: "시한 태엽 폭탄", gm: true, warn: 2.0, rec: 0, dmg: 40, r: 110, count: 10, perPlayer: 3, groups: 4, step: .9, hint: "무적 · 숫자 순서대로 터집니다. 이미 터진 자리로" },
     /* dualis: only the moving circle of light is safe */
-    eclipse:  { name: "일식",           gm: true, warn: .9,  rec: 0, dmg: 20, r: 150, steps: 12, step: .55, move: 140, hint: "무적 · 움직이는 빛 안에 머무르세요" },
+    eclipse:  { name: "일식",           gm: true, warn: .9,  rec: 0, dmg: 20, r: 150, steps: 12, step: .6, move: 100, chase: .65, grace: 1.0, hint: "무적 · 움직이는 빛 안에 머무르세요" },
     /* tollia: three bells ring out overlapping ripples */
-    ripple:   { name: "대종 공명",      gm: true, warn: 1.0, rec: 0, dmg: 35, w: 110, bands: 5, step: .45, bells: 3, bellGap: 1.1, hint: "무적 · 세 종에서 퍼지는 파문 사이로" },
+    ripple:   { name: "대종 공명",      gm: true, warn: 1.0, minWarn: .9, rec: 0, dmg: 35, w: 110, bands: 5, step: .45, minStep: .72, bells: 3, bellGap: 1.1, hint: "무적 · 세 종에서 퍼지는 파문 사이로" },
+    crank:    { name: "태엽 팔 회전",   g: false, warn: .9,  rec: 1.1, dmg: 22, r: 220, half: 55, count: 3, step: .5, minStep: .45, hint: "팔이 도는 방향 뒤쪽으로" },
+    spring:   { name: "용수철 도약",    g: false, warn: 1.1, minWarn: .9, rec: 1.3, dmg: 28, r: 125, w: 34, len: 520, lineDelay: .55, hint: "착지 후 십자로 톱니가 튐" },
     mhit:     { name: "병정 베기",      g: true,  warn: .85, rec: 0,   dmg: 7,  r: 42, hint: "" },
   },
   bosses: {
@@ -445,9 +447,9 @@ const CONFIG = {
               move: { style: "orbit", radius: 170, orbit: 1.8, speedMul: 1.6 } },
     mekan:  { name: "메카니카", title: "태엽 인형사", look: "gear", r: 60, speed: [80, 90, 100],
               pal: ["#f0b98a", "#b56a35", "#4d2a14", "#1c1612", "#ffae5c"], floor: "255,174,92",
-              pools: [[["summon", 1], ["gear", 3], ["cleave", 2]],
-                      [["summon", 1], ["gear", 2], ["cleave", 2], ["decoy", 1], ["spin", 1]],
-                      [["summon", 1], ["gear", 2], ["decoy", 1], ["heavy", 2], ["spin", 1], ["cleave", 1], ["warp", 1]]],
+              pools: [[["summon", 1], ["gear", 3], ["cleave", 2], ["crank", 2]],
+                      [["summon", 1], ["gear", 2], ["cleave", 1], ["decoy", 1], ["crank", 2], ["spring", 2]],
+                      [["summon", 1], ["gear", 2], ["decoy", 1], ["heavy", 2], ["crank", 2], ["spring", 2], ["warp", 1]]],
               force: ["summon", "decoy", "summon"], gimmicks: ["bomb"],
               move: { style: "walk" } },
     dualis: { name: "듀얼리스", title: "쌍극의 시계", look: "dual", r: 60, speed: [95, 105, 115],
@@ -469,8 +471,9 @@ const CONFIG = {
   gimmick: { every: 38, hardEveryMul: .8, moveTime: .9, groggy: 5.0, groggyBonus: .5 },
   /* boss charges: hit lands when the boss reaches you (not at the start); short runs are prevented by backing up first */
   charge: { margin: [55, 70, 50], overshoot: 160, minLen: 260 },
-  minion: { hp: 170, speed: 92, r: 18, atkRange: 46, atkCd: 3.0, maxAlive: 4, summonCap: 2 },
-  decoy: { hp: 240, r: 40 },
+  /* summonCd / decoyCd: minimum seconds between two summons, so there is always a window to hit the boss */
+  minion: { hp: 80, speed: 92, r: 18, atkRange: 46, atkCd: 3.0, maxAlive: 4, summonCap: 2, summonCd: 16 },
+  decoy: { hp: 140, r: 40, decoyCd: 20 },
   adds: { separationPad: 4, bossPad: 10 },
   pool: { tickEvery: 1.0, arm: .3 },
   /* rarity: 0 common · 1 rare · 2 epic. cls limits an augment to one class. v holds its numbers. */
@@ -934,7 +937,7 @@ function startFight(now) {
   Object.assign(H, { st: "fight", run: H.run + 1, boss: sc.boss, mhp: Math.round(sc.hp * diffCfg().hpMul * (1 + CONFIG.scaling.perPlayerHp * (n - 1))), n,
     ft: 0, ph: 0, ps: 0, dm: {}, end: 0, bx: 640, by: 240, bf: Math.PI / 2, bs: "shield", bt: TRANS, cur: "", atk: [], aid: 0, pools: [], pid: 0, adds: [] });
   H.hp = H.mhp;
-  Object.assign(hostL, { target: null, lastKind: "", force: BOSSES[sc.boss].force[0] || "", combo: false, chain: null, anim: null, pending: [], addDm: {}, last: now, bossKb: null, gimmickDue: false, nextGimmick: 1e9, feints: null, nextMove: 0, orb: Math.random() * TAU, orbDir: Math.random() < .5 ? 1 : -1 });
+  Object.assign(hostL, { target: null, lastKind: "", force: BOSSES[sc.boss].force[0] || "", combo: false, chain: null, anim: null, pending: [], addDm: {}, last: now, nextSummon: 0, nextDecoy: 0, bossKb: null, gimmickDue: false, nextGimmick: 1e9, feints: null, nextMove: 0, orb: Math.random() * TAU, orbDir: Math.random() < .5 ? 1 : -1 });
   fsLocal = now;
 }
 function hostTick(now) {
@@ -1151,7 +1154,7 @@ function startGimmick(T) {
   const randIn = (px, py) => [Math.round(px + Math.random() * (AW - px * 2)), Math.round(py + Math.random() * (AH - py * 2))];
   const alivePts = () => playersList().filter(p => p.pr.r === H.run && !p.pr.dn).map(p => p.pr);
   if (kind === "sweep") {
-    const steps = def.steps, beams = def.beams + X, dir = Math.random() < .5 ? 1 : -1, a0 = Math.random() * TAU, stepT = def.step * tempo * D.warnMul;
+    const steps = def.steps, beams = def.beams + X, dir = Math.random() < .5 ? 1 : -1, a0 = Math.random() * TAU, stepT = Math.max(def.minStep, def.step * tempo * D.warnMul);
     for (let k = 0; k < steps; k++) {
       const th = start + warn + k * stepT;
       for (let b = 0; b < beams; b++) push({ t0: r3(th - warn), th: r3(th), a: r3(a0 + dir * k * Math.PI / steps + b * TAU / beams) });
@@ -1173,43 +1176,49 @@ function startGimmick(T) {
       end = at + bw;
     }
   } else if (kind === "sandwave") {
-    const waves = def.waves + X, wg = def.waveGap * tempo * D.warnMul, gh = def.gh - X * 30, n = Math.ceil(AW / def.bw);
+    const waves = def.waves + X, wg = Math.max(def.minWaveGap, def.waveGap * tempo * D.warnMul), gh = def.gh - X * 30, n = Math.ceil(AW / def.bw), sw = Math.max(def.minWarn, warn);
+    let prevG = 110 + Math.random() * (AH - 220 - gh);
     for (let w = 0; w < waves; w++) {
-      const ws = start + w * wg, dir = w % 2 ? -1 : 1, g0 = Math.round(110 + Math.random() * (AH - 220 - gh)), g1 = g0 + gh;
+      // the next gap is never further than a short run from the last one
+      prevG = clamp(prevG + (Math.random() * 2 - 1) * def.gapShift, 110, AH - 110 - gh);
+      const ws = start + w * wg, dir = w % 2 ? -1 : 1, g0 = Math.round(prevG), g1 = g0 + gh;
       for (let c = 0; c < n; c++) {
-        const x0 = dir > 0 ? c * def.bw : AW - (c + 1) * def.bw, th = ws + warn + c * def.band * tempo;
+        const x0 = dir > 0 ? c * def.bw : AW - (c + 1) * def.bw, th = ws + sw + c * def.band * tempo;
         push({ t0: r3(ws), th: r3(th), o: 1, a0: x0, a1: x0 + def.bw, g0, g1 });
         end = th;
       }
     }
   } else if (kind === "bomb") {
-    const n = def.count + X * 4, groups = def.groups;
+    const n = def.count + Math.max(0, alivePts().length - 1) * def.perPlayer + X * 3, groups = def.groups;
     for (let k = 0; k < n; k++) {
       const g = k % groups, q = randIn(70, 90), th = start + warn + g * def.step * tempo * D.warnMul;
       push({ t0: r3(start), th: r3(th), x: q[0], y: q[1], n: g + 1 });
       end = Math.max(end, th);
     }
   } else if (kind === "eclipse") {
-    const steps = def.steps + X * 3, stepT = def.step * tempo * D.warnMul, r = def.r - X * 30;
-    let x = 640, y = 360, ang = Math.random() * TAU;
+    // the light never moves faster than a player can follow, and starts where the players are
+    const steps = def.steps + X * 3, stepT = Math.max(def.step * tempo * D.warnMul, def.move / (CONFIG.player.moveSpeed * def.chase)), r = def.r - X * 30;
+    const ps0 = alivePts();
+    let x = ps0.length ? ps0.reduce((a, q) => a + q.x, 0) / ps0.length : 640, y = ps0.length ? ps0.reduce((a, q) => a + q.y, 0) / ps0.length : 360, ang = Math.random() * TAU;
+    x = clamp(x, r + 40, AW - r - 40); y = clamp(y, r + 60, AH - r - 40);
     for (let k = 0; k < steps; k++) {
       ang += (Math.random() - .5) * 1.4;
       let nx = x + Math.cos(ang) * def.move, ny = y + Math.sin(ang) * def.move;
       if (nx < r + 40 || nx > AW - r - 40) { ang = Math.PI - ang; nx = clamp(nx, r + 40, AW - r - 40); }
       if (ny < r + 60 || ny > AH - r - 40) { ang = -ang; ny = clamp(ny, r + 60, AH - r - 40); }
       x = nx; y = ny;
-      const th = start + warn + k * stepT;
-      push({ t0: r3(th - warn), th: r3(th), x: Math.round(x), y: Math.round(y), r });
+      const th = start + warn + def.grace + k * stepT;
+      push({ t0: r3(k ? th - warn : T), th: r3(th), x: Math.round(x), y: Math.round(y), r });
       end = th;
     }
   } else if (kind === "ripple") {
     const spots = [[150, 160], [1130, 160], [150, 610], [1130, 610], [640, 130], [640, 640]].sort(() => Math.random() - .5);
     const bells = def.bells + X;
     for (let b = 0; b < bells; b++) {
-      const q = spots[b % spots.length], bs = start + b * def.bellGap * tempo * D.warnMul;
+      const q = spots[b % spots.length], bs = start + b * def.bellGap * tempo * D.warnMul, stepR = Math.max(def.minStep, def.step * tempo), rw = Math.max(def.minWarn, warn);
       for (let k = 0; k < def.bands; k++) {
-        const th = bs + warn + k * def.step * tempo;
-        push({ t0: r3(bs + k * def.step * tempo), th: r3(th), x: q[0], y: q[1], r0: k * def.w, r1: (k + 1) * def.w });
+        const th = bs + rw + k * stepR;
+        push({ t0: r3(bs + k * stepR), th: r3(th), x: q[0], y: q[1], r0: k * def.w, r1: (k + 1) * def.w });
         end = Math.max(end, th);
       }
     }
@@ -1221,7 +1230,8 @@ function pickKind() {
   const H = HS, B = BOSSES[H.boss];
   if (hostL.force) { const k = hostL.force; hostL.force = ""; return k; }
   const minions = H.adds.filter(a => a.k === "minion").length, decoyActive = H.atk.some(a => a.k === "decoy");
-  let pool = B.pools[H.ph].filter(([k]) => k !== hostL.lastKind && !(k === "decoy" && decoyActive) && !(k === "summon" && minions >= CONFIG.minion.summonCap));
+  const T = H.ft;
+  let pool = B.pools[H.ph].filter(([k]) => k !== hostL.lastKind && !(k === "decoy" && (decoyActive || T < (hostL.nextDecoy || 0))) && !(k === "summon" && (minions >= CONFIG.minion.summonCap || T < (hostL.nextSummon || 0))));
   if (!pool.length) pool = [["cleave", 1]];
   let tot = 0; for (const [, w] of pool) tot += w;
   let r = Math.random() * tot;
@@ -1253,7 +1263,7 @@ function castAttack(kind, T, alive) {
   const face = r3(Math.atan2(tgt.pr.y - by, tgt.pr.x - bx));
   H.bf = face;
   const D = diffCfg(), X = D.extra;
-  const warn = (def.fixed ? def.warn : def.warn * tempo) * D.warnMul;
+  const warn = Math.max(def.minWarn || 0, (def.fixed ? def.warn : def.warn * tempo) * D.warnMul);
   const t0 = r3(T), th = r3(T + warn), d = Math.round(def.dmg * sc.dmgMul * D.dmgMul);
   const E = o => { const e = Object.assign({ i: ++H.aid, k: kind, t0, th, x: Math.round(bx), y: Math.round(by), a: face, d }, o || {}); H.atk.push(e); return e; };
   const randPt = (pad) => [Math.round(pad + Math.random() * (AW - pad * 2)), Math.round(pad + 30 + Math.random() * (AH - pad * 2 - 30))];
@@ -1312,6 +1322,7 @@ function castAttack(kind, T, alive) {
       break;
     }
     case "summon": {
+      hostL.nextSummon = T + CONFIG.minion.summonCd * tempo;
       const cnt = Math.min(CONFIG.minion.maxAlive - H.adds.filter(a => a.k === "minion").length, def.count + X + Math.floor((alive.length - 1) / 2));
       if (cnt <= 0) { E({ p: [], d: 0 }); break; }
       const pts = []; for (let k = 0; k < cnt; k++) { const side = Math.floor(Math.random() * 4); pts.push(side === 0 ? [60, 120 + Math.random() * 480] : side === 1 ? [AW - 60, 120 + Math.random() * 480] : side === 2 ? [120 + Math.random() * 1040, 90] : [120 + Math.random() * 1040, AH - 50]); }
@@ -1321,6 +1332,7 @@ function castAttack(kind, T, alive) {
       break;
     }
     case "decoy": {
+      hostL.nextDecoy = T + CONFIG.decoy.decoyCd * tempo;
       const nDecoy = def.count + X + (alive.length >= def.bigParty ? 1 : 0);
       const pts = []; for (let k = 0; k < nDecoy; k++) { let q; let tries = 0; do { q = randPt(140); tries++; } while (tries < 20 && (dist(q[0], q[1], bx, by) < 220 || pts.some(o => dist(o[0], o[1], q[0], q[1]) < 200))); pts.push(q); }
       const hpEach = Math.round(CONFIG.decoy.hp * (1 + CONFIG.scaling.perPlayerAddHp * (alive.length - 1)));
@@ -1329,7 +1341,21 @@ function castAttack(kind, T, alive) {
       end = T + 1.2;
       break;
     }
-    case "gear": for (const off of X ? [-.9, -.45, 0, .45, .9] : [-.45, 0, .45]) E({ a: r3(face + off), l: def.len }); break;
+    case "gear": for (const off of [-.45, 0, .45]) E({ a: r3(face + off), l: def.len }); break;
+    case "crank": {   // a wide arm sweeps round the boss in three steps
+      const dir = Math.random() < .5 ? 1 : -1, stp = Math.max(def.minStep, def.step * tempo * D.warnMul);
+      for (let k = 0; k < def.count + X; k++) { const tk = r3(th + k * stp); E({ th: tk, a: r3(face + dir * k * 2.1) }); end = tk; }
+      break;
+    }
+    case "spring": {   // leap onto the farthest player, then gears fly out in a cross from the landing spot
+      const far = byDist(true), x1 = Math.round(clamp(far.pr.x, 90, AW - 90)), y1 = Math.round(clamp(far.pr.y, 140, AH - 80));
+      E({ x: x1, y: y1 });
+      const a0 = Math.random() * Math.PI / 2, tl = r3(th + def.lineDelay);
+      for (let k = 0; k < 4; k++) E({ k: "gear", x: x1, y: y1, a: r3(a0 + k * Math.PI / 2), l: def.len, th: tl, t0: r3(th - .15), d: Math.round(def.dmg * .8 * sc.dmgMul * D.dmgMul) });
+      hostL.pending.push({ at: th - .25, fn: t => { hostL.anim = { t0: t, dur: .25, x0: H.bx, y0: H.by, x1, y1 }; } });
+      end = tl;
+      break;
+    }   // 5 lines left no gap near the boss
     case "stack": E({ tg: tgt.peer, r: def.r, need: Math.min(def.need + X, alive.length) }); break;
     case "warp": {   // vanish and reappear on the farthest player
       const far = byDist(true), x1 = Math.round(clamp(far.pr.x, 90, AW - 90)), y1 = Math.round(clamp(far.pr.y, 140, AH - 80));
@@ -1341,7 +1367,7 @@ function castAttack(kind, T, alive) {
       const n = def.count + X;
       for (let k = 0; k < n; k++) {
         const q = alive[Math.floor(Math.random() * alive.length)].pr, x1 = Math.round(clamp(q.x, 90, AW - 90)), y1 = Math.round(clamp(q.y, 140, AH - 80));
-        const tk = r3(th + k * def.step * tempo * D.warnMul);
+        const tk = r3(th + k * Math.max(def.minStep, def.step * tempo * D.warnMul));
         E({ t0: k ? r3(tk - warn) : t0, th: tk, x: x1, y: y1 });
         hostL.pending.push({ at: tk - .25, fn: t => { hostL.anim = { t0: t, dur: .25, x0: H.bx, y0: H.by, x1, y1 }; } });
         end = tk;
@@ -1350,12 +1376,18 @@ function castAttack(kind, T, alive) {
     }
     case "haven": {
       const n = Math.max(1, def.count - X), pts = [];
-      for (let k = 0; k < n; k++) { let q, tries = 0; do { q = randPt(130); tries++; } while (tries < 30 && (pts.some(o => dist(o[0], o[1], q[0], q[1]) < 300) || dist(q[0], q[1], bx, by) < 150)); pts.push(q); }
+      // each shelter is placed within walking reach of a player (random ones could be across the arena)
+      for (let k = 0; k < n; k++) {
+        const base = alive[k % alive.length].pr; let q, tries = 0;
+        do { const an = Math.random() * TAU, rr = def.near[0] + Math.random() * (def.near[1] - def.near[0]); q = [Math.round(clamp(base.x + Math.cos(an) * rr, 100, AW - 100)), Math.round(clamp(base.y + Math.sin(an) * rr, 120, AH - 90))]; tries++; }
+        while (tries < 40 && (pts.some(o => dist(o[0], o[1], q[0], q[1]) < 220) || dist(q[0], q[1], bx, by) < 150));
+        pts.push(q);
+      }
       E({ p: pts }); break;
     }
     case "ring": {
       const n = def.count + X;
-      for (let k = 0; k < n; k++) { const tk = r3(th + k * def.step * tempo * D.warnMul); E({ th: tk, r0: k * def.w, r1: (k + 1) * def.w }); end = tk; }
+      for (let k = 0; k < n; k++) { const tk = r3(th + k * Math.max(def.minStep, def.step * tempo * D.warnMul)); E({ th: tk, r0: k * def.w, r1: (k + 1) * def.w }); end = tk; }
       break;
     }
     case "spread": E({ r: def.r }); break;
@@ -1581,8 +1613,8 @@ function posOf(peer) {
 function inAtk(a, px, py) {
   const def = ATK[a.k], dx = px - a.x, dy = py - a.y, d = Math.hypot(dx, dy), pad = 8;
   switch (a.k) {
-    case "cleave": case "flurry": case "backstab": return d <= def.r + pad && angDiff(Math.atan2(dy, dx), a.a) <= def.half * DEG + Math.atan2(pad, Math.max(d, 1));
-    case "spin": case "whirl": case "mark": case "heavy": case "pounce": case "pull": case "mhit": case "warp": case "hop": return d <= def.r + pad;
+    case "cleave": case "flurry": case "backstab": case "crank": return d <= def.r + pad && angDiff(Math.atan2(dy, dx), a.a) <= def.half * DEG + Math.atan2(pad, Math.max(d, 1));
+    case "spin": case "whirl": case "mark": case "heavy": case "pounce": case "pull": case "mhit": case "warp": case "hop": case "spring": return d <= def.r + pad;
     case "sweep": return angDiff(Math.atan2(dy, dx), a.a) <= def.half * DEG + Math.atan2(pad, Math.max(d, 1));
     case "bomb": return d <= def.r + pad;
     case "sandwave": return px >= a.a0 - pad && px <= a.a1 + pad && !(py >= a.g0 && py <= a.g1);
@@ -2078,8 +2110,8 @@ function drawTele(a, T, S) {
   }
   const shape = () => {
     switch (a.k) {
-      case "cleave": case "flurry": case "backstab": pathCone(a.x, a.y, def.r, a.a, def.half * DEG); return 1;
-      case "spin": case "whirl": case "mark": case "heavy": case "pounce": case "pull": case "mhit": case "warp": case "hop": ctx.beginPath(); ctx.arc(a.x, a.y, def.r, 0, TAU); return 1;
+      case "cleave": case "flurry": case "backstab": case "crank": pathCone(a.x, a.y, def.r, a.a, def.half * DEG); return 1;
+      case "spin": case "whirl": case "mark": case "heavy": case "pounce": case "pull": case "mhit": case "warp": case "hop": case "spring": ctx.beginPath(); ctx.arc(a.x, a.y, def.r, 0, TAU); return 1;
       case "sweep": pathCone(a.x, a.y, def.r, a.a, def.half * DEG); return 1;
       case "bomb": ctx.beginPath(); ctx.arc(a.x, a.y, def.r, 0, TAU); return 1;
       case "sandwave": ctx.beginPath(); ctx.rect(a.a0, -10, a.a1 - a.a0, a.g0 + 10); ctx.rect(a.a0, a.g1, a.a1 - a.a0, AH - a.g1 + 10); return 1;
@@ -2097,7 +2129,7 @@ function drawTele(a, T, S) {
   if (shape()) { ctx.strokeStyle = a.k === "summon" ? "rgba(255,174,92,.9)" : teleCol(a, .85); ctx.lineWidth = 2; ctx.stroke(); }
   // filling progress: scale toward the hit time
   ctx.save();
-  if (["cleave", "flurry", "spin", "whirl", "mark", "heavy", "pounce", "pull", "mhit", "warp", "hop", "sweep", "bomb", "backstab"].includes(a.k)) {
+  if (["cleave", "flurry", "spin", "whirl", "mark", "heavy", "pounce", "pull", "mhit", "warp", "hop", "sweep", "bomb", "backstab", "crank", "spring"].includes(a.k)) {
     const cx = a.x, cy = a.y; ctx.translate(cx, cy); ctx.scale(p, p); ctx.translate(-cx, -cy); fill(.3);
   } else fill(.08 + .28 * p);
   ctx.restore();
@@ -2642,7 +2674,7 @@ let stChangeAt = performance.now();
 const aud = { bs: "", seenCast: new Set(), seenImpact: new Set(), st: "", ph: -1, run: -1, adds: 0, beep: -1 };
 const IMPACT = { cleave: "imp_slam", flurry: "imp_slam", mark: "imp_slam", pounce: "imp_slam", heavy: "imp_heavy", spin: "imp_sweep", whirl: "imp_sweep",
   donut: "imp_blast", clock: "imp_blast", pull: "imp_blast", stack: "imp_blast", spread: "imp_blast", polarity: "imp_blast",
-  charge: "imp_charge", rush: "imp_charge", warp: "imp_blast", hop: "imp_slam", sweep: "imp_small", backstab: "imp_slam", slash: "imp_charge", sandwave: "imp_sand", bomb: "imp_heavy", eclipse: "imp_small", ripple: "imp_slam", ring: "imp_slam", haven: "imp_blast", sandpool: "imp_sand", sandwall: "imp_sand", gear: "imp_gear", decoy: "imp_decoy", mhit: "imp_small", summon: "summon" };
+  charge: "imp_charge", rush: "imp_charge", crank: "imp_sweep", spring: "imp_heavy", warp: "imp_blast", hop: "imp_slam", sweep: "imp_small", backstab: "imp_slam", slash: "imp_charge", sandwave: "imp_sand", bomb: "imp_heavy", eclipse: "imp_small", ripple: "imp_slam", ring: "imp_slam", haven: "imp_blast", sandpool: "imp_sand", sandwall: "imp_sand", gear: "imp_gear", decoy: "imp_decoy", mhit: "imp_small", summon: "summon" };
 function audioEvents(S, T) {
   const st = S ? S.st : "lobby";
   if (S && S.run !== aud.run) { aud.run = S.run; aud.seenCast.clear(); aud.seenImpact.clear(); aud.ph = -1; }
