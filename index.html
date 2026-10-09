@@ -1213,6 +1213,12 @@ function pickKind() {
   for (const [k, w] of pool) { r -= w; if (r <= 0) return k; }
   return pool[0][0];
 }
+/* free running room from (x,y) along angle a before leaving the margins (0 if already outside) */
+function freeLen(x, y, a, max, m) {
+  const ux = Math.cos(a), uy = Math.sin(a);
+  for (let s = 0; s < max; s += 10) { const px = x + ux * s, py = y + uy * s; if (px < m[0] || px > AW - m[0] || py < m[1] || py > AH - m[2]) return Math.max(0, s - 10); }
+  return max;
+}
 function lineLen(x, y, a, max, m) {
   m = m || [90, 140, 80];   // side, top, bottom margins
   const ux = Math.cos(a), uy = Math.sin(a);
@@ -1244,15 +1250,21 @@ function castAttack(kind, T, alive) {
     case "clock": E({ s: Math.floor(Math.random() * 4) }); break;
     case "charge": case "rush": {
       // charge through the target and well past it. If a wall is too close, the boss first backs up during the warning.
-      const CM = CONFIG.charge.margin, ux = Math.cos(face), uy = Math.sin(face);
-      const need = Math.min(def.len, dist(tgt.pr.x, tgt.pr.y, bx, by) + CONFIG.charge.overshoot, CONFIG.charge.minLen + 400);
-      let sx = bx, sy = by, L = lineLen(bx, by, face, def.len, CM);
-      if (L < Math.max(need, CONFIG.charge.minLen)) {
-        const back = lineLen(bx, by, face + Math.PI, Math.max(need, CONFIG.charge.minLen) - L, CM);
-        sx = bx - ux * back; sy = by - uy * back; L = lineLen(sx, sy, face, def.len, CM);
-        hostL.anim = { t0: T, dur: Math.min(.45, warn * .6), x0: bx, y0: by, x1: sx, y1: sy };
+      const CM = CONFIG.charge.margin, minLen = CONFIG.charge.minLen;
+      const want = Math.max(minLen, Math.min(def.len, dist(tgt.pr.x, tgt.pr.y, bx, by) + CONFIG.charge.overshoot));
+      // start from inside the run-able area, then plan: run forward, backing up first only as far as there is room behind
+      const x0 = clamp(bx, CM[0] + 1, AW - CM[0] - 1), y0 = clamp(by, CM[1] + 1, AH - CM[2] - 1);
+      const plan = ang => { const f = freeLen(x0, y0, ang, def.len, CM), back = f >= want ? 0 : Math.min(want - f, freeLen(x0, y0, ang + Math.PI, want, CM)); return { ang, back, len: Math.min(def.len, f + back) }; };
+      let best = plan(face);
+      if (best.len < minLen) {   // boxed in along that line (wall ahead and behind): angle the run toward open floor instead
+        const toC = Math.atan2(360 - y0, 640 - x0);
+        for (const ang of [face + .5, face - .5, (face + toC) / 2, toC]) { const c = plan(ang); if (c.len > best.len) best = c; }
       }
-      E({ x: Math.round(sx), y: Math.round(sy), l: L });
+      const ux = Math.cos(best.ang), uy = Math.sin(best.ang), sx = x0 - ux * best.back, sy = y0 - uy * best.back;
+      const L = Math.max(60, freeLen(sx, sy, best.ang, def.len, CM));
+      H.bf = r3(best.ang);
+      if (dist(sx, sy, bx, by) > 2) hostL.anim = { t0: T, dur: Math.min(.45, warn * .6), x0: bx, y0: by, x1: sx, y1: sy };
+      E({ x: Math.round(sx), y: Math.round(sy), a: H.bf, l: L });
       hostL.pending.push({ at: th, fn: t => { hostL.anim = { t0: t, dur: def.move, x0: sx, y0: sy, x1: sx + ux * L, y1: sy + uy * L, lin: true }; } });
       end = th + def.move;
       if (kind === "rush") hostL.chain = hostL.chain == null ? def.count + X - 1 : hostL.chain - 1;
