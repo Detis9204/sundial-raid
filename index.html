@@ -218,10 +218,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <dl class="keys">
         <dt>마우스 오른쪽</dt><dd>땅: 그 지점으로 이동 · 적: 주력기 사거리까지 따라감</dd>
         <dt>S · H</dt><dd>정지 · 제자리 유지</dd>
-        <dt>W · 왼쪽 클릭</dt><dd>주력기 (커서 방향). 기본 공격은 없고, 누르고 있으면 재사용 대기시간마다 연속 사용</dd>
-        <dt>Q · E · R</dt><dd>스킬 (커서 방향). R은 누르고 있다 놓는 채널링 · 3단 충전</dd>
+        <dt>Q · 왼쪽 클릭</dt><dd>주력기 (커서 방향). 기본 공격은 없고, 누르고 있으면 재사용 대기시간마다 연속 사용</dd>
+        <dt>W · E · R</dt><dd>공격 · 보조 · 결정 스킬 (커서 방향). R은 누르고 있다 놓는 채널링 · 3단 충전</dd>
         <dt>Space</dt><dd>회피. 커서 방향으로 빠르게 이동 · 무적 없음</dd>
-        <dt>D</dt><dd>밀치기. 주변의 적과 아군을 모두 밀쳐내고, 맞힌 수만큼 체력 회복</dd>
+        <dt>D</dt><dd>밀치기. 피해 없이 주변의 적과 아군을 모두 튕겨내고, 맞힌 수만큼 체력 회복</dd>
         <dt>F (길게)</dt><dd>쓰러진 동료 곁에서 3초 누르면 부활</dd>
         <dt>Tab (누른 채)</dt><dd>전체 플레이어 증강 보기</dd>
         <dt>범위 색</dt><dd><span class="r">빨강</span> 피하기 · <span class="t">청록·보라</span> 협동 기믹</dd>
@@ -312,7 +312,8 @@ const CONFIG = {
   /* 회피: no invulnerability, just a quick burst of movement toward the cursor */
   dash: { cd: 2.0, time: .16, speed: 760, iframe: 0 },
   /* 밀치기: knocks back everyone around (allies too). Each body hit heals the pusher. */
-  push: { cd: 7, radius: 110, dmg: 12, allyForce: 170, enemyForce: 120, time: .22, healPct: .06, maxTargets: 3 },
+  /* 밀치기: no damage. Targets are flung away (speed), slow down with friction and bounce off the arena walls. */
+  push: { cd: 7, radius: 110, speed: 950, friction: 5, bounce: .6, enemySpeedMul: .8, healPct: .06, maxTargets: 3 },
   channel: { overhold: 1.2, interruptCdRatio: .3, fizzleCd: 1.0, stageMul: [0, .45, .75, 1.0], flashTime: .35 },
   revive: { downedTime: 15, holdTime: 3, range: 80, hpRatio: .3 },
   combat: { recDmgBonus: .2, backAttackMul: 1.4, backAngle: 2.1, minionShieldPerUnit: .15, minionShieldMin: .55, closeRange: 120, regenEvery: 5, poisonTick: .5 },
@@ -452,7 +453,7 @@ const CONFIG = {
     { id: "arm",      g: "臂", name: "억센 팔",      rar: 0, v: .5,  desc: v => `밀치기 회복량 +${pc(v)}`, fx: (s, v) => { s.pushHealMul *= 1 + v; } },
     { id: "gap",      g: "隙", name: "약점 파악",    rar: 0, v: .2,  desc: v => `빈틈 상태 보스에게 주는 피해 +${pc(v)}`, fx: (s, v) => { s.recBonus += v; } },
     { id: "regen",    g: "癒", name: "재생",         rar: 0, v: 4,   desc: v => `5초마다 체력 ${v} 회복`, fx: (s, v) => { s.regen += v; } },
-    { id: "qcd",      g: "先", name: "첫 수",        rar: 0, v: .2,  desc: v => `Q 스킬 재사용 대기시간 -${pc(v)}`, fx: (s, v) => { s.cdMul[0] *= 1 - v; } },
+    { id: "qcd",      g: "先", name: "첫 수",        rar: 0, v: .2,  desc: v => `W 스킬 재사용 대기시간 -${pc(v)}`, fx: (s, v) => { s.cdMul[0] *= 1 - v; } },
     { id: "kn_arc",   g: "劍", name: "검술 숙련",    rar: 0, cls: "knight",  v: [30, .06], desc: v => `베기 각도 +${v[0]}°, 공격력 +${pc(v[1])}`, fx: (s, v) => { s.arcAdd += v[0]; s.atkMul *= 1 + v[1]; } },
     { id: "ro_poison",g: "毒", name: "독칼",         rar: 0, cls: "rogue",   v: [3, 6],    desc: v => `찌르기 적중 시 ${v[0]}초 동안 초당 ${v[1]} 독 피해`, fx: (s, v) => { s.poisonTime = v[0]; s.poisonDps = v[1]; } },
     { id: "pa_bash",  g: "盾", name: "방패 숙련",    rar: 0, cls: "paladin", v: [.4, .2],  desc: v => `방패 강타 피해 +${pc(v[0])}, 밀치기 범위 +${pc(v[1])}`, fx: (s, v) => { s.bashMul *= 1 + v[0]; s.pushRadiusMul *= 1 + v[1]; } },
@@ -470,7 +471,7 @@ const CONFIG = {
     { id: "pa_sanct", g: "聖", name: "성역",         rar: 1, cls: "paladin", v: [.5, 10], desc: v => `결계 범위 +${pc(v[0])}, 결계 받은 동료 체력 ${v[1]} 회복`, fx: (s, v) => { s.wardRangeMul *= 1 + v[0]; s.wardHeal += v[1]; } },
     { id: "gn_head",  g: "的", name: "헤드샷",       rar: 1, cls: "gunner",  v: [4, 1.0], desc: v => `사격 ${v[0]}발마다 피해 +${pc(v[1])}`, fx: (s, v) => { s.headEvery = v[0]; s.headMul = Math.max(s.headMul, v[1]); } },
     { id: "haste",    g: "時", name: "시간 가속",    rar: 2, v: [.2, .1], desc: v => `모든 스킬 재사용 대기시간 -${pc(v[0])}, 주력기 속도 +${pc(v[1])}`, fx: (s, v) => { for (let i = 0; i < 3; i++) s.cdMul[i] *= 1 - v[0]; s.aspdMul *= 1 + v[1]; } },
-    { id: "shock",    g: "震", name: "충격파",       rar: 2, v: [.4, 5], desc: v => `밀치기 범위 +${pc(v[0])}, 밀치기 피해 ${v[1]}배`, fx: (s, v) => { s.pushRadiusMul *= 1 + v[0]; s.pushDmgMul *= v[1]; } },
+    { id: "shock",    g: "震", name: "충격파",       rar: 2, v: [.4, .5], desc: v => `밀치기 범위 +${pc(v[0])}, 튕겨내는 힘 +${pc(v[1])}`, fx: (s, v) => { s.pushRadiusMul *= 1 + v[0]; s.pushForceMul *= 1 + v[1]; } },
     { id: "undying",  g: "不", name: "불굴",         rar: 2, v: .3,  desc: v => `스테이지마다 1회, 쓰러질 피해를 받으면 체력 ${pc(v)}로 버팀`, fx: (s, v) => { s.undying = v; } },
     { id: "overcharge",g:"過", name: "과충전",       rar: 2, v: .4,  desc: v => `채널링 최대 충전 피해 +${pc(v)}`, fx: (s, v) => { s.maxChargeBonus += v; } },
     { id: "kn_quake", g: "裂", name: "대지 분쇄",    rar: 2, cls: "knight",  v: .6,  desc: v => `대지 가르기 최대 충전 시 0.4초 뒤 충격파 한 번 더 (${pc(v)})`, fx: (s, v) => { s.quakeEcho = v; } },
@@ -723,7 +724,7 @@ function sanitize(p) {
     sw: Math.round(num(p.sw, 0, 1e9, 0)), cx: Math.round(num(p.cx, 0, 1e9, 0)),
     fx: (Array.isArray(p.fx) && p.fx.length >= 5) ? [num(p.fx[0], 0, 1e9, 0), Math.round(num(p.fx[1], 0, 20, 0)), num(p.fx[2], -100, AW + 100, 0), num(p.fx[3], -100, AH + 100, 0), num(p.fx[4], -7, 7, 0)] : null,
     wd: trip(p.wd), hl: trip(p.hl),
-    pu: (Array.isArray(p.pu) && p.pu.length >= 4) ? [num(p.pu[0], 0, 1e9, 0), num(p.pu[1], 0, AW, 0), num(p.pu[2], 0, AH, 0), num(p.pu[3], 0, 400, 110)] : null,
+    pu: (Array.isArray(p.pu) && p.pu.length >= 4) ? [num(p.pu[0], 0, 1e9, 0), num(p.pu[1], 0, AW, 0), num(p.pu[2], 0, AH, 0), num(p.pu[3], 0, 400, 110), num(p.pu[4], .5, 3, 1)] : null,
     ag: Array.isArray(p.ag) ? p.ag.filter(x => typeof x === "string" && AUG[x]).slice(0, 40) : [],
     pk: Math.round(num(p.pk, -1, 1e9, -1)), ad,
     ch: (Array.isArray(p.ch) && p.ch.length >= 3) ? [Math.round(num(p.ch[0], 0, 2, 0)), num(p.ch[1], 0, 3, 0), Math.round(num(p.ch[2], 0, 3, 0))] : null,
@@ -961,6 +962,16 @@ function hostTick(now) {
   const MC = CONFIG.minion;
   for (const m of H.adds) {
     if (m.k !== "minion") continue;
+    if (m.vx || m.vy) {   // flying from a push
+      const P = CONFIG.push;
+      m.x += m.vx * dt; m.y += m.vy * dt;
+      if (m.x < 20 || m.x > AW - 20) m.vx = -m.vx * P.bounce;
+      if (m.y < 20 || m.y > AH - 20) m.vy = -m.vy * P.bounce;
+      const f = Math.exp(-P.friction * dt); m.vx = Math.round(m.vx * f); m.vy = Math.round(m.vy * f);
+      if (Math.hypot(m.vx, m.vy) < 30) { m.vx = 0; m.vy = 0; }
+      m.x = Math.round(clamp(m.x, 20, AW - 20) * 10) / 10; m.y = Math.round(clamp(m.y, 20, AH - 20) * 10) / 10;
+      continue;
+    }
     let tg = null, bd = 1e9; for (const p of alive) { const d = dist(p.pr.x, p.pr.y, m.x, m.y); if (d < bd) { bd = d; tg = p; } }
     if (!tg) continue;
     const dx = tg.pr.x - m.x, dy = tg.pr.y - m.y;
@@ -982,7 +993,7 @@ function hostTick(now) {
       if (a.k !== "minion") continue;
       const dx = a.x - pu[1], dy = a.y - pu[2], d = Math.hypot(dx, dy) || 1;
       if (d > pu[3] + CONFIG.minion.r) continue;
-      a.x += dx / d * CONFIG.push.enemyForce; a.y += dy / d * CONFIG.push.enemyForce; a.nx = Math.max(a.nx, r3(T + .8));
+      const sp = CONFIG.push.speed * CONFIG.push.enemySpeedMul * (pu[4] || 1); a.vx = Math.round(dx / d * sp); a.vy = Math.round(dy / d * sp); a.nx = Math.max(a.nx, r3(T + .8));
     }
   }
   separateAdds(H, B);
@@ -1162,7 +1173,7 @@ function baseStats() {
     counterAdd: 0, counterTimeAdd: 0, dashBuff: 0, dashBuffTime: 0, lifesteal: 0, closeBonus: 0, reviveSpd: 1, reviveHp: 0,
     parryIframe: 0, parryReset: false, perfectCounter: 0, undying: 0, maxChargeBonus: 0,
     arcAdd: 0, spinRange: 1, spinMul: 1, quakeEcho: 0, poisonTime: 0, poisonDps: 0, shadowBack: 0, execLow: 0, execMul: 0,
-    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0, pushHealMul: 1, pushCdMul: 1, pushRadiusMul: 1, pushDmgMul: 1, dashDistMul: 1 };
+    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0, pushHealMul: 1, pushCdMul: 1, pushRadiusMul: 1, pushDmgMul: 1, pushForceMul: 1, dashDistMul: 1 };
 }
 function recalcStats() {
   const s = baseStats();
@@ -1284,9 +1295,9 @@ function doPush() {
   me.pushCd = P.cd * st.pushCdMul;
   const R = P.radius * st.pushRadiusMul;
   emitFx(15, st.pushRadiusMul);
-  me.pu = [++me.evId, Math.round(me.x), Math.round(me.y), Math.round(R)];
+  me.pu = [++me.evId, Math.round(me.x), Math.round(me.y), Math.round(R), r3(st.pushForceMul)];
   let hits = 0;
-  for (const e of enemies()) if (edgeDist(e) <= R) { deal(e, P.dmg * st.pushDmgMul, { noBuff: true }); hits++; }
+  for (const e of enemies()) if (edgeDist(e) <= R) { float(e.x, e.y - e.r - 12, "밀침", "#9fd8ff"); hits++; }
   const S = curS;
   for (const p of others) {
     const pr = p.presence; if (pr.dn || (S && S.st === "fight" && pr.r !== S.run)) continue;
@@ -1297,10 +1308,10 @@ function doPush() {
     me.hp = Math.min(me.mh, me.hp + heal); float(me.x, me.y - 44, "+" + heal, "#7fd3a3", true); SFX.play("heal", .6);
   }
 }
-function knockMe(fromX, fromY, force) {
-  const P = CONFIG.push, dx = me.x - fromX, dy = me.y - fromY, d = Math.hypot(dx, dy);
+function knockMe(fromX, fromY, speed) {
+  const dx = me.x - fromX, dy = me.y - fromY, d = Math.hypot(dx, dy);
   const ux = d > .5 ? dx / d : Math.cos(Math.random() * TAU), uy = d > .5 ? dy / d : Math.sin(Math.random() * TAU);
-  me.kb = { vx: ux * force / P.time, vy: uy * force / P.time, t: P.time };
+  me.kb = { vx: ux * speed, vy: uy * speed };
   me.order = null;
   if (me.ch) interruptChannel("밀려남");
   if (me.rvP > 0) { me.rvP = 0; me.rv = null; }
@@ -1496,7 +1507,7 @@ const keys = new Set();
 const mouse = { x: 640, y: 300, in: false };
 let queued = new Set(), released = new Set(), armed = false;
 function inGame() { return net.mode !== "off"; }
-const SKILL_KEYS = ["KeyQ", "KeyE", "KeyR"];
+const SKILL_KEYS = ["KeyW", "KeyE", "KeyR"];
 addEventListener("keydown", e => {
   if (!inGame() || e.target.tagName === "INPUT") return;
   if (["Space", "Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
@@ -1623,7 +1634,7 @@ function updateMe(dt, T, S) {
   }
   SKILL_KEYS.forEach((k, i) => { if (queued.has(k)) useSkill(i); });
   if (me.ch && released.has(SKILL_KEYS[me.ch.i])) releaseChannel();
-  if ((keys.has("KeyW") || mouse.down) && !(S && S.st === "augment")) castMain();
+  if ((keys.has("KeyQ") || mouse.down) && !(S && S.st === "augment")) castMain();
   queued.clear(); released.clear();
 
   // channel
@@ -1645,7 +1656,14 @@ function updateMe(dt, T, S) {
     if (m.onTick) m.onTick();
     if (m.t >= m.dur) { me.move = null; if (m.onEnd) m.onEnd(); }
   } else if (me.dashT > 0) { me.dashT -= dt; me.x += me.ddx * CONFIG.dash.speed * st.dashDistMul * dt; me.y += me.ddy * CONFIG.dash.speed * st.dashDistMul * dt; }
-  if (me.kb) { me.kb.t -= dt; me.x += me.kb.vx * dt; me.y += me.kb.vy * dt; if (me.kb.t <= 0) me.kb = null; }
+  if (me.kb) {   // flung by a push: slide, bounce off walls, slow down
+    const P = CONFIG.push, k = me.kb;
+    me.x += k.vx * dt; me.y += k.vy * dt;
+    if (me.x < 14 || me.x > AW - 14) { k.vx = -k.vx * P.bounce; me.x = clamp(me.x, 14, AW - 14); }
+    if (me.y < 14 || me.y > AH - 14) { k.vy = -k.vy * P.bounce; me.y = clamp(me.y, 14, AH - 14); }
+    const f = Math.exp(-P.friction * dt); k.vx *= f; k.vy *= f;
+    if (Math.hypot(k.vx, k.vy) < 30) me.kb = null;
+  }
   if (me.multi) {
     me.multi.t -= dt;
     if (me.multi.t <= 0) { me.multi.t = .1; me.multi.left--; emitFx(5); const hit = enemies().filter(e => inArc(e, me.multi.range, 45 * DEG, me.aim)); for (const e of hit) deal(e, me.multi.dmg); if (me.multi.left <= 0) me.multi = null; }
@@ -1691,7 +1709,7 @@ function updateMe(dt, T, S) {
     const fresh = (map, ev) => { const prev = map.get(p.peer); if (!ev) { if (prev === undefined) map.set(p.peer, 0); return false; } if (prev === ev[0]) return false; map.set(p.peer, ev[0]); return prev !== undefined; };
     if (fresh(seenWd, pr.wd) && dist(me.x, me.y, pr.wd[1], pr.wd[2]) <= CLASSES.paladin.skills[1].wardRange * pr.wd[3]) { me.wardUntil = nowS() + CLASSES.paladin.skills[1].wardTime; float(me.x, me.y - 30, "결계", "#9fd8ff"); SFX.play("ward", .7); if (pr.wd[4] && me.hp < me.mh) me.hp = Math.min(me.mh, me.hp + pr.wd[4]); }
     if (fresh(seenHl, pr.hl) && me.hp < me.mh && dist(me.x, me.y, pr.hl[1], pr.hl[2]) <= CLASSES.paladin.skills[2].healRange) { me.hp = Math.min(me.mh, me.hp + (pr.hl[4] || 25)); float(me.x, me.y - 30, "+" + (pr.hl[4] || 25), "#7fd3a3"); SFX.play("heal"); }
-    if (fresh(seenPu, pr.pu) && dist(me.x, me.y, pr.pu[1], pr.pu[2]) <= pr.pu[3] + CONFIG.player.radius) knockMe(pr.pu[1], pr.pu[2], CONFIG.push.allyForce);
+    if (fresh(seenPu, pr.pu) && dist(me.x, me.y, pr.pu[1], pr.pu[2]) <= pr.pu[3] + CONFIG.player.radius) knockMe(pr.pu[1], pr.pu[2], CONFIG.push.speed * (pr.pu[4] || 1));
   }
 }
 function updateOthers(dt) {
@@ -2184,11 +2202,11 @@ function drawHUD(T, S) {
   line(o ? ({ move: "이동 중", atk: "추적 중", hold: "제자리 유지" }[o.t] || "대기") : "대기", "#8f97b3");
   // skill bar
   const sx = AW / 2 - (6 * 76 + 5 * 8 + 14) / 2, sY = AH - 66;
-  drawSlot(sx, sY, "W", C.atk.name, "주력", me.atkCd, C.atk.cd / me.st.aspdMul, null);
+  drawSlot(sx, sY, "Q", C.atk.name, "주력", me.atkCd, C.atk.cd / me.st.aspdMul, null);
   for (let i = 0; i < 3; i++) {
     const sk = C.skills[i];
     const state = me.ch && me.ch.i === i ? { ch: true, stage: me.ch.stage, p: clamp(me.ch.t / sk.channel[2], 0, 1) } : null;
-    drawSlot(sx + 84 + i * 84, sY, "QER"[i] + (sk.channel ? " ⟳" : ""), sk.name, sk.tier, me.cd[i], skillCd(i), state);
+    drawSlot(sx + 84 + i * 84, sY, "WER"[i] + (sk.channel ? " ⟳" : ""), sk.name, sk.tier, me.cd[i], skillCd(i), state);
   }
   drawSlot(sx + 350, sY, "SPC", "회피", "", me.dashCd, CONFIG.dash.cd * me.st.dashCdMul, null);
   drawSlot(sx + 434, sY, "D", "밀치기", "", me.pushCd, CONFIG.push.cd * me.st.pushCdMul, null);
@@ -2330,7 +2348,7 @@ function updateUi(now, S, players, T) {
     $("#diffNormal").setAttribute("aria-pressed", dk === "normal"); $("#diffHard").setAttribute("aria-pressed", dk === "hard");
     $("#diffNormal").disabled = !isHost; $("#diffHard").disabled = !isHost;
     $("#lobbyHint").textContent = isHost
-      ? (net.mode === "solo" ? "오른쪽 클릭으로 다가가 W나 왼쪽 클릭으로 주력기를 써 보세요." : players.length + "/" + MAX_PLAYERS + "명 · 방장은 이 탭을 앞에 띄워 두세요")
+      ? (net.mode === "solo" ? "오른쪽 클릭으로 다가가 Q나 왼쪽 클릭으로 주력기를 써 보세요." : players.length + "/" + MAX_PLAYERS + "명 · 방장은 이 탭을 앞에 띄워 두세요")
       : (hostH ? "방장이 게임을 시작하기를 기다리는 중" : "방장과 동기화하는 중…");
   }
   if (st === "wipe" || st === "victory") {
@@ -2449,8 +2467,8 @@ for (const key of Object.keys(CLASSES)) {
   const b = document.createElement("button"); b.className = "cls"; b.id = "cls-" + key; b.type = "button";
   b.setAttribute("aria-pressed", key === myClass ? "true" : "false");
   b.innerHTML = '<img class="clsArt" alt="" src="' + CONFIG.sprites[key].src + '">' + "<b>" + C.name + '</b><span class="role">' + C.role + " · 체력 " + C.hp + "</span><p>" + C.desc + "</p><ol>" +
-    "<li><span>W 주력</span>" + C.atk.name + " · 피해 " + C.atk.dmg + " · " + C.atk.cd + "초<br><em>" + C.atk.note + "</em></li>" +
-    C.skills.map((s, i) => "<li><span>" + "QER"[i] + " " + s.tier + "</span>" + s.name + " · 피해 " + s.dmg + " · " + s.cd + "초<br><em>" + s.note + "</em></li>").join("") + "</ol>";
+    "<li><span>Q 주력</span>" + C.atk.name + " · 피해 " + C.atk.dmg + " · " + C.atk.cd + "초<br><em>" + C.atk.note + "</em></li>" +
+    C.skills.map((s, i) => "<li><span>" + "WER"[i] + " " + s.tier + "</span>" + s.name + " · 피해 " + s.dmg + " · " + s.cd + "초<br><em>" + s.note + "</em></li>").join("") + "</ol>";
   b.addEventListener("click", () => { myClass = key; save("sr.class", key); recalcStats(); clsBox.querySelectorAll(".cls").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); });
   clsBox.appendChild(b);
 }
