@@ -116,6 +116,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #lobby{position:absolute;left:50%;top:84px;transform:translateX(-50%);width:min(560px,calc(100% - 32px));padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
 #lobby .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
 #lobby h2{margin:0;font-family:var(--f-ko);font-size:18px}
+#diffRow .btn[aria-pressed="true"]{border-color:var(--brass);color:var(--brass)}
+#diffRow #diffHard[aria-pressed="true"]{border-color:var(--rose);color:var(--rose)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{display:flex;align-items:center;gap:6px;font-size:12.5px;background:var(--night);border:1px solid var(--line);border-radius:99px;padding:4px 10px 4px 6px}
 .chip i{width:12px;height:12px;border-radius:50%;display:block}
@@ -180,9 +182,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
   <div id="menuWrap">
     <div id="menu" class="panel">
-      <div class="eyebrow">협동 보스 레이드 · 5 스테이지 · 프로토타입</div>
-      <h1>해시계 레이드<small>FIVE WARDENS OF THE SUNDIAL</small></h1>
-      <p class="lede">시간의 수호자 다섯을 차례로 쓰러뜨리세요. 기본 공격 없이 주력기와 스킬로 싸우고, 회피와 밀치기로 버팁니다. 밀치기는 동료까지 밀어내지만 맞힐 때마다 체력을 회복합니다. 보스전마다 증강을 하나씩 골라 강해지고, 전멸하면 그 스테이지부터 다시 도전합니다.</p>
+      <div class="eyebrow">협동 보스 레이드 · 12 스테이지 · 프로토타입</div>
+      <h1>해시계 레이드<small>SIX WARDENS OF THE SUNDIAL</small></h1>
+      <p class="lede">시간의 수호자 여섯을 12 스테이지에 걸쳐 쓰러뜨리세요. 7 스테이지부터는 각성한 수호자가 다시 나타납니다. 기본 공격 없이 주력기와 스킬로 싸우고, 회피와 밀치기로 버팁니다. 밀치기는 동료까지 밀어내지만 맞힐 때마다 체력을 회복합니다. 보스전마다 증강을 하나씩 골라 강해지고, 전멸하면 그 스테이지부터 다시 도전합니다.</p>
 
       <div class="field">
         <span class="lbl" id="clsLbl">직업</span>
@@ -244,7 +246,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <span class="status" id="lobbyHint"></span>
     </div>
     <div class="chips" id="chips"></div>
-    <button class="btn primary" id="startBtn" hidden>게임 시작 · 5 스테이지</button>
+    <div class="row" id="diffRow" role="group" aria-label="난이도">
+      <button class="btn" type="button" id="diffNormal" aria-pressed="true">보통</button>
+      <button class="btn" type="button" id="diffHard" aria-pressed="false">어려움 · 예고 짧고 패턴 추가</button>
+    </div>
+    <button class="btn primary" id="startBtn" hidden>게임 시작 · 12 스테이지</button>
   </div>
 
   <div id="augPick" hidden>
@@ -299,7 +305,7 @@ const CONFIG = {
   /* character art: drawn pixel-crisp, flipped to face the way the character looks. facesRight = which way the source image looks. */
   sprites: { knight: { src: "assets/knight.png", h: 50, facesRight: true }, paladin: { src: "assets/paladin.png", h: 50, facesRight: true }, rogue: { src: "assets/rogue.png", h: 48, facesRight: true }, gunner: { src: "assets/gunner.png", h: 50, facesRight: true } },
   audio: { master: .7, sfx: 1.0, music: .3, verb: .32, verbTime: 2.2, drive: 6, riserVol: .14, riserMax: 3.0,
-           bpm: [112, 118, 124, 130, 138], bpmPerPhase: 8, calmBpm: 76, keys: [50, 49, 52, 47, 48], lowHpRatio: .3 },
+           bpm: [112, 118, 124, 130, 136, 140, 128, 134, 140, 146, 152, 158], bpmPerPhase: 8, calmBpm: 76, keys: [50, 49, 52, 47, 48, 45, 50, 49, 52, 47, 48, 45], lowHpRatio: .3 },
   net: { maxPlayers: 8, sendMs: 33 },
   player: { moveSpeed: 250, radius: 12 },
   controls: { acquireRange: 170, arriveDist: 6, markerTime: .6, pickPad: 12 },
@@ -312,46 +318,59 @@ const CONFIG = {
   combat: { recDmgBonus: .2, backAttackMul: 1.4, backAngle: 2.1, minionShieldPerUnit: .15, minionShieldMin: .55, closeRange: 120, regenEvery: 5, poisonTick: .5 },
   stageFlow: { transition: 2.0, phaseAt: [.7, .4], comboChance: .4, clearDelay: 3.5, augmentTimeout: 40, augmentStartDelay: 1.2, phase3TempoMul: .92 },
   scaling: { perPlayerHp: .8, perPlayerAddHp: .35 },
+  /* stages 7-12 bring the wardens back awakened: more HP, harder hits, faster tempo */
   stages: [
     { boss: "hora",   hp: 9000,  dmgMul: 1.00, tempo: 1.00, rarity: [80, 18, 2] },
-    { boss: "seka",   hp: 10500, dmgMul: 1.12, tempo: .95,  rarity: [65, 28, 7] },
-    { boss: "klepsy", hp: 12000, dmgMul: 1.25, tempo: .90,  rarity: [50, 37, 13] },
-    { boss: "mekan",  hp: 13500, dmgMul: 1.38, tempo: .86,  rarity: [38, 42, 20] },
-    { boss: "dualis", hp: 15500, dmgMul: 1.52, tempo: .82,  rarity: [25, 45, 30] },
+    { boss: "seka",   hp: 10500, dmgMul: 1.10, tempo: .96,  rarity: [70, 25, 5] },
+    { boss: "klepsy", hp: 12000, dmgMul: 1.20, tempo: .92,  rarity: [60, 32, 8] },
+    { boss: "mekan",  hp: 13500, dmgMul: 1.30, tempo: .89,  rarity: [50, 38, 12] },
+    { boss: "dualis", hp: 15000, dmgMul: 1.40, tempo: .86,  rarity: [42, 42, 16] },
+    { boss: "tollia", hp: 16500, dmgMul: 1.50, tempo: .84,  rarity: [35, 45, 20] },
+    { boss: "hora",   hp: 18500, dmgMul: 1.60, tempo: .82,  rarity: [30, 46, 24], tag: "각성" },
+    { boss: "seka",   hp: 20500, dmgMul: 1.70, tempo: .80,  rarity: [25, 47, 28], tag: "각성" },
+    { boss: "klepsy", hp: 22500, dmgMul: 1.80, tempo: .78,  rarity: [20, 48, 32], tag: "각성" },
+    { boss: "mekan",  hp: 24500, dmgMul: 1.90, tempo: .76,  rarity: [16, 48, 36], tag: "각성" },
+    { boss: "dualis", hp: 27000, dmgMul: 2.00, tempo: .74,  rarity: [12, 48, 40], tag: "각성" },
+    { boss: "tollia", hp: 30000, dmgMul: 2.10, tempo: .72,  rarity: [8, 47, 45],  tag: "각성" },
   ],
+  /* 7. hard: shorter warnings and openings, harder hits, combos from phase II, one more of everything */
+  difficulty: {
+    normal: { name: "보통",   warnMul: 1.0, recMul: 1.0, dmgMul: 1.0,  hpMul: 1.0,  combo: .4, comboFrom: 2, extra: 0 },
+    hard:   { name: "어려움", warnMul: .8,  recMul: .8,  dmgMul: 1.25, hpMul: 1.15, combo: .7, comboFrom: 1, extra: 1 },
+  },
   /* atk = the class's main skill (W / left click). There is no basic attack. */
   classes: {
     knight: {
       name: "검사", role: "균형형 · 넓은 베기", desc: "넓은 베기 주력기와 돌진으로 빈틈을 놓치지 않는 정석 딜러.",
-      hp: 100, atk: { name: "베기", dmg: 55, cd: 1.0, range: 100, arc: 110, note: "커서 방향 넓은 부채꼴" },
+      hp: 100, atk: { name: "베기", dmg: 65, cd: 1.25, range: 100, arc: 110, note: "커서 방향 넓은 부채꼴" },
       skills: [
-        { name: "회전베기", tier: "약", cd: 6, dmg: 70, range: 120, note: "주변 360°" },
-        { name: "돌진 찌르기", tier: "중", cd: 14, dmg: 150, dist: 230, note: "커서 방향 돌진, 지나간 적 관통" },
-        { name: "대지 가르기", tier: "강", cd: 26, dmg: 340, channel: [.45, .9, 1.35], range: [150, 200, 250], arc: 70, note: "채널링 · 단계마다 범위·피해 증가" },
+        { name: "회전베기", tier: "공격", cd: 6, dmg: 160, range: 120, note: "주변 360° 공격" },
+        { name: "돌진 찌르기", tier: "보조", cd: 14, dmg: 120, dist: 230, note: "이동 · 커서 방향 돌진, 지나간 적 관통" },
+        { name: "대지 가르기", tier: "결정", cd: 40, dmg: 750, channel: [.45, .9, 1.35], range: [150, 200, 250], arc: 70, note: "채널링 · 단계마다 범위·피해 증가" },
       ] },
     rogue: {
       name: "쌍검사", role: "고속 딜러 · 백어택", desc: "체력이 낮지만 찌르기가 빠르다. 보스 등 뒤에서 때리면 피해 1.4배.",
-      hp: 80, atk: { name: "찌르기", dmg: 30, cd: .55, range: 80, arc: 70, note: "짧고 빠른 찌르기" },
+      hp: 80, atk: { name: "찌르기", dmg: 36, cd: .7, range: 80, arc: 70, note: "짧고 빠른 찌르기" },
       skills: [
-        { name: "연속 찌르기", tier: "약", cd: 6, dmg: 84, hits: 3, range: 85, note: "0.3초간 3연타" },
-        { name: "그림자 습격", tier: "중", cd: 15, dmg: 160, range: 340, note: "보스 등 뒤로 순간이동, 멀면 커서 방향 점멸" },
-        { name: "처형", tier: "강", cd: 26, dmg: 360, channel: [.3, .6, .9], range: 95, arc: 90, lowHp: .3, lowMul: 1.5, note: "채널링 · 보스 체력 30% 이하면 1.5배" },
+        { name: "연속 찌르기", tier: "공격", cd: 6, dmg: 180, hits: 3, range: 85, note: "0.3초간 3연타" },
+        { name: "그림자 습격", tier: "보조", cd: 15, dmg: 120, range: 340, note: "이동 · 보스 등 뒤로 순간이동, 멀면 커서 방향 점멸" },
+        { name: "처형", tier: "결정", cd: 40, dmg: 780, channel: [.3, .6, .9], range: 95, arc: 90, lowHp: .3, lowMul: 1.5, note: "채널링 · 보스 체력 30% 이하면 1.5배" },
       ] },
     paladin: {
       name: "수호기사", role: "방어 · 지원", desc: "체력이 높고 주력기가 묵직하다. 동료에게 결계와 회복을 나눠 준다.",
-      hp: 120, atk: { name: "철퇴", dmg: 72, cd: 1.3, range: 95, arc: 120, note: "넓고 묵직한 내려치기" },
+      hp: 120, atk: { name: "철퇴", dmg: 88, cd: 1.6, range: 95, arc: 120, note: "넓고 묵직한 내려치기" },
       skills: [
-        { name: "방패 강타", tier: "약", cd: 6, dmg: 80, range: 95, note: "전방 강타" },
-        { name: "수호의 결계", tier: "중", cd: 18, dmg: 40, range: 160, wardRange: 170, wardTime: 5, note: "주변 동료 피해 1회 무효" },
-        { name: "심판의 망치", tier: "강", cd: 30, dmg: 300, channel: [.4, .8, 1.2], leap: [120, 190, 260], radius: 120, heal: 25, healRange: 170, note: "채널링 · 단계마다 도약 거리 증가, 착지 시 회복" },
+        { name: "방패 강타", tier: "공격", cd: 6, dmg: 160, range: 95, note: "전방 강타" },
+        { name: "수호의 결계", tier: "보조", cd: 18, dmg: 40, range: 160, wardRange: 170, wardTime: 5, note: "방어 · 주변 동료 피해 1회 무효" },
+        { name: "심판의 망치", tier: "결정", cd: 45, dmg: 650, channel: [.4, .8, 1.2], leap: [120, 190, 260], radius: 120, heal: 30, healRange: 170, note: "채널링 · 단계마다 도약 거리 증가, 착지 시 회복" },
       ] },
     gunner: {
       name: "사수", role: "원거리 · 관통 저격", desc: "멀리서 쏘지만 사격이 근접 주력기보다 느리고 체력이 낮다. 위험하면 물러나며 쏜다.",
-      hp: 85, atk: { name: "사격", dmg: 52, cd: 1.55, range: 360, arc: 0, ranged: true, speed: 1100, note: "커서 방향 직선탄, 처음 맞은 적에게 피해" },
+      hp: 85, atk: { name: "사격", dmg: 64, cd: 1.9, range: 360, arc: 0, ranged: true, speed: 1100, note: "커서 방향 직선탄, 처음 맞은 적에게 피해" },
       skills: [
-        { name: "후퇴 사격", tier: "약", cd: 8, dmg: 65, back: 150, note: "커서 방향으로 쏘고 반대쪽으로 물러남" },
-        { name: "관통탄", tier: "중", cd: 15, dmg: 150, len: 620, w: 20, note: "커서 방향 일직선의 적을 모두 관통" },
-        { name: "정밀 저격", tier: "강", cd: 26, dmg: 330, channel: [.5, 1.0, 1.5], len: [700, 950, 1300], w: [14, 20, 28], note: "채널링 · 단계마다 사거리·굵기·피해 증가" },
+        { name: "관통탄", tier: "공격", cd: 7, dmg: 190, len: 620, w: 20, note: "커서 방향 일직선의 적을 모두 관통" },
+        { name: "후퇴 사격", tier: "보조", cd: 9, dmg: 65, back: 150, note: "이동 · 커서 방향으로 쏘고 반대쪽으로 물러남" },
+        { name: "정밀 저격", tier: "결정", cd: 40, dmg: 760, channel: [.5, 1.0, 1.5], len: [700, 950, 1300], w: [14, 20, 28], note: "채널링 · 단계마다 사거리·굵기·피해 증가" },
       ] },
   },
   /* g: guardable (yellow). c: co-op gimmick colour. dmg is before the stage multiplier. */
@@ -373,9 +392,11 @@ const CONFIG = {
     summon:   { name: "태엽 병정 소환", g: false, warn: 1.4, rec: 1.8, dmg: 0, count: 2, hint: "병정을 먼저 처치" },
     decoy:    { name: "태엽 분신",      g: false, warn: 9.0, rec: 1.2, dmg: 12, count: 2, bigParty: 3, hint: "분신을 부숴야 함", fixed: true },
     gear:     { name: "톱니 투척",      g: false, warn: 1.0, rec: .9,  dmg: 20, w: 40, len: 900, hint: "선 사이로" },
-    stack:    { name: "공명",           g: false, warn: 2.6, rec: 1.3, dmg: 36, r: 110, need: 2, c: "stack", hint: "표시된 동료에게 모이기" },
+    stack:    { name: "공명",           g: false, warn: 2.6, rec: 1.3, dmg: 36, r: 110, need: 2, c: "stack", hint: "표시된 인원만큼 모이면 피해 없음" },
     spread:   { name: "반발",           g: false, warn: 2.2, rec: 1.0, dmg: 24, r: 100, c: "spread", hint: "서로 흩어지기" },
     polarity: { name: "명암 반전",      g: false, warn: 3.0, rec: 1.6, dmg: 34, c: "pol", hint: "내 색깔 쪽으로" },
+    haven:    { name: "피난처",         g: false, warn: 2.4, rec: 1.4, dmg: 30, r: 85, count: 2, c: "haven", hint: "초록 원 안으로 들어가기" },
+    ring:     { name: "종소리 파문",    g: false, warn: 1.3, rec: 1.3, dmg: 22, w: 110, count: 3, step: .55, hint: "파문이 지나간 자리로" },
     mhit:     { name: "병정 베기",      g: true,  warn: .85, rec: 0,   dmg: 7,  r: 42, hint: "" },
   },
   bosses: {
@@ -391,11 +412,11 @@ const CONFIG = {
                       [["rush", 3], ["flurry", 3], ["pounce", 2], ["whirl", 2]],
                       [["rush", 2], ["flurry", 3], ["pounce", 2], ["whirl", 2], ["heavy", 2]]],
               force: ["flurry", "pounce", "rush"] },
-    klepsy: { name: "클렙시", title: "모래시계 여왕", look: "hourglass", r: 62, speed: [70, 80, 90],
+    klepsy: { name: "클렙시", title: "모래시계 여왕", look: "hourglass", r: 62, speed: [115, 130, 145],
               pal: ["#f7e1a8", "#c9a35a", "#3e6f70", "#14232a", "#f2c46b"], floor: "242,196,107",
               pools: [[["sandpool", 3], ["spin", 2], ["mark", 1]],
                       [["sandpool", 2], ["spin", 1], ["sandwall", 2], ["pull", 2]],
-                      [["sandpool", 2], ["sandwall", 2], ["pull", 2], ["donut", 2], ["mark", 1]]],
+                      [["sandpool", 2], ["sandwall", 2], ["pull", 2], ["donut", 1], ["mark", 1], ["haven", 2]]],
               force: ["sandpool", "sandwall", "pull"] },
     mekan:  { name: "메카니카", title: "태엽 인형사", look: "gear", r: 60, speed: [80, 90, 100],
               pal: ["#f0b98a", "#b56a35", "#4d2a14", "#1c1612", "#ffae5c"], floor: "255,174,92",
@@ -406,9 +427,15 @@ const CONFIG = {
     dualis: { name: "듀얼리스", title: "쌍극의 시계", look: "dual", r: 60, speed: [95, 105, 115],
               pal: ["#fff1c9", "#d9b25c", "#5a3f9e", "#151229", "#b892ff"], floor: "184,146,255",
               pools: [[["stack", 2], ["spread", 2], ["cleave", 2], ["charge", 1]],
-                      [["stack", 2], ["spread", 2], ["polarity", 3], ["cleave", 1], ["spin", 1]],
+                      [["stack", 2], ["spread", 2], ["polarity", 3], ["cleave", 1], ["haven", 1]],
                       [["stack", 2], ["spread", 2], ["polarity", 2], ["donut", 1], ["heavy", 1], ["charge", 1]]],
               force: ["stack", "polarity", "spread"] },
+    tollia: { name: "톨리아", title: "종탑의 집행자", look: "bell", r: 60, speed: [100, 112, 124],
+              pal: ["#e6f4ff", "#7fb2d9", "#2b4a6e", "#101a2b", "#9fd8ff"], floor: "159,216,255",
+              pools: [[["ring", 3], ["haven", 2], ["cleave", 2], ["mark", 1]],
+                      [["ring", 3], ["haven", 2], ["spin", 1], ["heavy", 2], ["spread", 1]],
+                      [["ring", 2], ["haven", 2], ["heavy", 2], ["charge", 1], ["clock", 1], ["stack", 1]]],
+              force: ["ring", "haven", "ring"] },
   },
   minion: { hp: 170, speed: 92, r: 18, atkRange: 46, atkCd: 3.0, maxAlive: 4, summonCap: 2 },
   decoy: { hp: 240, r: 40 },
@@ -848,8 +875,9 @@ function playersList() {
 /* =====================================================================
    HOST: game flow, boss AI
    ===================================================================== */
+function diffCfg() { return CONFIG.difficulty[(HS && HS.diff) || "normal"] || CONFIG.difficulty.normal; }
 function lobbyState(prev) {
-  return { st: "lobby", game: prev ? prev.game : 0, stage: 0, run: prev ? prev.run : 0, akey: -1, adl: 0, boss: CONFIG.stages[0].boss,
+  return { diff: prev && prev.diff || "normal", st: "lobby", game: prev ? prev.game : 0, stage: 0, run: prev ? prev.run : 0, akey: -1, adl: 0, boss: CONFIG.stages[0].boss,
     ft: 0, ph: 0, ps: 0, mhp: 1, hp: 1, dm: {}, names: prev ? prev.names : {}, n: 1, end: 0, tt: 0, gdm: {},
     bx: 640, by: 260, bf: Math.PI / 2, bs: "idle", bt: 0, cur: "", atk: [], aid: 0, pools: [], pid: 0, adds: [] };
 }
@@ -870,7 +898,7 @@ function enterAugment(now) {
 }
 function startFight(now) {
   const H = HS, sc = CONFIG.stages[H.stage], n = Math.max(1, playersList().length);
-  Object.assign(H, { st: "fight", run: H.run + 1, boss: sc.boss, mhp: Math.round(sc.hp * (1 + CONFIG.scaling.perPlayerHp * (n - 1))), n,
+  Object.assign(H, { st: "fight", run: H.run + 1, boss: sc.boss, mhp: Math.round(sc.hp * diffCfg().hpMul * (1 + CONFIG.scaling.perPlayerHp * (n - 1))), n,
     ft: 0, ph: 0, ps: 0, dm: {}, end: 0, bx: 640, by: 240, bf: Math.PI / 2, bs: "shield", bt: TRANS, cur: "", atk: [], aid: 0, pools: [], pid: 0, adds: [] });
   H.hp = H.mhp;
   Object.assign(hostL, { target: null, lastKind: "", force: BOSSES[sc.boss].force[0] || "", combo: false, chain: null, anim: null, pending: [], addDm: {}, last: now });
@@ -939,7 +967,7 @@ function hostTick(now) {
     if (bd > MC.atkRange - 4) { m.x += dx / bd * MC.speed / tempo * dt; m.y += dy / bd * MC.speed / tempo * dt; }
     else if (T >= m.nx) {
       const ang = Math.atan2(dy, dx), d = ATK.mhit;
-      H.atk.push({ i: ++H.aid, k: "mhit", t0: r3(T), th: r3(T + d.warn * tempo), x: Math.round(m.x + Math.cos(ang) * 24), y: Math.round(m.y + Math.sin(ang) * 24), a: r3(ang), d: Math.round(d.dmg * sc.dmgMul) });
+      H.atk.push({ i: ++H.aid, k: "mhit", t0: r3(T), th: r3(T + d.warn * tempo), x: Math.round(m.x + Math.cos(ang) * 24), y: Math.round(m.y + Math.sin(ang) * 24), a: r3(ang), d: Math.round(d.dmg * sc.dmgMul * diffCfg().dmgMul) });
       m.nx = r3(T + MC.atkCd * tempo);
     }
     m.x = Math.round(clamp(m.x, 20, AW - 20) * 10) / 10; m.y = Math.round(clamp(m.y, 20, AH - 20) * 10) / 10;
@@ -977,9 +1005,9 @@ function hostTick(now) {
         if (H.cur === "rush" && hostL.chain > 0) castAttack("rush", T, alive);
         else {
           hostL.chain = null;
-          const noCombo = ["clock", "decoy", "summon", "polarity", "stack", "spread", "rush"];
-          if (H.ph === 2 && !hostL.combo && !noCombo.includes(H.cur) && Math.random() < CONFIG.stageFlow.comboChance) { hostL.combo = true; castAttack(pickKind(), T, alive); }
-          else { hostL.combo = false; H.bs = "rec"; H.bt = r3(T + ATK[H.cur].rec * tempo); }
+          const noCombo = ["clock", "decoy", "summon", "polarity", "stack", "spread", "rush", "haven", "ring"], D = diffCfg();
+          if (H.ph >= D.comboFrom && !hostL.combo && !noCombo.includes(H.cur) && Math.random() < D.combo) { hostL.combo = true; castAttack(pickKind(), T, alive); }
+          else { hostL.combo = false; H.bs = "rec"; H.bt = r3(T + ATK[H.cur].rec * tempo * D.recMul); }
         }
       }
       break;
@@ -1036,8 +1064,9 @@ function castAttack(kind, T, alive) {
   if (kind === "rush" || kind === "stack") tgt = pick();
   const face = r3(Math.atan2(tgt.pr.y - by, tgt.pr.x - bx));
   H.bf = face;
-  const warn = def.fixed ? def.warn : def.warn * tempo;
-  const t0 = r3(T), th = r3(T + warn), d = Math.round(def.dmg * sc.dmgMul);
+  const D = diffCfg(), X = D.extra;
+  const warn = (def.fixed ? def.warn : def.warn * tempo) * D.warnMul;
+  const t0 = r3(T), th = r3(T + warn), d = Math.round(def.dmg * sc.dmgMul * D.dmgMul);
   const E = o => { const e = Object.assign({ i: ++H.aid, k: kind, t0, th, x: Math.round(bx), y: Math.round(by), a: face, d }, o || {}); H.atk.push(e); return e; };
   const randPt = (pad) => [Math.round(pad + Math.random() * (AW - pad * 2)), Math.round(pad + 30 + Math.random() * (AH - pad * 2 - 30))];
   let end = th;
@@ -1050,11 +1079,11 @@ function castAttack(kind, T, alive) {
       const L = lineLen(bx, by, face, def.len); E({ l: L });
       hostL.anim = { t0: th, dur: def.move, x0: bx, y0: by, x1: bx + Math.cos(face) * L, y1: by + Math.sin(face) * L };
       end = th + def.move;
-      if (kind === "rush") hostL.chain = hostL.chain == null ? def.count - 1 : hostL.chain - 1;
+      if (kind === "rush") hostL.chain = hostL.chain == null ? def.count + X - 1 : hostL.chain - 1;
       break;
     }
     case "flurry":
-      for (let k = 0; k < def.count; k++) { const tk = r3(th + k * def.step * tempo); E({ th: tk, a: r3(face + [0, .7, -.7][k % 3]) }); end = tk; }
+      for (let k = 0; k < def.count + X; k++) { const tk = r3(th + k * def.step * tempo * D.warnMul); E({ th: tk, a: r3(face + [0, .7, -.7][k % 3]) }); end = tk; }
       break;
     case "pounce": {
       const x1 = clamp(tgt.pr.x, 90, AW - 90), y1 = clamp(tgt.pr.y, 140, AH - 80);
@@ -1064,7 +1093,7 @@ function castAttack(kind, T, alive) {
     }
     case "sandpool": case "sandwall": {
       let pts = [];
-      if (kind === "sandpool") { pts = alive.map(p => [Math.round(p.pr.x), Math.round(p.pr.y)]); for (let k = 0; k < def.extra; k++) pts.push(randPt(90)); }
+      if (kind === "sandpool") { pts = alive.map(p => [Math.round(p.pr.x), Math.round(p.pr.y)]); for (let k = 0; k < def.extra + X * 2; k++) pts.push(randPt(90)); }
       else {
         const vertical = Math.random() < .5, step = def.r * 1.6, n = Math.ceil((vertical ? AH : AW) / step) + 1;
         const gap = 1 + Math.floor(Math.random() * (n - 3)), line = vertical ? 200 + Math.random() * 880 : 160 + Math.random() * 400;
@@ -1075,7 +1104,7 @@ function castAttack(kind, T, alive) {
       break;
     }
     case "summon": {
-      const cnt = Math.min(CONFIG.minion.maxAlive - H.adds.filter(a => a.k === "minion").length, def.count + Math.floor((alive.length - 1) / 2));
+      const cnt = Math.min(CONFIG.minion.maxAlive - H.adds.filter(a => a.k === "minion").length, def.count + X + Math.floor((alive.length - 1) / 2));
       if (cnt <= 0) { E({ p: [], d: 0 }); break; }
       const pts = []; for (let k = 0; k < cnt; k++) { const side = Math.floor(Math.random() * 4); pts.push(side === 0 ? [60, 120 + Math.random() * 480] : side === 1 ? [AW - 60, 120 + Math.random() * 480] : side === 2 ? [120 + Math.random() * 1040, 90] : [120 + Math.random() * 1040, AH - 50]); }
       const e = E({ p: pts.map(q => [Math.round(q[0]), Math.round(q[1])]), d: 0 });
@@ -1084,7 +1113,7 @@ function castAttack(kind, T, alive) {
       break;
     }
     case "decoy": {
-      const nDecoy = def.count + (alive.length >= def.bigParty ? 1 : 0);
+      const nDecoy = def.count + X + (alive.length >= def.bigParty ? 1 : 0);
       const pts = []; for (let k = 0; k < nDecoy; k++) { let q; let tries = 0; do { q = randPt(140); tries++; } while (tries < 20 && (dist(q[0], q[1], bx, by) < 220 || pts.some(o => dist(o[0], o[1], q[0], q[1]) < 200))); pts.push(q); }
       const hpEach = Math.round(CONFIG.decoy.hp * (1 + CONFIG.scaling.perPlayerAddHp * (alive.length - 1)));
       for (const q of pts) H.adds.push({ i: ++H.aid, k: "decoy", x: q[0], y: q[1], hp: hpEach, mhp: hpEach });
@@ -1092,8 +1121,18 @@ function castAttack(kind, T, alive) {
       end = T + 1.2;
       break;
     }
-    case "gear": for (const off of [-.45, 0, .45]) E({ a: r3(face + off), l: def.len }); break;
-    case "stack": E({ tg: tgt.peer, r: def.r, need: Math.min(def.need, alive.length) }); break;
+    case "gear": for (const off of X ? [-.9, -.45, 0, .45, .9] : [-.45, 0, .45]) E({ a: r3(face + off), l: def.len }); break;
+    case "stack": E({ tg: tgt.peer, r: def.r, need: Math.min(def.need + X, alive.length) }); break;
+    case "haven": {
+      const n = Math.max(1, def.count - X), pts = [];
+      for (let k = 0; k < n; k++) { let q, tries = 0; do { q = randPt(130); tries++; } while (tries < 30 && (pts.some(o => dist(o[0], o[1], q[0], q[1]) < 300) || dist(q[0], q[1], bx, by) < 150)); pts.push(q); }
+      E({ p: pts }); break;
+    }
+    case "ring": {
+      const n = def.count + X;
+      for (let k = 0; k < n; k++) { const tk = r3(th + k * def.step * tempo * D.warnMul); E({ th: tk, r0: k * def.w, r1: (k + 1) * def.w }); end = tk; }
+      break;
+    }
     case "spread": E({ r: def.r }); break;
     case "polarity": {
       const arr = alive.map(p => p.peer).sort(() => Math.random() - .5), pol = {};
@@ -1326,11 +1365,13 @@ function quadOf(dx, dy) { const t = (Math.atan2(dy, dx) + Math.PI / 2 + TAU) % T
 function damageFor(a, S) {
   const def = ATK[a.k];
   switch (a.k) {
-    case "stack": {
-      const c = posOf(a.tg); if (!c || dist(me.x, me.y, c.x, c.y) > a.r) return 0;
+    case "stack": {   // stand in the circle with at least `need` people: no damage. Anyone else takes the hit.
+      const c = posOf(a.tg); if (!c) return 0;
       const n = alivePositions(true).filter(q => dist(q.x, q.y, c.x, c.y) <= a.r).length;
-      return n >= a.need ? Math.round(a.d / n) : a.d * 2;
+      return dist(me.x, me.y, c.x, c.y) <= a.r && n >= a.need ? 0 : a.d;
     }
+    case "haven": for (const q of a.p || []) if (dist(me.x, me.y, q[0], q[1]) <= ATK.haven.r) return 0; return a.d;
+    case "ring": { const d = dist(me.x, me.y, a.x, a.y); return d >= a.r0 && d <= a.r1 ? a.d : 0; }
     case "spread": for (const q of alivePositions(false)) if (dist(q.x, q.y, me.x, me.y) <= a.r) return a.d; return 0;
     case "polarity": { const p = a.pol ? a.pol[myPeer] : undefined; if (p == null) return 0; const half = me.x < AW / 2 ? 0 : 1, need = p === 0 ? a.s : 1 - a.s; return half === need ? 0 : a.d; }
     case "decoy": return (S.adds || []).filter(x => x.k === "decoy").length * a.d;
@@ -1384,12 +1425,12 @@ function useSkill(i) {
       void wr;
     }
   } else if (myClass === "gunner") {
-    if (i === 0) {
+    if (i === 1) {
       const tgt = enemies().filter(e => onLine(e, me.x, me.y, a, C.atk.range + 40, 14)).sort((p, q) => dist(me.x, me.y, p.x, p.y) - dist(me.x, me.y, q.x, q.y))[0];
       emitFx(14); if (tgt) deal(tgt, sk.dmg);
       me.ifr = Math.max(me.ifr, .25);
       startMove(.18, me.x - ux * sk.back, me.y - uy * sk.back);
-    } else if (i === 1) {
+    } else if (i === 0) {
       emitFx(12, sk.len); shake = .1;
       hitAll(e => onLine(e, me.x, me.y, a, sk.len, sk.w), sk.dmg);
     }
@@ -1712,7 +1753,18 @@ function drawTele(a, T, S) {
     const n = alivePositions(true).filter(q => dist(q.x, q.y, c.x, c.y) <= a.r).length, ok = n >= a.need;
     ctx.fillStyle = teleCol(a, flash > 0 ? .5 * flash : .12 + .18 * p); ctx.beginPath(); ctx.arc(c.x, c.y, a.r, 0, TAU); ctx.fill();
     ctx.strokeStyle = teleCol(a, .9); ctx.lineWidth = 3; ctx.setLineDash([12, 8]); ctx.lineDashOffset = -T * 40; ctx.stroke(); ctx.setLineDash([]);
-    if (flash < 0) label("모이기 " + n + "/" + a.need, c.x, c.y - a.r - 14, ok ? "#7fd3a3" : "#5fd6c4");
+    if (flash < 0) { label("모이기 " + n + "/" + a.need, c.x, c.y - a.r - 14, ok ? "#7fd3a3" : "#5fd6c4"); label(ok ? "인원 충족 · 피해 없음" : "원 안에 " + a.need + "명 모이면 피해 없음", c.x, c.y + a.r + 16, ok ? "#7fd3a3" : "#f3e6c8"); }
+    ctx.restore(); return;
+  }
+  if (a.k === "haven") {
+    const al = flash > 0 ? .5 * flash : .1 + .25 * p;
+    ctx.beginPath(); ctx.rect(-50, -50, AW + 100, AH + 100);
+    for (const q of a.p || []) { ctx.moveTo(q[0] + def.r, q[1]); ctx.arc(q[0], q[1], def.r, 0, TAU, true); }
+    ctx.fillStyle = "rgba(255,111,125," + al + ")"; ctx.fill("evenodd");
+    if (flash < 0) for (const q of a.p || []) {
+      ctx.strokeStyle = "rgba(127,211,163,.95)"; ctx.lineWidth = 3; ctx.setLineDash([10, 6]); ctx.lineDashOffset = -T * 30; ctx.beginPath(); ctx.arc(q[0], q[1], def.r, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+      label("안전", q[0], q[1], "#7fd3a3");
+    }
     ctx.restore(); return;
   }
   if (a.k === "spread") {
@@ -1750,6 +1802,7 @@ function drawTele(a, T, S) {
     switch (a.k) {
       case "cleave": case "flurry": pathCone(a.x, a.y, def.r, a.a, def.half * DEG); return 1;
       case "spin": case "whirl": case "mark": case "heavy": case "pounce": case "pull": case "mhit": ctx.beginPath(); ctx.arc(a.x, a.y, def.r, 0, TAU); return 1;
+      case "ring": ctx.beginPath(); ctx.arc(a.x, a.y, a.r1, 0, TAU); if (a.r0 > 0) { ctx.moveTo(a.x + a.r0, a.y); ctx.arc(a.x, a.y, a.r0, 0, TAU, true); return 2; } return 1;
       case "donut": ctx.beginPath(); ctx.rect(-50, -50, AW + 100, AH + 100); ctx.moveTo(a.x + def.r, a.y); ctx.arc(a.x, a.y, def.r, 0, TAU, true); return 2;
       case "charge": case "rush": case "gear": { const back = a.k === "gear" ? 0 : bossDef(S).r; ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.a); ctx.beginPath(); ctx.rect(-back, -def.w, a.l + back * 2, def.w * 2); ctx.restore(); return 1; }
       case "clock": { ctx.beginPath(); for (let q = 0; q < 4; q++) { if (q === a.s) continue; const s0 = -Math.PI / 2 + q * Math.PI / 2; ctx.moveTo(a.x, a.y); ctx.arc(a.x, a.y, 1500, s0, s0 + Math.PI / 2); ctx.closePath(); } return 1; }
@@ -1793,6 +1846,9 @@ function drawBossBody(look, pal, r, f, T, ph, rec, flash) {
   ctx.fillStyle = pal[1]; ctx.beginPath(); ctx.moveTo(r + 26, 0); ctx.lineTo(r - 6, -16); ctx.lineTo(r - 6, 16); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = "#1a1208"; ctx.lineWidth = 2; ctx.stroke();
   ctx.restore();
+  if (look === "bell") {
+    for (let k = 0; k < 2; k++) { const u = ((T * .6 + k * .5) % 1); ctx.strokeStyle = "rgba(159,216,255," + (1 - u) * .6 + ")"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, r + 6 + u * 40, 0, TAU); ctx.stroke(); }
+  }
   if (look === "gear") {
     ctx.save(); ctx.rotate(T * .6); ctx.fillStyle = pal[1];
     for (let i = 0; i < 14; i++) { ctx.save(); ctx.rotate(i * TAU / 14); ctx.fillRect(r - 4, -7, 14, 14); ctx.restore(); }
@@ -2098,7 +2154,7 @@ function drawHUD(T, S) {
   const frac = fighting ? clamp(S.hp / S.mhp, 0, 1) : 1;
   const stageNo = S ? S.stage + 1 : 1;
   ctx.font = '600 14px "Gowun Batang", serif'; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = "#f3e6c8";
-  ctx.fillText(B.name + " · " + B.title, x0, y - 10);
+  ctx.fillText(B.name + " · " + B.title + (S && CONFIG.stages[S.stage] && CONFIG.stages[S.stage].tag ? " · " + CONFIG.stages[S.stage].tag : ""), x0, y - 10);
   ctx.textAlign = "right"; ctx.font = '500 13px "IBM Plex Mono", monospace'; ctx.fillStyle = "#e8b45a";
   ctx.fillText("STAGE " + stageNo + "/" + CONFIG.stages.length + (fighting ? "  ·  PHASE " + ROMAN[(S.ph | 0) + 1] + "  " + (frac * 100).toFixed(1) + "%" : ""), x0 + w, y - 10);
   ctx.fillStyle = "rgba(13,18,34,.85)"; ctx.fillRect(x0 - 2, y - 2, w + 4, 14);
@@ -2109,7 +2165,7 @@ function drawHUD(T, S) {
   if (S && S.st === "fight" && S.bs === "cast" && ATK[S.cur]) {
     const d = ATK[S.cur];
     ctx.textAlign = "center"; ctx.font = '700 16px "Gowun Batang", serif'; ctx.lineWidth = 4; ctx.strokeStyle = "rgba(13,18,34,.9)"; ctx.strokeText(d.name + "  ·  " + d.hint, AW / 2, y + 34);
-    ctx.fillStyle = d.c === "stack" ? "#5fd6c4" : d.c ? "#b892ff" : "#ff6f7d";
+    ctx.fillStyle = d.c === "stack" || d.c === "haven" ? "#5fd6c4" : d.c ? "#b892ff" : "#ff6f7d";
     ctx.fillText(d.name + "  ·  " + d.hint, AW / 2, y + 34);
   }
   // my hp
@@ -2270,13 +2326,16 @@ function updateUi(now, S, players, T) {
   if (st === "lobby") {
     setHTML($("#chips"), players.map(p => '<span class="chip"><i style="background:' + safeCol(p.pr.c) + '"></i><b>' + esc(p.pr.n) + "</b><small>" + CLASSES[p.pr.k].name + "</small>" + (p.peer === hostPeer ? "<em>방장</em>" : "") + (p.me ? "<em>나</em>" : "") + "</span>").join(""));
     $("#startBtn").hidden = !isHost;
+    const dk = S && S.diff === "hard" ? "hard" : "normal";
+    $("#diffNormal").setAttribute("aria-pressed", dk === "normal"); $("#diffHard").setAttribute("aria-pressed", dk === "hard");
+    $("#diffNormal").disabled = !isHost; $("#diffHard").disabled = !isHost;
     $("#lobbyHint").textContent = isHost
       ? (net.mode === "solo" ? "오른쪽 클릭으로 다가가 W나 왼쪽 클릭으로 주력기를 써 보세요." : players.length + "/" + MAX_PLAYERS + "명 · 방장은 이 탭을 앞에 띄워 두세요")
       : (hostH ? "방장이 게임을 시작하기를 기다리는 중" : "방장과 동기화하는 중…");
   }
   if (st === "wipe" || st === "victory") {
     const win = st === "victory";
-    $("#resEyebrow").textContent = win ? "5 스테이지 완주 · " + (S.n || 1) + "인" : "STAGE " + (S.stage + 1) + " · " + BOSSES[S.boss].name + " · PHASE " + ROMAN[(S.ph | 0) + 1];
+    $("#resEyebrow").textContent = (CONFIG.difficulty[S.diff] || CONFIG.difficulty.normal).name + " · " + (win ? CONFIG.stages.length + " 스테이지 완주 · " + (S.n || 1) + "인" : "STAGE " + (S.stage + 1)) + " · " + BOSSES[S.boss].name + " · PHASE " + ROMAN[(S.ph | 0) + 1];
     $("#resTitle").textContent = win ? "모든 수호자를 쓰러뜨렸습니다" : "전멸";
     $("#resTime").textContent = win ? "총 전투 시간 " + fmtTime(S.tt) : "전투 시간 " + fmtTime(S.end) + "   보스 남은 체력 " + (S.hp / S.mhp * 100).toFixed(1) + "%";
     const src = win ? S.gdm : S.dm;
@@ -2293,7 +2352,7 @@ let stChangeAt = performance.now();
 const aud = { seenCast: new Set(), seenImpact: new Set(), st: "", ph: -1, run: -1, adds: 0, beep: -1 };
 const IMPACT = { cleave: "imp_slam", flurry: "imp_slam", mark: "imp_slam", pounce: "imp_slam", heavy: "imp_heavy", spin: "imp_sweep", whirl: "imp_sweep",
   donut: "imp_blast", clock: "imp_blast", pull: "imp_blast", stack: "imp_blast", spread: "imp_blast", polarity: "imp_blast",
-  charge: "imp_charge", rush: "imp_charge", sandpool: "imp_sand", sandwall: "imp_sand", gear: "imp_gear", decoy: "imp_decoy", mhit: "imp_small", summon: "summon" };
+  charge: "imp_charge", rush: "imp_charge", ring: "imp_slam", haven: "imp_blast", sandpool: "imp_sand", sandwall: "imp_sand", gear: "imp_gear", decoy: "imp_decoy", mhit: "imp_small", summon: "summon" };
 function audioEvents(S, T) {
   const st = S ? S.st : "lobby";
   if (S && S.run !== aud.run) { aud.run = S.run; aud.seenCast.clear(); aud.seenImpact.clear(); aud.ph = -1; }
@@ -2323,8 +2382,8 @@ function audioEvents(S, T) {
       else SFX.riser(a.th - T, def.c ? "c" : "r");
     }
     if (a.k === "decoy" && T < a.th) { const left = Math.ceil(a.th - T); if (left <= 3 && left !== aud.beep) { aud.beep = left; SFX.play("beep"); } }
-    if (T >= a.th && T - a.th < .3 && !aud.seenImpact.has(ck)) {
-      aud.seenImpact.add(ck);
+    if (T >= a.th && T - a.th < .3 && !aud.seenImpact.has(a.i)) {
+      aud.seenImpact.add(a.i);
       const n = (S.adds || []).filter(x => x.k === "decoy").length;
       if (a.k === "decoy" && !n) continue;   // every decoy was destroyed in time
       SFX.play(IMPACT[a.k] || "imp_slam");
@@ -2420,6 +2479,8 @@ $("#copyBtn").addEventListener("click", () => {
   catch (e) { btn.textContent = t; }
 });
 $("#startBtn").addEventListener("click", () => { if (isHost) startGame(performance.now()); });
+$("#diffNormal").addEventListener("click", () => { if (isHost && HS) { HS.diff = "normal"; lastUi = 0; } });
+$("#diffHard").addEventListener("click", () => { if (isHost && HS) { HS.diff = "hard"; lastUi = 0; } });
 $("#retryBtn").addEventListener("click", () => { if (isHost && HS && HS.st === "wipe") startFight(performance.now()); });
 $("#restartBtn").addEventListener("click", () => { if (isHost) startGame(performance.now()); });
 $("#toLobbyBtn").addEventListener("click", () => { if (isHost) HS = lobbyState(HS); });
