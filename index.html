@@ -37,7 +37,7 @@ body{margin:0;background:var(--night);color:var(--bone);font-family:var(--f-body
 #cv.armed{cursor:none}
 .panel{background:color-mix(in srgb,var(--ink) 94%,transparent);border:1px solid var(--line);border-top:2px solid var(--brass);border-radius:6px;box-shadow:0 18px 50px rgba(0,0,0,.45)}
 #menuWrap{position:absolute;inset:0;overflow:auto;display:grid;place-items:center;padding-inline:16px;padding-block:24px;background:radial-gradient(ellipse at 50% 40%,rgba(13,18,34,.35),rgba(13,18,34,.88))}
-#menu{width:100%;max-width:680px;padding:26px 26px 22px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box}
+#menu{width:100%;max-width:840px;padding:26px 26px 22px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box}
 .eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
 h1{margin:0;font-family:var(--f-ko);font-weight:700;font-size:34px;line-height:1.1;text-wrap:balance}
 h1 small{display:block;font-family:var(--f-display);font-weight:400;font-size:15px;letter-spacing:.2em;color:var(--muted);margin-top:6px}
@@ -52,8 +52,9 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--bras
 .swatches{display:flex;gap:8px;flex-wrap:wrap}
 .sw{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
 .sw[aria-pressed="true"]{border-color:var(--bone);box-shadow:0 0 0 2px var(--night) inset}
-.classes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-@media (max-width:600px){.classes{grid-template-columns:1fr}}
+.classes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:800px){.classes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.classes{grid-template-columns:1fr}}
 .cls{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid var(--line);border-radius:5px;background:var(--night);min-width:0}
 .cls:hover{border-color:#4a557f}
 .cls[aria-pressed="true"]{border-color:var(--brass);background:#1a1f36}
@@ -296,7 +297,7 @@ const DEG = Math.PI / 180;
 const CONFIG = {
   arena: { w: 1280, h: 720 },
   /* character art: drawn pixel-crisp, flipped to face the way the character looks. facesRight = which way the source image looks. */
-  sprites: { knight: { src: "assets/knight.png", h: 50, facesRight: true }, paladin: { src: "assets/paladin.png", h: 50, facesRight: true }, rogue: { src: "assets/rogue.png", h: 48, facesRight: true } },
+  sprites: { knight: { src: "assets/knight.png", h: 50, facesRight: true }, paladin: { src: "assets/paladin.png", h: 50, facesRight: true }, rogue: { src: "assets/rogue.png", h: 48, facesRight: true }, gunner: { src: "assets/gunner.png", h: 50, facesRight: false } },
   audio: { master: .7, sfx: 1.0, music: .3, verb: .32, verbTime: 2.2, drive: 6, riserVol: .14, riserMax: 3.0,
            bpm: [112, 118, 124, 130, 138], bpmPerPhase: 8, calmBpm: 76, keys: [50, 49, 52, 47, 48], lowHpRatio: .3 },
   net: { maxPlayers: 8, sendMs: 33 },
@@ -340,6 +341,14 @@ const CONFIG = {
         { name: "방패 강타", tier: "약", cd: 4, dmg: 60, range: 95, guard: .35, note: "피해 + 짧은 방어 자세" },
         { name: "수호의 결계", tier: "중", cd: 12, dmg: 40, range: 160, wardRange: 170, wardTime: 5, note: "주변 동료 피해 1회 무효" },
         { name: "심판의 망치", tier: "강", cd: 20, dmg: 300, channel: [.4, .8, 1.2], leap: [120, 190, 260], radius: 120, heal: 25, healRange: 170, note: "채널링 · 단계마다 도약 거리 증가, 착지 시 회복" },
+      ] },
+    gunner: {
+      name: "사수", role: "원거리 · 관통 저격", desc: "멀리서 쏘지만 공격 속도가 근접 직업보다 느리고 체력이 낮다. 위험하면 물러나며 쏜다.",
+      hp: 85, atk: { dmg: 30, cd: .72, range: 330, arc: 0, ranged: true, speed: 1100 }, guard: { dur: .35, cd: 2.0 },
+      skills: [
+        { name: "후퇴 사격", tier: "약", cd: 5, dmg: 65, back: 150, note: "커서 방향으로 쏘고 반대쪽으로 물러남" },
+        { name: "관통탄", tier: "중", cd: 10, dmg: 150, len: 620, w: 20, note: "커서 방향 일직선의 적을 모두 관통" },
+        { name: "정밀 저격", tier: "강", cd: 18, dmg: 330, channel: [.5, 1.0, 1.5], len: [700, 950, 1300], w: [14, 20, 28], note: "채널링 · 단계마다 사거리·굵기·피해 증가" },
       ] },
   },
   /* g: guardable (yellow). c: co-op gimmick colour. dmg is before the stage multiplier. */
@@ -416,6 +425,7 @@ const CONFIG = {
     { id: "qcd",      g: "先", name: "첫 수",        rar: 0, v: .2,  desc: v => `Q 스킬 재사용 대기시간 -${pc(v)}`, fx: (s, v) => { s.cdMul[0] *= 1 - v; } },
     { id: "kn_arc",   g: "劍", name: "검술 숙련",    rar: 0, cls: "knight",  v: [30, .06], desc: v => `기본 공격 각도 +${v[0]}°, 공격력 +${pc(v[1])}`, fx: (s, v) => { s.arcAdd += v[0]; s.atkMul *= 1 + v[1]; } },
     { id: "ro_poison",g: "毒", name: "독칼",         rar: 0, cls: "rogue",   v: [3, 6],    desc: v => `기본 공격 적중 시 ${v[0]}초 동안 초당 ${v[1]} 독 피해`, fx: (s, v) => { s.poisonTime = v[0]; s.poisonDps = v[1]; } },
+    { id: "gn_barrel",g: "銃", name: "긴 총열",      rar: 0, cls: "gunner",  v: [60, .06], desc: v => `기본 공격 사거리 +${v[0]}, 공격력 +${pc(v[1])}`, fx: (s, v) => { s.rangeAdd += v[0]; s.atkMul *= 1 + v[1]; } },
     { id: "pa_bash",  g: "盾", name: "방패 숙련",    rar: 0, cls: "paladin", v: [.2, .4],  desc: v => `방어 판정 +${v[0]}초, 방패 강타 피해 +${pc(v[1])}`, fx: (s, v) => { s.guardAdd += v[0]; s.bashMul *= 1 + v[1]; } },
     { id: "counter",  g: "反", name: "반격의 대가",  rar: 1, v: [.6, 1.5], desc: v => `방어 성공 보너스 배율 +${v[0]}, 지속 +${v[1]}초`, fx: (s, v) => { s.counterAdd += v[0]; s.counterTimeAdd += v[1]; } },
     { id: "dashbuff", g: "突", name: "돌격",         rar: 1, v: [.6, 1.5], desc: v => `대시 후 ${v[1]}초 안의 다음 공격 피해 +${pc(v[0])}`, fx: (s, v) => { s.dashBuff = Math.max(s.dashBuff, v[0]); s.dashBuffTime = v[1]; } },
@@ -427,6 +437,7 @@ const CONFIG = {
     { id: "wall",     g: "壁", name: "철벽",         rar: 1, v: .8,  desc: v => `방어 성공 시 ${v}초 무적, 방어 재사용 즉시 초기화`, fx: (s, v) => { s.parryIframe = Math.max(s.parryIframe, v); s.parryReset = true; } },
     { id: "kn_spin",  g: "旋", name: "회오리",       rar: 1, cls: "knight",  v: [.4, .3], desc: v => `회전베기 범위 +${pc(v[0])}, 피해 +${pc(v[1])}`, fx: (s, v) => { s.spinRange *= 1 + v[0]; s.spinMul *= 1 + v[1]; } },
     { id: "ro_shadow",g: "影", name: "그림자 발걸음",rar: 1, cls: "rogue",   v: 2,   desc: v => `그림자 습격 뒤 ${v}초 동안 모든 공격이 백어택`, fx: (s, v) => { s.shadowBack = v; } },
+    { id: "gn_head",  g: "的", name: "헤드샷",       rar: 1, cls: "gunner",  v: [4, 1.0], desc: v => `기본 공격 ${v[0]}발마다 피해 +${pc(v[1])}`, fx: (s, v) => { s.headEvery = v[0]; s.headMul = Math.max(s.headMul, v[1]); } },
     { id: "pa_sanct", g: "聖", name: "성역",         rar: 1, cls: "paladin", v: [.5, 10], desc: v => `결계 범위 +${pc(v[0])}, 결계 받은 동료 체력 ${v[1]} 회복`, fx: (s, v) => { s.wardRangeMul *= 1 + v[0]; s.wardHeal += v[1]; } },
     { id: "haste",    g: "時", name: "시간 가속",    rar: 2, v: [.2, .1], desc: v => `모든 스킬 재사용 대기시간 -${pc(v[0])}, 공격 속도 +${pc(v[1])}`, fx: (s, v) => { for (let i = 0; i < 3; i++) s.cdMul[i] *= 1 - v[0]; s.aspdMul *= 1 + v[1]; } },
     { id: "perfect",  g: "完", name: "완벽한 반격",  rar: 2, v: 3,   desc: v => `방어 성공 시 주변 적에게 기본 공격력 ${v * 100}% 즉시 반격`, fx: (s, v) => { s.perfectCounter = v; } },
@@ -434,6 +445,7 @@ const CONFIG = {
     { id: "overcharge",g:"過", name: "과충전",       rar: 2, v: .4,  desc: v => `채널링 최대 충전 피해 +${pc(v)}`, fx: (s, v) => { s.maxChargeBonus += v; } },
     { id: "kn_quake", g: "裂", name: "대지 분쇄",    rar: 2, cls: "knight",  v: .6,  desc: v => `대지 가르기 최대 충전 시 0.4초 뒤 충격파 한 번 더 (${pc(v)})`, fx: (s, v) => { s.quakeEcho = v; } },
     { id: "ro_exec",  g: "斬", name: "사형 집행인",  rar: 2, cls: "rogue",   v: [.5, 1.8], desc: v => `처형 강화 조건 체력 ${pc(v[0])} 이하, 배율 ${v[1]}배`, fx: (s, v) => { s.execLow = v[0]; s.execMul = v[1]; } },
+    { id: "gn_snipe", g: "狙", name: "명사수",       rar: 2, cls: "gunner",  v: [.5, .4], desc: v => `정밀 저격 최대 충전 피해 +${pc(v[0])}, 최대 충전으로 쏘면 재사용 대기시간 ${pc(v[1])} 돌려받음`, fx: (s, v) => { s.snipeMax += v[0]; s.snipeRefund = v[1]; } },
     { id: "pa_wrath", g: "罰", name: "천벌",         rar: 2, cls: "paladin", v: [2, .4], desc: v => `심판의 망치 회복량 ${v[0]}배, 착지 범위 +${pc(v[1])}`, fx: (s, v) => { s.hammerHealMul *= v[0]; s.hammerRadiusMul *= 1 + v[1]; } },
   ],
 };
@@ -519,7 +531,10 @@ const SFX = (() => {
     g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(A.music * (1 - depth), t + .02); g.linearRampToValueAtTime(A.music, t + dur);
   }
   const lib = {
-    swing: (v, k) => { const p = k === "rogue" ? 1.4 : k === "paladin" ? .7 : 1; whoosh(.32 * v, .14, false); noise(.08, .12 * v, "bandpass", 5000 * p, 2000 * p, 2); },
+    shot: v => { crack(.45 * v); sub(.35 * v, 180, 60, .12); noise(.14, .25 * v, "bandpass", 1600, 500, 1.2, 0, { wet: .3 }); },
+    pierce: v => { crack(.6 * v); sub(.5 * v, 150, 45, .3); metal(.1 * v, 1800, .5); noise(.4, .22 * v, "bandpass", 3000, 600, 2, 0, { wet: .4 }); duck(.3, .3); },
+    snipe: v => { crack(.9 * v); boom(.9 * v); tone(2600, .7, "sine", .08 * v, 500, 0, .002, { wet: .7 }); duck(.6, .6); },
+    swing: (v, k) => { if (k === "gunner") return lib.shot(v); const p = k === "rogue" ? 1.4 : k === "paladin" ? .7 : 1; whoosh(.32 * v, .14, false); noise(.08, .12 * v, "bandpass", 5000 * p, 2000 * p, 2); },
     hit: v => { tone(170, .09, "square", .14 * v, 70, 0, .002, { drive: true }); crack(.3 * v); sub(.25 * v, 140, 60, .15); },
     crit: v => { tone(170, .12, "square", .18 * v, 60, 0, .002, { drive: true }); crack(.45 * v); sub(.5 * v, 130, 40, .35); metal(.12 * v, 1320, .5); duck(.35, .3); },
     clank: v => { metal(.08 * v, 900, .25); },
@@ -635,7 +650,7 @@ const SFX = (() => {
   };
 })();
 /* effects: 0 swing,1 parry,2 spin,3 lunge,4 quake,5 stab,6 blink,7 exec,8 bash,9 ward,10 hammer,11 break */
-const FX_SOUND = ["swing", "parry", "spin", "lunge", "quake", "stab", "blink", "exec", "bash", "ward", "hammer", "interrupt"];
+const FX_SOUND = ["swing", "parry", "spin", "lunge", "quake", "stab", "blink", "exec", "bash", "ward", "hammer", "interrupt", "pierce", "snipe", "shot"];
 
 /* ---------- storage (per-viewer convenience) ---------- */
 function load(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
@@ -1079,7 +1094,7 @@ const me = { x: 640, y: 600, hp: 100, mh: 100, dn: 0, downT: 0, ifr: 0, dashT: 0
   a: -Math.PI / 2, aim: 0, order: null, eng: null, cd: [0, 0, 0], atkCd: 0, dashCd: 0, guardT: 0, guardCd: 0, counterT: 0, counterMul: 2,
   wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, poisonAcc: 0, regenT: 0, undyingUsed: false, poolT: 0,
   cast: null, move: null, multi: null, ch: null, chFlash: 0, sw: 0, cx: 0, fx: null, fxN: 0, wd: null, hl: null, evId: 0,
-  rv: null, rvT: null, rvP: 0, hitT: 0, ag: [], pk: -1, offer: null, offerKey: -1, st: null };
+  rv: null, rvT: null, rvP: 0, hitT: 0, ag: [], pk: -1, offer: null, offerKey: -1, st: null, shots: [], shotN: 0 };
 let resolved = new Set(), fxList = [], floats = [], markers = [], disp = new Map(), addDisp = new Map();
 const seenSw = new Map(), seenFx = new Map(), seenWd = new Map(), seenHl = new Map(), seenCx = new Map();
 let shake = 0, bossFlash = 0;
@@ -1090,7 +1105,7 @@ function baseStats() {
     counterAdd: 0, counterTimeAdd: 0, dashBuff: 0, dashBuffTime: 0, lifesteal: 0, closeBonus: 0, reviveSpd: 1, reviveHp: 0,
     parryIframe: 0, parryReset: false, perfectCounter: 0, undying: 0, maxChargeBonus: 0,
     arcAdd: 0, spinRange: 1, spinMul: 1, quakeEcho: 0, poisonTime: 0, poisonDps: 0, shadowBack: 0, execLow: 0, execMul: 0,
-    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1 };
+    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0 };
 }
 function recalcStats() {
   const s = baseStats();
@@ -1105,7 +1120,7 @@ function resetMe() {
   me.mh = C.hp + (me.st ? me.st.hpAdd : 0); me.hp = me.mh; me.dn = 0; me.downT = 0; me.ifr = 1; me.dm = 0; me.ad = {};
   me.x = 460 + Math.random() * 360; me.y = 610; me.order = null; me.eng = null;
   Object.assign(me, { cd: [0, 0, 0], atkCd: 0, dashCd: 0, dashT: 0, guardT: 0, guardCd: 0, counterT: 0, wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, regenT: 0, undyingUsed: false,
-    cast: null, move: null, multi: null, ch: null, rv: null, rvT: null, rvP: 0, poolT: 0 });
+    cast: null, move: null, multi: null, ch: null, rv: null, rvT: null, rvP: 0, poolT: 0, shots: [], shotN: 0 });
   resolved = new Set();
 }
 function nowS() { return performance.now() / 1000; }
@@ -1172,6 +1187,27 @@ function deal(e, base, opts) {
     if (st.poisonTime && e.boss) me.poisonT = st.poisonTime;
   }
   return d;
+}
+function onLine(e, x, y, a, len, w) {
+  const dx = e.x - x, dy = e.y - y, c = Math.cos(a), sn = Math.sin(a), along = dx * c + dy * sn;
+  return along >= -e.r && along <= len + e.r && Math.abs(dx * sn - dy * c) <= w + e.r;
+}
+function fireShot(t) {
+  const st = me.st, C = CLASSES[myClass];
+  let dmg = C.atk.dmg; me.shotN++;
+  const head = st.headEvery && me.shotN % st.headEvery === 0;
+  if (head) dmg *= 1 + st.headMul;
+  me.shots.push({ x: me.x + Math.cos(me.a) * 18, y: me.y + Math.sin(me.a) * 18 - 8, a: me.a, tid: t.id, dmg, head });
+}
+function updateShots(dt) {
+  const spd = CLASSES[myClass].atk.speed || 1100;
+  for (const sh of me.shots) {
+    const e = findEnemy(sh.tid); if (!e) { sh.dead = true; continue; }
+    const dx = e.x - sh.x, dy = e.y - sh.y, d = Math.hypot(dx, dy), step = spd * dt;
+    if (d <= e.r + step) { sh.dead = true; deal(e, sh.dmg, { basic: true }); if (sh.head) float(e.x, e.y - e.r - 34, "헤드샷", "#ffd166", true); }
+    else { sh.x += dx / d * step; sh.y += dy / d * step; sh.a = Math.atan2(dy, dx); }
+  }
+  me.shots = me.shots.filter(sh => !sh.dead);
 }
 function hitAll(fn, base, opts) { let n = 0; for (const e of enemies()) if (fn(e)) { deal(e, base, opts); n++; } return n; }
 
@@ -1290,7 +1326,7 @@ function useSkill(i) {
       } else { me.x = clamp(me.x + ux * 200, 14, AW - 14); me.y = clamp(me.y + uy * 200, 14, AH - 14); emitFx(6); }
       me.ifr = Math.max(me.ifr, .3);
     }
-  } else {
+  } else if (myClass === "paladin") {
     if (i === 0) { emitFx(8); me.guardT = Math.max(me.guardT, sk.guard); hitAll(e => inArc(e, sk.range, 55 * DEG, a), sk.dmg * st.bashMul); }
     else if (i === 1) {
       const wr = sk.wardRange * st.wardRangeMul;
@@ -1298,6 +1334,16 @@ function useSkill(i) {
       float(me.x, me.y - 30, "결계", "#9fd8ff");
       hitAll(e => edgeDist(e) <= sk.range, sk.dmg);
       void wr;
+    }
+  } else if (myClass === "gunner") {
+    if (i === 0) {
+      const tgt = enemies().filter(e => onLine(e, me.x, me.y, a, C.atk.range + 40, 14)).sort((p, q) => dist(me.x, me.y, p.x, p.y) - dist(me.x, me.y, q.x, q.y))[0];
+      emitFx(14); if (tgt) deal(tgt, sk.dmg);
+      me.ifr = Math.max(me.ifr, .25);
+      startMove(.18, me.x - ux * sk.back, me.y - uy * sk.back);
+    } else if (i === 1) {
+      emitFx(12, sk.len); shake = .1;
+      hitAll(e => onLine(e, me.x, me.y, a, sk.len, sk.w), sk.dmg);
     }
   }
 }
@@ -1327,7 +1373,7 @@ function releaseChannel() {
     const S = curS, low = S && S.st === "fight" && S.hp / S.mhp < (st.execLow || sk.lowHp);
     const lowMul = st.execMul || sk.lowMul;
     hitAll(e => inArc(e, sk.range, sk.arc / 2 * DEG, a), sk.dmg * mul * (low ? lowMul : 1));
-  } else {
+  } else if (myClass === "paladin") {
     const d = sk.leap[s - 1], rad = sk.radius * st.hammerRadiusMul;
     me.ifr = Math.max(me.ifr, .45);
     startMove(.35, me.x + Math.cos(a) * d, me.y + Math.sin(a) * d, null, () => {
@@ -1337,6 +1383,11 @@ function releaseChannel() {
       me.hl = [++me.evId, Math.round(me.x), Math.round(me.y), 1, heal];
       if (!me.dn && me.hp < me.mh) { me.hp = Math.min(me.mh, me.hp + heal); float(me.x, me.y - 30, "+" + heal, "#7fd3a3"); }
     });
+  } else if (myClass === "gunner") {
+    const len = sk.len[s - 1], w = sk.w[s - 1];
+    emitFx(13, len, .55 + s * .2); shake = .12 + s * .05;
+    hitAll(e => onLine(e, me.x, me.y, a, len, w), sk.dmg * mul * (s === 3 ? 1 + st.snipeMax : 1));
+    if (s === 3 && st.snipeRefund) me.cd[ch.i] *= 1 - st.snipeRefund;
   }
 }
 function channelPreview(k, a, x, y, stage, mulR) {
@@ -1344,6 +1395,7 @@ function channelPreview(k, a, x, y, stage, mulR) {
   const sk = CLASSES[k].skills[2], s = Math.max(1, stage);
   if (k === "knight") return { type: "cone", x, y, r: sk.range[s - 1], half: sk.arc / 2 * DEG, a };
   if (k === "rogue") return { type: "cone", x, y, r: sk.range, half: sk.arc / 2 * DEG, a };
+  if (k === "gunner") return { type: "line", x, y, a, len: sk.len[s - 1], w: sk.w[s - 1] };
   const d = sk.leap[s - 1];
   return { type: "circle", x: clamp(x + Math.cos(a) * d, 14, AW - 14), y: clamp(y + Math.sin(a) * d, 14, AH - 14), r: sk.radius * (mulR || 1) };
 }
@@ -1439,7 +1491,7 @@ function moveToward(tx, ty, dt, stopAt) {
   return false;
 }
 function processOrder(dt) {
-  const C = CLASSES[myClass], st = me.st, range = C.atk.range;
+  const C = CLASSES[myClass], st = me.st, range = C.atk.range + (C.atk.ranged ? st.rangeAdd : 0);
   const o = me.order; let target = null;
   const nearestIn = r => { let best = null, bd = 1e9; for (const e of enemies()) { const d = edgeDist(e); if (d <= r && d < bd) { bd = d; best = e; } } return best; };
   if (o && o.t === "atk") {
@@ -1461,10 +1513,13 @@ function processOrder(dt) {
     me.a = Math.atan2(target.y - me.y, target.x - me.x);
     if (me.atkCd <= 0 && me.guardT <= 0) {
       me.atkCd = C.atk.cd / st.aspdMul; me.sw++;
-      spawnFx(0, me.x, me.y, me.a, myColor, myClass, st.arcAdd); SFX.play("swing", 1, myClass);
-      const half = (C.atk.arc + st.arcAdd) / 2 * DEG;
-      deal(target, C.atk.dmg, { basic: true });
-      for (const e of enemies()) if (e.id !== target.id && inArc(e, range, half, me.a)) deal(e, C.atk.dmg * .6, { basic: true, noBuff: true });
+      spawnFx(0, me.x, me.y, me.a, myColor, myClass, C.atk.ranged ? -1 : st.arcAdd); SFX.play("swing", 1, myClass);
+      if (C.atk.ranged) fireShot(target);
+      else {
+        const half = (C.atk.arc + st.arcAdd) / 2 * DEG;
+        deal(target, C.atk.dmg, { basic: true });
+        for (const e of enemies()) if (e.id !== target.id && inArc(e, range, half, me.a)) deal(e, C.atk.dmg * .6, { basic: true, noBuff: true });
+      }
     }
   }
 }
@@ -1477,6 +1532,7 @@ function updateMe(dt, T, S) {
   me.aim = Math.atan2(mouse.y - me.y, mouse.x - me.x);
   for (const k of ["ifr", "dashCd", "atkCd", "guardT", "guardCd", "counterT", "hitT", "dashBuffT", "shadowT", "chFlash"]) me[k] = Math.max(0, me[k] - dt);
   for (let i = 0; i < 3; i++) me.cd[i] = Math.max(0, me.cd[i] - dt);
+  updateShots(dt);
 
   if (me.dn === 1) {
     let beingRevived = false;
@@ -1810,7 +1866,9 @@ function drawChannelFloor(k, a, x, y, stage, t) {
   const cols = ["143,151,179", "232,180,90", "255,179,71", "255,243,196"], al = [.1, .14, .2, .28][stage] + (stage === 3 ? .08 * Math.sin(performance.now() / 70) : 0);
   ctx.save();
   ctx.fillStyle = "rgba(" + cols[stage] + "," + al + ")"; ctx.strokeStyle = "rgba(" + cols[stage] + ",.8)"; ctx.lineWidth = stage === 3 ? 3 : 1.5; ctx.setLineDash(stage === 3 ? [] : [6, 6]);
-  if (sh.type === "cone") pathCone(sh.x, sh.y, sh.r, sh.a, sh.half); else { ctx.beginPath(); ctx.arc(sh.x, sh.y, sh.r, 0, TAU); }
+  if (sh.type === "cone") pathCone(sh.x, sh.y, sh.r, sh.a, sh.half);
+  else if (sh.type === "line") { ctx.save(); ctx.translate(sh.x, sh.y); ctx.rotate(sh.a); ctx.beginPath(); ctx.rect(0, -sh.w, sh.len, sh.w * 2); ctx.restore(); }
+  else { ctx.beginPath(); ctx.arc(sh.x, sh.y, sh.r, 0, TAU); }
   ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
   if (sh.type === "circle") { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(sh.x, sh.y); ctx.stroke(); }
   ctx.restore();
@@ -1892,7 +1950,15 @@ function drawFx() {
     const u = f.t, C = CLASSES[f.k] || CLASSES.knight;
     ctx.save(); ctx.translate(f.x, f.y);
     switch (f.type) {
-      case 0: { const al = 1 - u / .18; if (al <= 0) break; const half = (C.atk.arc + (f.e || 0)) * DEG / 2, r = C.atk.range + 10;
+      case 0: {
+        if (C.atk.ranged) {
+          const al = 1 - u / .3; if (al <= 0) break; const c = Math.cos(f.a), sn = Math.sin(f.a);
+          if (u < .07) { ctx.fillStyle = "#fff3c4"; ctx.beginPath(); ctx.arc(c * 22, sn * 22 - 8, 9, 0, TAU); ctx.fill(); }
+          if (f.e === -1) break;   // my own bullets are drawn as real projectiles
+          const L = C.atk.range, p0 = Math.min(L, u * 1100); ctx.globalAlpha = al; ctx.strokeStyle = f.col; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(c * Math.max(18, p0 - 40), sn * Math.max(18, p0 - 40) - 8); ctx.lineTo(c * p0, sn * p0 - 8); ctx.stroke(); break;
+        }
+        const al = 1 - u / .18; if (al <= 0) break; const half = (C.atk.arc + (f.e || 0)) * DEG / 2, r = C.atk.range + 10;
         ctx.fillStyle = "rgba(243,230,200," + al * .22 + ")"; pathCone(0, 0, r, f.a, half); ctx.fill();
         ctx.strokeStyle = f.col; ctx.globalAlpha = al; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, r, f.a - half, f.a + half); ctx.stroke(); break; }
       case 1: { const al = 1 - u / .35; if (al <= 0) break; ctx.strokeStyle = "rgba(255,209,102," + al + ")"; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, 0, 24 + u * 60, 0, TAU); ctx.stroke(); break; }
@@ -1905,11 +1971,26 @@ function drawFx() {
       case 8: { const al = 1 - u / .2; if (al <= 0) break; ctx.fillStyle = "rgba(255,209,102," + al * .35 + ")"; pathCone(0, 0, 105, f.a, 55 * DEG); ctx.fill(); break; }
       case 9: { const al = 1 - u / .45; if (al <= 0) break; ctx.strokeStyle = "rgba(159,216,255," + al + ")"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, (30 + u * 310) * (f.e || 1), 0, TAU); ctx.stroke(); break; }
       case 10: { const al = 1 - u / .45; if (al <= 0) break; const rr = 120 * (f.e || 1); ctx.fillStyle = "rgba(255,209,102," + al * .35 + ")"; ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.fill(); ctx.strokeStyle = "rgba(127,211,163," + al + ")"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 60 + u * 250, 0, TAU); ctx.stroke(); break; }
+      case 12: { const al = 1 - u / .4; if (al <= 0) break; const L = f.e || 620; ctx.rotate(f.a);
+        ctx.strokeStyle = f.col; ctx.globalAlpha = al * .6; ctx.lineWidth = 22 * al; ctx.beginPath(); ctx.moveTo(20, -8); ctx.lineTo(L, -8); ctx.stroke();
+        ctx.strokeStyle = "#ffffff"; ctx.globalAlpha = al; ctx.lineWidth = 4; ctx.stroke(); break; }
+      case 13: { const al = 1 - u / .5; if (al <= 0) break; const L = f.e || 1300; ctx.rotate(f.a);
+        ctx.strokeStyle = "rgba(255,243,196," + al * .35 + ")"; ctx.lineWidth = 40 * al + 6; ctx.beginPath(); ctx.moveTo(20, -8); ctx.lineTo(L, -8); ctx.stroke();
+        ctx.strokeStyle = f.col; ctx.globalAlpha = al; ctx.lineWidth = 10; ctx.stroke(); ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
+        ctx.globalAlpha = 1; ctx.fillStyle = "rgba(255,255,255," + al + ")"; ctx.beginPath(); ctx.arc(24, -8, 16 * al, 0, TAU); ctx.fill(); break; }
+      case 14: { const al = 1 - u / .35; if (al <= 0) break; const c = Math.cos(f.a), sn = Math.sin(f.a), p0 = Math.min(370, u * 1400);
+        if (u < .08) { ctx.fillStyle = "#fff3c4"; ctx.beginPath(); ctx.arc(c * 22, sn * 22 - 8, 12, 0, TAU); ctx.fill(); }
+        ctx.globalAlpha = al; ctx.strokeStyle = f.col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(c * Math.max(18, p0 - 60), sn * Math.max(18, p0 - 60) - 8); ctx.lineTo(c * p0, sn * p0 - 8); ctx.stroke();
+        ctx.fillStyle = "rgba(200,200,220," + al * .4 + ")"; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(-c * (10 + u * 60) + (i - 1.5) * 8, -sn * (10 + u * 60) + 6, 7 + u * 10, 0, TAU); ctx.fill(); } break; }
       case 11: { const al = 1 - u / .45; if (al <= 0) break; ctx.strokeStyle = "rgba(255,111,125," + al + ")"; ctx.lineWidth = 4;
         for (let i = 0; i < 6; i++) { const a = i * TAU / 6 + .3; ctx.beginPath(); ctx.moveTo(Math.cos(a) * (10 + u * 30), Math.sin(a) * (10 + u * 30) - 40); ctx.lineTo(Math.cos(a) * (22 + u * 40), Math.sin(a) * (22 + u * 40) - 40); ctx.stroke(); }
         ctx.beginPath(); ctx.moveTo(-8, -48); ctx.lineTo(8, -32); ctx.moveTo(8, -48); ctx.lineTo(-8, -32); ctx.stroke(); break; }
     }
     ctx.restore();
+  }
+  for (const sh of me.shots) {
+    ctx.strokeStyle = sh.head ? "#ffd166" : "#fff3c4"; ctx.lineWidth = sh.head ? 4 : 2.5;
+    ctx.beginPath(); ctx.moveTo(sh.x - Math.cos(sh.a) * 22, sh.y - Math.sin(sh.a) * 22); ctx.lineTo(sh.x, sh.y); ctx.stroke();
   }
   for (const m of markers) {
     const u = m.t / CONFIG.controls.markerTime, col = m.col === "move" ? "127,211,120" : "255,111,125";
