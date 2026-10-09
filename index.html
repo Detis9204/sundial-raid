@@ -313,7 +313,7 @@ const CONFIG = {
   dash: { cd: 2.0, time: .16, speed: 760, iframe: 0 },
   /* 밀치기: knocks back everyone around (allies too). Each body hit heals the pusher. */
   /* 밀치기: no damage. Targets are flung away (speed), slow down with friction and bounce off the arena walls. */
-  push: { cd: 7, radius: 110, speed: 950, friction: 5, bounce: .6, enemySpeedMul: .8, healPct: .06, maxTargets: 3 },
+  push: { cd: 7, radius: 110, speed: 950, friction: 5, bounce: .6, enemySpeedMul: .8, bossSpeedMul: .55, healPct: .06, maxTargets: 3 },
   channel: { overhold: 1.2, interruptCdRatio: .3, fizzleCd: 1.0, stageMul: [0, .45, .75, 1.0], flashTime: .35 },
   revive: { downedTime: 15, holdTime: 3, range: 80, hpRatio: .3 },
   combat: { recDmgBonus: .2, backAttackMul: 1.4, backAngle: 2.1, minionShieldPerUnit: .15, minionShieldMin: .55, closeRange: 120, regenEvery: 5, poisonTick: .5 },
@@ -462,6 +462,8 @@ const CONFIG = {
   },
   /* invulnerable gimmick phases: boss walks to the centre, can't be hurt, runs a must-dodge sequence, then collapses (groggy) */
   gimmick: { every: 38, hardEveryMul: .8, moveTime: .9, groggy: 5.0, groggyBonus: .5 },
+  /* boss charges: hit lands when the boss reaches you (not at the start); short runs are prevented by backing up first */
+  charge: { margin: [55, 70, 50], overshoot: 160, minLen: 260 },
   minion: { hp: 170, speed: 92, r: 18, atkRange: 46, atkCd: 3.0, maxAlive: 4, summonCap: 2 },
   decoy: { hp: 240, r: 40 },
   adds: { separationPad: 4, bossPad: 10 },
@@ -927,7 +929,7 @@ function startFight(now) {
   Object.assign(H, { st: "fight", run: H.run + 1, boss: sc.boss, mhp: Math.round(sc.hp * diffCfg().hpMul * (1 + CONFIG.scaling.perPlayerHp * (n - 1))), n,
     ft: 0, ph: 0, ps: 0, dm: {}, end: 0, bx: 640, by: 240, bf: Math.PI / 2, bs: "shield", bt: TRANS, cur: "", atk: [], aid: 0, pools: [], pid: 0, adds: [] });
   H.hp = H.mhp;
-  Object.assign(hostL, { target: null, lastKind: "", force: BOSSES[sc.boss].force[0] || "", combo: false, chain: null, anim: null, pending: [], addDm: {}, last: now, gimmickDue: false, nextGimmick: 1e9, feints: null, nextMove: 0, orb: Math.random() * TAU, orbDir: Math.random() < .5 ? 1 : -1 });
+  Object.assign(hostL, { target: null, lastKind: "", force: BOSSES[sc.boss].force[0] || "", combo: false, chain: null, anim: null, pending: [], addDm: {}, last: now, bossKb: null, gimmickDue: false, nextGimmick: 1e9, feints: null, nextMove: 0, orb: Math.random() * TAU, orbDir: Math.random() < .5 ? 1 : -1 });
   fsLocal = now;
 }
 function hostTick(now) {
@@ -978,8 +980,16 @@ function hostTick(now) {
   if (!alive.length) return;
   const dt = Math.min(.05, (now - (hostL.last || now)) / 1000); hostL.last = now;
   const tempo = curTempo();
+  if (hostL.bossKb) {
+    const k = hostL.bossKb, P = CONFIG.push;
+    H.bx += k.vx * dt; H.by += k.vy * dt;
+    if (H.bx < 90 || H.bx > AW - 90) { k.vx = -k.vx * P.bounce; H.bx = clamp(H.bx, 90, AW - 90); }
+    if (H.by < 140 || H.by > AH - 80) { k.vy = -k.vy * P.bounce; H.by = clamp(H.by, 140, AH - 80); }
+    const f = Math.exp(-P.friction * dt); k.vx *= f; k.vy *= f;
+    if (Math.hypot(k.vx, k.vy) < 30 || hostL.anim || H.bs === "gimmick") hostL.bossKb = null;
+  }
   if (hostL.anim && T >= hostL.anim.t0) {
-    const a = hostL.anim, k = ease((T - a.t0) / a.dur);
+    const a = hostL.anim, k = a.lin ? clamp((T - a.t0) / a.dur, 0, 1) : ease((T - a.t0) / a.dur);
     H.bx = a.x0 + (a.x1 - a.x0) * k; H.by = a.y0 + (a.y1 - a.y0) * k;
     if (k >= 1) hostL.anim = null;
   }
@@ -1019,6 +1029,12 @@ function hostTick(now) {
       const dx = a.x - pu[1], dy = a.y - pu[2], d = Math.hypot(dx, dy) || 1;
       if (d > pu[3] + CONFIG.minion.r) continue;
       const sp = CONFIG.push.speed * CONFIG.push.enemySpeedMul * (pu[4] || 1); a.vx = Math.round(dx / d * sp); a.vy = Math.round(dy / d * sp); a.nx = Math.max(a.nx, r3(T + .8));
+    }
+    // the boss is shoved directly away from the pusher, unless it is mid-dash or in an invulnerable gimmick
+    const bdx = H.bx - pu[1], bdy = H.by - pu[2], bd = Math.hypot(bdx, bdy) || 1;
+    if (bd <= pu[3] + B.r && !hostL.anim && H.bs !== "gimmick") {
+      const sp = CONFIG.push.speed * CONFIG.push.bossSpeedMul * (pu[4] || 1);
+      hostL.bossKb = { vx: bdx / bd * sp, vy: bdy / bd * sp };
     }
   }
   separateAdds(H, B);
@@ -1197,9 +1213,10 @@ function pickKind() {
   for (const [k, w] of pool) { r -= w; if (r <= 0) return k; }
   return pool[0][0];
 }
-function lineLen(x, y, a, max) {
+function lineLen(x, y, a, max, m) {
+  m = m || [90, 140, 80];   // side, top, bottom margins
   const ux = Math.cos(a), uy = Math.sin(a);
-  for (let s = 0; s < max; s += 10) { const px = x + ux * s, py = y + uy * s; if (px < 90 || px > AW - 90 || py < 140 || py > AH - 80) return Math.max(60, s); }
+  for (let s = 0; s < max; s += 10) { const px = x + ux * s, py = y + uy * s; if (px < m[0] || px > AW - m[0] || py < m[1] || py > AH - m[2]) return Math.max(60, s); }
   return max;
 }
 function castAttack(kind, T, alive) {
@@ -1226,8 +1243,17 @@ function castAttack(kind, T, alive) {
     case "mark": for (const p of alive) E({ x: Math.round(p.pr.x), y: Math.round(p.pr.y) }); break;
     case "clock": E({ s: Math.floor(Math.random() * 4) }); break;
     case "charge": case "rush": {
-      const L = lineLen(bx, by, face, def.len); E({ l: L });
-      hostL.anim = { t0: th, dur: def.move, x0: bx, y0: by, x1: bx + Math.cos(face) * L, y1: by + Math.sin(face) * L };
+      // charge through the target and well past it. If a wall is too close, the boss first backs up during the warning.
+      const CM = CONFIG.charge.margin, ux = Math.cos(face), uy = Math.sin(face);
+      const need = Math.min(def.len, dist(tgt.pr.x, tgt.pr.y, bx, by) + CONFIG.charge.overshoot, CONFIG.charge.minLen + 400);
+      let sx = bx, sy = by, L = lineLen(bx, by, face, def.len, CM);
+      if (L < Math.max(need, CONFIG.charge.minLen)) {
+        const back = lineLen(bx, by, face + Math.PI, Math.max(need, CONFIG.charge.minLen) - L, CM);
+        sx = bx - ux * back; sy = by - uy * back; L = lineLen(sx, sy, face, def.len, CM);
+        hostL.anim = { t0: T, dur: Math.min(.45, warn * .6), x0: bx, y0: by, x1: sx, y1: sy };
+      }
+      E({ x: Math.round(sx), y: Math.round(sy), l: L });
+      hostL.pending.push({ at: th, fn: t => { hostL.anim = { t0: t, dur: def.move, x0: sx, y0: sy, x1: sx + ux * L, y1: sy + uy * L, lin: true }; } });
       end = th + def.move;
       if (kind === "rush") hostL.chain = hostL.chain == null ? def.count + X - 1 : hostL.chain - 1;
       break;
@@ -1534,6 +1560,12 @@ function inAtk(a, px, py) {
     case "clock": return quadOf(dx, dy) !== a.s;
   }
   return false;
+}
+/* charges sweep along their line: each spot is hit when the boss passes it */
+function hitTime(a) {
+  if (a.k !== "charge" && a.k !== "rush") return a.th;
+  const along = (me.x - a.x) * Math.cos(a.a) + (me.y - a.y) * Math.sin(a.a);
+  return a.th + ATK[a.k].move * clamp((along - bossDef(curS).r * .5) / Math.max(1, a.l), 0, 1);
 }
 function quadOf(dx, dy) { const t = (Math.atan2(dy, dx) + Math.PI / 2 + TAU) % TAU; return Math.floor(t / (Math.PI / 2)) % 4; }
 function damageFor(a, S) {
@@ -1863,7 +1895,8 @@ function updateMe(dt, T, S) {
 
   if (fighting) {
     for (const a of S.atk || []) {
-      if (T >= a.th && !resolved.has(a.i)) { resolved.add(a.i); if (T - a.th < .5) { const d = damageFor(a, S); if (d > 0) bossHit(d, ATK[a.k].gm); } }
+      const ht = hitTime(a);
+      if (T >= ht && !resolved.has(a.i)) { resolved.add(a.i); if (T - ht < .5) { const d = damageFor(a, S); if (d > 0) bossHit(d, ATK[a.k].gm); } }
     }
     for (const k in me.ad) if (!(S.adds || []).some(x => String(x.i) === k)) delete me.ad[k];
     let inPool = null;
