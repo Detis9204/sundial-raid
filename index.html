@@ -182,7 +182,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div id="menu" class="panel">
       <div class="eyebrow">협동 보스 레이드 · 5 스테이지 · 프로토타입</div>
       <h1>해시계 레이드<small>FIVE WARDENS OF THE SUNDIAL</small></h1>
-      <p class="lede">시간의 수호자 다섯을 차례로 쓰러뜨리세요. 보스는 공격 전에 바닥에 범위를 그리고, 공격이 끝나면 빈틈을 보입니다. 보스전마다 증강을 하나씩 골라 강해지고, 전멸하면 그 스테이지부터 다시 도전합니다.</p>
+      <p class="lede">시간의 수호자 다섯을 차례로 쓰러뜨리세요. 기본 공격 없이 주력기와 스킬로 싸우고, 회피와 밀치기로 버팁니다. 밀치기는 동료까지 밀어내지만 맞힐 때마다 체력을 회복합니다. 보스전마다 증강을 하나씩 골라 강해지고, 전멸하면 그 스테이지부터 다시 도전합니다.</p>
 
       <div class="field">
         <span class="lbl" id="clsLbl">직업</span>
@@ -214,15 +214,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div class="status" id="status">연결 라이브러리를 불러오는 중…</div>
       <p class="touchnote">이 프로토타입은 키보드와 마우스가 있는 컴퓨터에서 플레이할 수 있어요.</p>
       <dl class="keys">
-        <dt>마우스 오른쪽</dt><dd>땅: 그 지점으로 이동 · 적: 다가가서 공격</dd>
-        <dt>A → 왼쪽 클릭</dt><dd>적: 지정 공격 · 땅: 이동하며 가까운 적 자동 공격. ESC나 오른쪽 클릭으로 취소</dd>
-        <dt>S · H</dt><dd>정지 · 제자리 유지 (사거리 안의 적만 공격)</dd>
+        <dt>마우스 오른쪽</dt><dd>땅: 그 지점으로 이동 · 적: 주력기 사거리까지 따라감</dd>
+        <dt>S · H</dt><dd>정지 · 제자리 유지</dd>
+        <dt>W · 왼쪽 클릭</dt><dd>주력기 (커서 방향). 기본 공격은 없고, 누르고 있으면 재사용 대기시간마다 연속 사용</dd>
         <dt>Q · E · R</dt><dd>스킬 (커서 방향). R은 누르고 있다 놓는 채널링 · 3단 충전</dd>
-        <dt>G</dt><dd>방어. <span class="y">노란 범위</span> 공격을 막으면 다음 공격 강화</dd>
-        <dt>Space</dt><dd>커서 방향 대시 · 짧은 무적</dd>
+        <dt>Space</dt><dd>회피. 커서 방향으로 빠르게 이동 · 무적 없음</dd>
+        <dt>D</dt><dd>밀치기. 주변의 적과 아군을 모두 밀쳐내고, 맞힌 수만큼 체력 회복</dd>
         <dt>F (길게)</dt><dd>쓰러진 동료 곁에서 3초 누르면 부활</dd>
         <dt>Tab (누른 채)</dt><dd>전체 플레이어 증강 보기</dd>
-        <dt>범위 색</dt><dd><span class="y">노랑</span> 막기 가능 · <span class="r">빨강</span> 피하기 · <span class="t">청록·보라</span> 협동 기믹</dd>
+        <dt>범위 색</dt><dd><span class="r">빨강</span> 피하기 · <span class="t">청록·보라</span> 협동 기믹</dd>
         <dt>M · N</dt><dd>소리 전체 끄기·켜기 · 배경음악만 끄기·켜기</dd>
       </dl>
     </div>
@@ -303,8 +303,10 @@ const CONFIG = {
   net: { maxPlayers: 8, sendMs: 33 },
   player: { moveSpeed: 250, radius: 12 },
   controls: { acquireRange: 170, arriveDist: 6, markerTime: .6, pickPad: 12 },
-  dash: { cd: 2.0, time: .16, speed: 760, iframe: .3 },
-  guard: { counterMul: 2.0, counterTime: 3.0, slowMul: .35, parryIframe: .3 },
+  /* 회피: no invulnerability, just a quick burst of movement toward the cursor */
+  dash: { cd: 2.0, time: .16, speed: 760, iframe: 0 },
+  /* 밀치기: knocks back everyone around (allies too). Each body hit heals the pusher. */
+  push: { cd: 5, radius: 110, dmg: 12, allyForce: 170, enemyForce: 120, time: .22, healPct: .06, maxTargets: 3 },
   channel: { overhold: 1.2, interruptCdRatio: .3, fizzleCd: 1.0, stageMul: [0, .45, .75, 1.0], flashTime: .35 },
   revive: { downedTime: 15, holdTime: 3, range: 80, hpRatio: .3 },
   combat: { recDmgBonus: .2, backAttackMul: 1.4, backAngle: 2.1, minionShieldPerUnit: .15, minionShieldMin: .55, closeRange: 120, regenEvery: 5, poisonTick: .5 },
@@ -317,34 +319,35 @@ const CONFIG = {
     { boss: "mekan",  hp: 13500, dmgMul: 1.38, tempo: .86,  rarity: [38, 42, 20] },
     { boss: "dualis", hp: 15500, dmgMul: 1.52, tempo: .82,  rarity: [25, 45, 30] },
   ],
+  /* atk = the class's main skill (W / left click). There is no basic attack. */
   classes: {
     knight: {
-      name: "검사", role: "균형형 · 넓은 베기", desc: "넓게 휘두르는 기본기와 돌진으로 빈틈을 놓치지 않는 정석 딜러.",
-      hp: 100, atk: { dmg: 34, cd: .45, range: 95, arc: 110 }, guard: { dur: .4, cd: 2.0 },
+      name: "검사", role: "균형형 · 넓은 베기", desc: "넓은 베기 주력기와 돌진으로 빈틈을 놓치지 않는 정석 딜러.",
+      hp: 100, atk: { name: "베기", dmg: 55, cd: .8, range: 100, arc: 110, note: "커서 방향 넓은 부채꼴" },
       skills: [
         { name: "회전베기", tier: "약", cd: 4, dmg: 70, range: 120, note: "주변 360°" },
         { name: "돌진 찌르기", tier: "중", cd: 9, dmg: 150, dist: 230, note: "커서 방향 돌진, 지나간 적 관통" },
         { name: "대지 가르기", tier: "강", cd: 18, dmg: 340, channel: [.45, .9, 1.35], range: [150, 200, 250], arc: 70, note: "채널링 · 단계마다 범위·피해 증가" },
       ] },
     rogue: {
-      name: "쌍검사", role: "고속 딜러 · 백어택", desc: "체력이 낮지만 빠르게 벤다. 보스 등 뒤에서 때리면 피해 1.4배.",
-      hp: 80, atk: { dmg: 20, cd: .26, range: 75, arc: 70 }, guard: { dur: .35, cd: 2.0 },
+      name: "쌍검사", role: "고속 딜러 · 백어택", desc: "체력이 낮지만 찌르기가 빠르다. 보스 등 뒤에서 때리면 피해 1.4배.",
+      hp: 80, atk: { name: "찌르기", dmg: 30, cd: .42, range: 80, arc: 70, note: "짧고 빠른 찌르기" },
       skills: [
         { name: "연속 찌르기", tier: "약", cd: 4, dmg: 84, hits: 3, range: 85, note: "0.3초간 3연타" },
         { name: "그림자 습격", tier: "중", cd: 10, dmg: 160, range: 340, note: "보스 등 뒤로 순간이동, 멀면 커서 방향 점멸" },
         { name: "처형", tier: "강", cd: 18, dmg: 360, channel: [.3, .6, .9], range: 95, arc: 90, lowHp: .3, lowMul: 1.5, note: "채널링 · 보스 체력 30% 이하면 1.5배" },
       ] },
     paladin: {
-      name: "수호기사", role: "방어 · 지원", desc: "체력과 방어 시간이 길고, 동료에게 결계와 회복을 나눠 준다.",
-      hp: 120, atk: { dmg: 44, cd: .62, range: 90, arc: 120 }, guard: { dur: .6, cd: 1.5 },
+      name: "수호기사", role: "방어 · 지원", desc: "체력이 높고 주력기가 묵직하다. 동료에게 결계와 회복을 나눠 준다.",
+      hp: 120, atk: { name: "철퇴", dmg: 72, cd: 1.05, range: 95, arc: 120, note: "넓고 묵직한 내려치기" },
       skills: [
-        { name: "방패 강타", tier: "약", cd: 4, dmg: 60, range: 95, guard: .35, note: "피해 + 짧은 방어 자세" },
+        { name: "방패 강타", tier: "약", cd: 4, dmg: 80, range: 95, note: "전방 강타" },
         { name: "수호의 결계", tier: "중", cd: 12, dmg: 40, range: 160, wardRange: 170, wardTime: 5, note: "주변 동료 피해 1회 무효" },
         { name: "심판의 망치", tier: "강", cd: 20, dmg: 300, channel: [.4, .8, 1.2], leap: [120, 190, 260], radius: 120, heal: 25, healRange: 170, note: "채널링 · 단계마다 도약 거리 증가, 착지 시 회복" },
       ] },
     gunner: {
-      name: "사수", role: "원거리 · 관통 저격", desc: "멀리서 쏘지만 공격 속도가 근접 직업보다 느리고 체력이 낮다. 위험하면 물러나며 쏜다.",
-      hp: 85, atk: { dmg: 30, cd: .72, range: 330, arc: 0, ranged: true, speed: 1100 }, guard: { dur: .35, cd: 2.0 },
+      name: "사수", role: "원거리 · 관통 저격", desc: "멀리서 쏘지만 사격이 근접 주력기보다 느리고 체력이 낮다. 위험하면 물러나며 쏜다.",
+      hp: 85, atk: { name: "사격", dmg: 52, cd: 1.25, range: 360, arc: 0, ranged: true, speed: 1100, note: "커서 방향 직선탄, 처음 맞은 적에게 피해" },
       skills: [
         { name: "후퇴 사격", tier: "약", cd: 5, dmg: 65, back: 150, note: "커서 방향으로 쏘고 반대쪽으로 물러남" },
         { name: "관통탄", tier: "중", cd: 10, dmg: 150, len: 620, w: 20, note: "커서 방향 일직선의 적을 모두 관통" },
@@ -353,15 +356,15 @@ const CONFIG = {
   },
   /* g: guardable (yellow). c: co-op gimmick colour. dmg is before the stage multiplier. */
   bossAttacks: {
-    cleave:   { name: "내려찍기",       g: true,  warn: 1.1, rec: 1.0, dmg: 22, r: 270, half: 50, hint: "막기 가능" },
+    cleave:   { name: "내려찍기",       g: true,  warn: 1.1, rec: 1.0, dmg: 22, r: 270, half: 50, hint: "옆으로 피하기" },
     spin:     { name: "휩쓸기",         g: false, warn: 1.4, rec: 1.3, dmg: 22, r: 200, hint: "멀리 벗어나기" },
     donut:    { name: "정오의 빛",      g: false, warn: 2.0, rec: 1.4, dmg: 20, r: 150, hint: "보스 곁으로" },
-    mark:     { name: "그림자 표식",    g: true,  warn: 1.6, rec: .7,  dmg: 18, r: 90,  hint: "흩어지거나 막기" },
+    mark:     { name: "그림자 표식",    g: true,  warn: 1.6, rec: .7,  dmg: 18, r: 90,  hint: "흩어지기" },
     charge:   { name: "돌진",           g: false, warn: 1.2, rec: 1.7, dmg: 25, w: 55, len: 720, move: .3, hint: "옆으로 피하기" },
-    heavy:    { name: "철퇴",           g: true,  warn: .9,  rec: .9,  dmg: 40, r: 75,  hint: "막기 가능 · 강한 피해" },
+    heavy:    { name: "철퇴",           g: true,  warn: .9,  rec: .9,  dmg: 40, r: 75,  hint: "강한 피해 · 벗어나기" },
     clock:    { name: "사분면 심판",    g: false, warn: 2.4, rec: 2.6, dmg: 35, hint: "빈 사분면으로", fixed: true },
     rush:     { name: "연속 돌진",      g: false, warn: .65, rec: 1.6, dmg: 22, w: 50, len: 520, move: .22, count: 3, hint: "세 번 연속 · 옆으로" },
-    flurry:   { name: "삼연참",         g: true,  warn: .85, rec: 1.1, dmg: 16, r: 230, half: 45, step: .4, count: 3, hint: "막기 타이밍 3번" },
+    flurry:   { name: "삼연참",         g: true,  warn: .85, rec: 1.1, dmg: 16, r: 230, half: 45, step: .4, count: 3, hint: "세 번 연속 · 타이밍 맞춰 회피" },
     pounce:   { name: "도약 강습",      g: false, warn: 1.1, rec: 1.4, dmg: 30, r: 130, hint: "가장 먼 사람 주의" },
     whirl:    { name: "회전 칼날",      g: false, warn: 1.0, rec: 1.0, dmg: 20, r: 230, hint: "멀리 벗어나기" },
     sandpool: { name: "모래 늪",        g: false, warn: 1.4, rec: .9,  dmg: 12, r: 85, life: 14, tick: 8, extra: 2, hint: "발밑에 늪이 생김" },
@@ -414,39 +417,39 @@ const CONFIG = {
   /* rarity: 0 common · 1 rare · 2 epic. cls limits an augment to one class. v holds its numbers. */
   augments: [
     { id: "atk",      g: "力", name: "예리한 칼날",  rar: 0, v: .12, desc: v => `공격력 +${pc(v)}`, fx: (s, v) => { s.atkMul *= 1 + v; } },
-    { id: "aspd",     g: "疾", name: "가벼운 손목",  rar: 0, v: .12, desc: v => `공격 속도 +${pc(v)}`, fx: (s, v) => { s.aspdMul *= 1 + v; } },
+    { id: "aspd",     g: "疾", name: "가벼운 손목",  rar: 0, v: .12, desc: v => `주력기 속도 +${pc(v)}`, fx: (s, v) => { s.aspdMul *= 1 + v; } },
     { id: "move",     g: "風", name: "바람걸음",     rar: 0, v: .12, desc: v => `이동 속도 +${pc(v)}`, fx: (s, v) => { s.moveMul *= 1 + v; } },
     { id: "hp",       g: "命", name: "단단한 몸",    rar: 0, v: 20,  desc: v => `최대 체력 +${v}`, fx: (s, v) => { s.hpAdd += v; } },
-    { id: "dash",     g: "息", name: "숨고르기",     rar: 0, v: .25, desc: v => `대시 재사용 대기시간 -${pc(v)}`, fx: (s, v) => { s.dashCdMul *= 1 - v; } },
+    { id: "dash",     g: "息", name: "숨고르기",     rar: 0, v: .25, desc: v => `회피 재사용 대기시간 -${pc(v)}`, fx: (s, v) => { s.dashCdMul *= 1 - v; } },
     { id: "focus",    g: "念", name: "집중",         rar: 0, v: .25, desc: v => `채널링 충전 속도 +${pc(v)}`, fx: (s, v) => { s.chargeMul *= 1 + v; } },
-    { id: "hold",     g: "守", name: "버티기",       rar: 0, v: .15, desc: v => `방어 판정 시간 +${v}초`, fx: (s, v) => { s.guardAdd += v; } },
+    { id: "arm",      g: "臂", name: "억센 팔",      rar: 0, v: .5,  desc: v => `밀치기 회복량 +${pc(v)}`, fx: (s, v) => { s.pushHealMul *= 1 + v; } },
     { id: "gap",      g: "隙", name: "약점 파악",    rar: 0, v: .2,  desc: v => `빈틈 상태 보스에게 주는 피해 +${pc(v)}`, fx: (s, v) => { s.recBonus += v; } },
     { id: "regen",    g: "癒", name: "재생",         rar: 0, v: 4,   desc: v => `5초마다 체력 ${v} 회복`, fx: (s, v) => { s.regen += v; } },
     { id: "qcd",      g: "先", name: "첫 수",        rar: 0, v: .2,  desc: v => `Q 스킬 재사용 대기시간 -${pc(v)}`, fx: (s, v) => { s.cdMul[0] *= 1 - v; } },
-    { id: "kn_arc",   g: "劍", name: "검술 숙련",    rar: 0, cls: "knight",  v: [30, .06], desc: v => `기본 공격 각도 +${v[0]}°, 공격력 +${pc(v[1])}`, fx: (s, v) => { s.arcAdd += v[0]; s.atkMul *= 1 + v[1]; } },
-    { id: "ro_poison",g: "毒", name: "독칼",         rar: 0, cls: "rogue",   v: [3, 6],    desc: v => `기본 공격 적중 시 ${v[0]}초 동안 초당 ${v[1]} 독 피해`, fx: (s, v) => { s.poisonTime = v[0]; s.poisonDps = v[1]; } },
-    { id: "gn_barrel",g: "銃", name: "긴 총열",      rar: 0, cls: "gunner",  v: [60, .06], desc: v => `기본 공격 사거리 +${v[0]}, 공격력 +${pc(v[1])}`, fx: (s, v) => { s.rangeAdd += v[0]; s.atkMul *= 1 + v[1]; } },
-    { id: "pa_bash",  g: "盾", name: "방패 숙련",    rar: 0, cls: "paladin", v: [.2, .4],  desc: v => `방어 판정 +${v[0]}초, 방패 강타 피해 +${pc(v[1])}`, fx: (s, v) => { s.guardAdd += v[0]; s.bashMul *= 1 + v[1]; } },
-    { id: "counter",  g: "反", name: "반격의 대가",  rar: 1, v: [.6, 1.5], desc: v => `방어 성공 보너스 배율 +${v[0]}, 지속 +${v[1]}초`, fx: (s, v) => { s.counterAdd += v[0]; s.counterTimeAdd += v[1]; } },
-    { id: "dashbuff", g: "突", name: "돌격",         rar: 1, v: [.6, 1.5], desc: v => `대시 후 ${v[1]}초 안의 다음 공격 피해 +${pc(v[0])}`, fx: (s, v) => { s.dashBuff = Math.max(s.dashBuff, v[0]); s.dashBuffTime = v[1]; } },
+    { id: "kn_arc",   g: "劍", name: "검술 숙련",    rar: 0, cls: "knight",  v: [30, .06], desc: v => `베기 각도 +${v[0]}°, 공격력 +${pc(v[1])}`, fx: (s, v) => { s.arcAdd += v[0]; s.atkMul *= 1 + v[1]; } },
+    { id: "ro_poison",g: "毒", name: "독칼",         rar: 0, cls: "rogue",   v: [3, 6],    desc: v => `찌르기 적중 시 ${v[0]}초 동안 초당 ${v[1]} 독 피해`, fx: (s, v) => { s.poisonTime = v[0]; s.poisonDps = v[1]; } },
+    { id: "pa_bash",  g: "盾", name: "방패 숙련",    rar: 0, cls: "paladin", v: [.4, .2],  desc: v => `방패 강타 피해 +${pc(v[0])}, 밀치기 범위 +${pc(v[1])}`, fx: (s, v) => { s.bashMul *= 1 + v[0]; s.pushRadiusMul *= 1 + v[1]; } },
+    { id: "gn_barrel",g: "銃", name: "긴 총열",      rar: 0, cls: "gunner",  v: [60, .06], desc: v => `사격 사거리 +${v[0]}, 공격력 +${pc(v[1])}`, fx: (s, v) => { s.rangeAdd += v[0]; s.atkMul *= 1 + v[1]; } },
+    { id: "recoil",   g: "反", name: "반동",         rar: 1, v: .3,  desc: v => `밀치기 재사용 대기시간 -${pc(v)}`, fx: (s, v) => { s.pushCdMul *= 1 - v; } },
+    { id: "dashbuff", g: "突", name: "돌격",         rar: 1, v: [.6, 1.5], desc: v => `회피 후 ${v[1]}초 안의 다음 공격 피해 +${pc(v[0])}`, fx: (s, v) => { s.dashBuff = Math.max(s.dashBuff, v[0]); s.dashBuffTime = v[1]; } },
     { id: "ecd",      g: "技", name: "기술 연마",    rar: 1, v: .25, desc: v => `E 스킬 재사용 대기시간 -${pc(v)}`, fx: (s, v) => { s.cdMul[1] *= 1 - v; } },
     { id: "rcd",      g: "決", name: "결정타",       rar: 1, v: .25, desc: v => `R 스킬 재사용 대기시간 -${pc(v)}`, fx: (s, v) => { s.cdMul[2] *= 1 - v; } },
-    { id: "leech",    g: "吸", name: "흡혈 칼날",    rar: 1, v: 2,   desc: v => `기본 공격 적중 시 체력 ${v} 회복`, fx: (s, v) => { s.lifesteal += v; } },
+    { id: "leech",    g: "吸", name: "흡혈 칼날",    rar: 1, v: 2,   desc: v => `주력기 적중 시 체력 ${v} 회복`, fx: (s, v) => { s.lifesteal += v; } },
     { id: "close",    g: "近", name: "근접 투지",    rar: 1, v: .15, desc: v => `적과 붙어 있을 때(120 이내) 공격력 +${pc(v)}`, fx: (s, v) => { s.closeBonus += v; } },
     { id: "medic",    g: "援", name: "구원자",       rar: 1, v: [.5, .5], desc: v => `부활 속도 +${pc(v[0])}, 부활시킨 동료 체력 ${pc(v[1])}`, fx: (s, v) => { s.reviveSpd *= 1 + v[0]; s.reviveHp = Math.max(s.reviveHp, v[1]); } },
-    { id: "wall",     g: "壁", name: "철벽",         rar: 1, v: .8,  desc: v => `방어 성공 시 ${v}초 무적, 방어 재사용 즉시 초기화`, fx: (s, v) => { s.parryIframe = Math.max(s.parryIframe, v); s.parryReset = true; } },
+    { id: "gale",     g: "颯", name: "질풍",         rar: 1, v: .4,  desc: v => `회피 거리 +${pc(v)}`, fx: (s, v) => { s.dashDistMul *= 1 + v; } },
     { id: "kn_spin",  g: "旋", name: "회오리",       rar: 1, cls: "knight",  v: [.4, .3], desc: v => `회전베기 범위 +${pc(v[0])}, 피해 +${pc(v[1])}`, fx: (s, v) => { s.spinRange *= 1 + v[0]; s.spinMul *= 1 + v[1]; } },
     { id: "ro_shadow",g: "影", name: "그림자 발걸음",rar: 1, cls: "rogue",   v: 2,   desc: v => `그림자 습격 뒤 ${v}초 동안 모든 공격이 백어택`, fx: (s, v) => { s.shadowBack = v; } },
-    { id: "gn_head",  g: "的", name: "헤드샷",       rar: 1, cls: "gunner",  v: [4, 1.0], desc: v => `기본 공격 ${v[0]}발마다 피해 +${pc(v[1])}`, fx: (s, v) => { s.headEvery = v[0]; s.headMul = Math.max(s.headMul, v[1]); } },
     { id: "pa_sanct", g: "聖", name: "성역",         rar: 1, cls: "paladin", v: [.5, 10], desc: v => `결계 범위 +${pc(v[0])}, 결계 받은 동료 체력 ${v[1]} 회복`, fx: (s, v) => { s.wardRangeMul *= 1 + v[0]; s.wardHeal += v[1]; } },
-    { id: "haste",    g: "時", name: "시간 가속",    rar: 2, v: [.2, .1], desc: v => `모든 스킬 재사용 대기시간 -${pc(v[0])}, 공격 속도 +${pc(v[1])}`, fx: (s, v) => { for (let i = 0; i < 3; i++) s.cdMul[i] *= 1 - v[0]; s.aspdMul *= 1 + v[1]; } },
-    { id: "perfect",  g: "完", name: "완벽한 반격",  rar: 2, v: 3,   desc: v => `방어 성공 시 주변 적에게 기본 공격력 ${v * 100}% 즉시 반격`, fx: (s, v) => { s.perfectCounter = v; } },
+    { id: "gn_head",  g: "的", name: "헤드샷",       rar: 1, cls: "gunner",  v: [4, 1.0], desc: v => `사격 ${v[0]}발마다 피해 +${pc(v[1])}`, fx: (s, v) => { s.headEvery = v[0]; s.headMul = Math.max(s.headMul, v[1]); } },
+    { id: "haste",    g: "時", name: "시간 가속",    rar: 2, v: [.2, .1], desc: v => `모든 스킬 재사용 대기시간 -${pc(v[0])}, 주력기 속도 +${pc(v[1])}`, fx: (s, v) => { for (let i = 0; i < 3; i++) s.cdMul[i] *= 1 - v[0]; s.aspdMul *= 1 + v[1]; } },
+    { id: "shock",    g: "震", name: "충격파",       rar: 2, v: [.4, 5], desc: v => `밀치기 범위 +${pc(v[0])}, 밀치기 피해 ${v[1]}배`, fx: (s, v) => { s.pushRadiusMul *= 1 + v[0]; s.pushDmgMul *= v[1]; } },
     { id: "undying",  g: "不", name: "불굴",         rar: 2, v: .3,  desc: v => `스테이지마다 1회, 쓰러질 피해를 받으면 체력 ${pc(v)}로 버팀`, fx: (s, v) => { s.undying = v; } },
     { id: "overcharge",g:"過", name: "과충전",       rar: 2, v: .4,  desc: v => `채널링 최대 충전 피해 +${pc(v)}`, fx: (s, v) => { s.maxChargeBonus += v; } },
     { id: "kn_quake", g: "裂", name: "대지 분쇄",    rar: 2, cls: "knight",  v: .6,  desc: v => `대지 가르기 최대 충전 시 0.4초 뒤 충격파 한 번 더 (${pc(v)})`, fx: (s, v) => { s.quakeEcho = v; } },
     { id: "ro_exec",  g: "斬", name: "사형 집행인",  rar: 2, cls: "rogue",   v: [.5, 1.8], desc: v => `처형 강화 조건 체력 ${pc(v[0])} 이하, 배율 ${v[1]}배`, fx: (s, v) => { s.execLow = v[0]; s.execMul = v[1]; } },
-    { id: "gn_snipe", g: "狙", name: "명사수",       rar: 2, cls: "gunner",  v: [.5, .4], desc: v => `정밀 저격 최대 충전 피해 +${pc(v[0])}, 최대 충전으로 쏘면 재사용 대기시간 ${pc(v[1])} 돌려받음`, fx: (s, v) => { s.snipeMax += v[0]; s.snipeRefund = v[1]; } },
     { id: "pa_wrath", g: "罰", name: "천벌",         rar: 2, cls: "paladin", v: [2, .4], desc: v => `심판의 망치 회복량 ${v[0]}배, 착지 범위 +${pc(v[1])}`, fx: (s, v) => { s.hammerHealMul *= v[0]; s.hammerRadiusMul *= 1 + v[1]; } },
+    { id: "gn_snipe", g: "狙", name: "명사수",       rar: 2, cls: "gunner",  v: [.5, .4], desc: v => `정밀 저격 최대 충전 피해 +${pc(v[0])}, 최대 충전으로 쏘면 재사용 대기시간 ${pc(v[1])} 돌려받음`, fx: (s, v) => { s.snipeMax += v[0]; s.snipeRefund = v[1]; } },
   ],
 };
 function pc(v) { return Math.round(v * 100) + "%"; }
@@ -531,6 +534,7 @@ const SFX = (() => {
     g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(A.music * (1 - depth), t + .02); g.linearRampToValueAtTime(A.music, t + dur);
   }
   const lib = {
+    push: v => { sub(.7 * v, 140, 40, .35); noise(.3, .4 * v, "lowpass", 1400, 200, 1, 0, { wet: .3 }); whoosh(.35 * v, .25, false); },
     shot: v => { crack(.45 * v); sub(.35 * v, 180, 60, .12); noise(.14, .25 * v, "bandpass", 1600, 500, 1.2, 0, { wet: .3 }); },
     pierce: v => { crack(.6 * v); sub(.5 * v, 150, 45, .3); metal(.1 * v, 1800, .5); noise(.4, .22 * v, "bandpass", 3000, 600, 2, 0, { wet: .4 }); duck(.3, .3); },
     snipe: v => { crack(.9 * v); boom(.9 * v); tone(2600, .7, "sine", .08 * v, 500, 0, .002, { wet: .7 }); duck(.6, .6); },
@@ -650,7 +654,7 @@ const SFX = (() => {
   };
 })();
 /* effects: 0 swing,1 parry,2 spin,3 lunge,4 quake,5 stab,6 blink,7 exec,8 bash,9 ward,10 hammer,11 break */
-const FX_SOUND = ["swing", "parry", "spin", "lunge", "quake", "stab", "blink", "exec", "bash", "ward", "hammer", "interrupt", "pierce", "snipe", "shot"];
+const FX_SOUND = ["swing", "parry", "spin", "lunge", "quake", "stab", "blink", "exec", "bash", "ward", "hammer", "interrupt", "pierce", "snipe", "shot", "push"];
 
 /* ---------- storage (per-viewer convenience) ---------- */
 function load(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
@@ -692,6 +696,7 @@ function sanitize(p) {
     sw: Math.round(num(p.sw, 0, 1e9, 0)), cx: Math.round(num(p.cx, 0, 1e9, 0)),
     fx: (Array.isArray(p.fx) && p.fx.length >= 5) ? [num(p.fx[0], 0, 1e9, 0), Math.round(num(p.fx[1], 0, 20, 0)), num(p.fx[2], -100, AW + 100, 0), num(p.fx[3], -100, AH + 100, 0), num(p.fx[4], -7, 7, 0)] : null,
     wd: trip(p.wd), hl: trip(p.hl),
+    pu: (Array.isArray(p.pu) && p.pu.length >= 4) ? [num(p.pu[0], 0, 1e9, 0), num(p.pu[1], 0, AW, 0), num(p.pu[2], 0, AH, 0), num(p.pu[3], 0, 400, 110)] : null,
     ag: Array.isArray(p.ag) ? p.ag.filter(x => typeof x === "string" && AUG[x]).slice(0, 40) : [],
     pk: Math.round(num(p.pk, -1, 1e9, -1)), ad,
     ch: (Array.isArray(p.ch) && p.ch.length >= 3) ? [Math.round(num(p.ch[0], 0, 2, 0)), num(p.ch[1], 0, 3, 0), Math.round(num(p.ch[2], 0, 3, 0))] : null,
@@ -849,7 +854,7 @@ function lobbyState(prev) {
     bx: 640, by: 260, bf: Math.PI / 2, bs: "idle", bt: 0, cur: "", atk: [], aid: 0, pools: [], pid: 0, adds: [] };
 }
 function becomeHost() { isHost = true; HS = lobbyState(null); }
-const hostL = { target: null, lastKind: "", force: "", combo: false, chain: null, anim: null, pending: [], addDm: {}, augStart: 0, readySince: 0, clearAt: 0, last: 0 };
+const hostL = { pu: {}, target: null, lastKind: "", force: "", combo: false, chain: null, anim: null, pending: [], addDm: {}, augStart: 0, readySince: 0, clearAt: 0, last: 0 };
 function curTempo() { return CONFIG.stages[HS.stage].tempo * (HS.ph === 2 ? CONFIG.stageFlow.phase3TempoMul : 1); }
 
 function startGame(now) {
@@ -938,6 +943,19 @@ function hostTick(now) {
       m.nx = r3(T + MC.atkCd * tempo);
     }
     m.x = Math.round(clamp(m.x, 20, AW - 20) * 10) / 10; m.y = Math.round(clamp(m.y, 20, AH - 20) * 10) / 10;
+  }
+  for (const p of pl) {   // pushes knock minions back
+    const pu = p.pr.pu, prev = hostL.pu[p.peer];
+    if (!pu) { if (prev === undefined) hostL.pu[p.peer] = 0; continue; }
+    if (prev === pu[0]) continue;
+    hostL.pu[p.peer] = pu[0];
+    if (prev === undefined) continue;
+    for (const a of H.adds) {
+      if (a.k !== "minion") continue;
+      const dx = a.x - pu[1], dy = a.y - pu[2], d = Math.hypot(dx, dy) || 1;
+      if (d > pu[3] + CONFIG.minion.r) continue;
+      a.x += dx / d * CONFIG.push.enemyForce; a.y += dy / d * CONFIG.push.enemyForce; a.nx = Math.max(a.nx, r3(T + .8));
+    }
   }
   separateAdds(H, B);
   switch (H.bs) {
@@ -1094,9 +1112,9 @@ const me = { x: 640, y: 600, hp: 100, mh: 100, dn: 0, downT: 0, ifr: 0, dashT: 0
   a: -Math.PI / 2, aim: 0, order: null, eng: null, cd: [0, 0, 0], atkCd: 0, dashCd: 0, guardT: 0, guardCd: 0, counterT: 0, counterMul: 2,
   wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, poisonAcc: 0, regenT: 0, undyingUsed: false, poolT: 0,
   cast: null, move: null, multi: null, ch: null, chFlash: 0, sw: 0, cx: 0, fx: null, fxN: 0, wd: null, hl: null, evId: 0,
-  rv: null, rvT: null, rvP: 0, hitT: 0, ag: [], pk: -1, offer: null, offerKey: -1, st: null, shots: [], shotN: 0 };
+  rv: null, rvT: null, rvP: 0, hitT: 0, ag: [], pk: -1, offer: null, offerKey: -1, st: null, shots: [], shotN: 0, pushCd: 0, kb: null, pu: null };
 let resolved = new Set(), fxList = [], floats = [], markers = [], disp = new Map(), addDisp = new Map();
-const seenSw = new Map(), seenFx = new Map(), seenWd = new Map(), seenHl = new Map(), seenCx = new Map();
+const seenSw = new Map(), seenFx = new Map(), seenWd = new Map(), seenHl = new Map(), seenCx = new Map(), seenPu = new Map();
 let shake = 0, bossFlash = 0;
 const bossDisp = { x: 640, y: 260, f: Math.PI / 2 };
 
@@ -1105,7 +1123,7 @@ function baseStats() {
     counterAdd: 0, counterTimeAdd: 0, dashBuff: 0, dashBuffTime: 0, lifesteal: 0, closeBonus: 0, reviveSpd: 1, reviveHp: 0,
     parryIframe: 0, parryReset: false, perfectCounter: 0, undying: 0, maxChargeBonus: 0,
     arcAdd: 0, spinRange: 1, spinMul: 1, quakeEcho: 0, poisonTime: 0, poisonDps: 0, shadowBack: 0, execLow: 0, execMul: 0,
-    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0 };
+    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0, pushHealMul: 1, pushCdMul: 1, pushRadiusMul: 1, pushDmgMul: 1, dashDistMul: 1 };
 }
 function recalcStats() {
   const s = baseStats();
@@ -1120,7 +1138,7 @@ function resetMe() {
   me.mh = C.hp + (me.st ? me.st.hpAdd : 0); me.hp = me.mh; me.dn = 0; me.downT = 0; me.ifr = 1; me.dm = 0; me.ad = {};
   me.x = 460 + Math.random() * 360; me.y = 610; me.order = null; me.eng = null;
   Object.assign(me, { cd: [0, 0, 0], atkCd: 0, dashCd: 0, dashT: 0, guardT: 0, guardCd: 0, counterT: 0, wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, regenT: 0, undyingUsed: false,
-    cast: null, move: null, multi: null, ch: null, rv: null, rvT: null, rvP: 0, poolT: 0, shots: [], shotN: 0 });
+    cast: null, move: null, multi: null, ch: null, rv: null, rvT: null, rvP: 0, poolT: 0, shots: [], shotN: 0, pushCd: 0, kb: null });
   resolved = new Set();
 }
 function nowS() { return performance.now() / 1000; }
@@ -1129,7 +1147,7 @@ function myPresence() {
   return { n: myName, c: myColor, k: myClass, x: Math.round(me.x), y: Math.round(me.y), a: Math.round((me.ch ? me.aim : me.a) * 100) / 100,
     hp: Math.round(me.hp), mh: me.mh, dn: me.dn, bo: Math.round(me.downT * 10) / 10, dm: me.dm, r: me.run, game: me.game, rv: me.rv,
     gd: me.guardT > 0 ? 1 : 0, bk: me.wardUntil > nowS() ? 1 : 0, ct: me.counterT > 0 ? 1 : 0,
-    sw: me.sw, cx: me.cx, fx: me.fx, wd: me.wd, hl: me.hl, ag: me.ag, pk: me.pk, ad: me.ad,
+    sw: me.sw, cx: me.cx, fx: me.fx, wd: me.wd, hl: me.hl, pu: me.pu, ag: me.ag, pk: me.pk, ad: me.ad,
     ch: me.ch ? [me.ch.i, r3(Math.min(me.ch.t, C.skills[me.ch.i].channel[2] + .01)), me.ch.stage] : null };
 }
 function float(x, y, txt, col, big) { floats.push({ x: x + (Math.random() - .5) * 30, y, txt: String(txt), col, t: 0, big: !!big }); }
@@ -1192,22 +1210,62 @@ function onLine(e, x, y, a, len, w) {
   const dx = e.x - x, dy = e.y - y, c = Math.cos(a), sn = Math.sin(a), along = dx * c + dy * sn;
   return along >= -e.r && along <= len + e.r && Math.abs(dx * sn - dy * c) <= w + e.r;
 }
-function fireShot(t) {
+function fireShot() {
   const st = me.st, C = CLASSES[myClass];
   let dmg = C.atk.dmg; me.shotN++;
   const head = st.headEvery && me.shotN % st.headEvery === 0;
   if (head) dmg *= 1 + st.headMul;
-  me.shots.push({ x: me.x + Math.cos(me.a) * 18, y: me.y + Math.sin(me.a) * 18 - 8, a: me.a, tid: t.id, dmg, head });
+  me.shots.push({ x: me.x + Math.cos(me.aim) * 18, y: me.y + Math.sin(me.aim) * 18 - 8, a: me.aim, left: C.atk.range + st.rangeAdd, dmg, head });
 }
 function updateShots(dt) {
   const spd = CLASSES[myClass].atk.speed || 1100;
   for (const sh of me.shots) {
-    const e = findEnemy(sh.tid); if (!e) { sh.dead = true; continue; }
-    const dx = e.x - sh.x, dy = e.y - sh.y, d = Math.hypot(dx, dy), step = spd * dt;
-    if (d <= e.r + step) { sh.dead = true; deal(e, sh.dmg, { basic: true }); if (sh.head) float(e.x, e.y - e.r - 34, "헤드샷", "#ffd166", true); }
-    else { sh.x += dx / d * step; sh.y += dy / d * step; sh.a = Math.atan2(dy, dx); }
+    const step = spd * dt;
+    sh.x += Math.cos(sh.a) * step; sh.y += Math.sin(sh.a) * step; sh.left -= step;
+    for (const e of enemies()) if (dist(sh.x, sh.y, e.x, e.y) <= e.r + 6) { sh.dead = true; deal(e, sh.dmg, { basic: true }); if (sh.head) float(e.x, e.y - e.r - 34, "헤드샷", "#ffd166", true); break; }
+    if (sh.left <= 0) sh.dead = true;
   }
   me.shots = me.shots.filter(sh => !sh.dead);
+}
+/* the main skill replaces the basic attack: short cooldown, aimed at the cursor */
+function castMain() {
+  const C = CLASSES[myClass], st = me.st, A = C.atk;
+  if (me.dn || me.atkCd > 0 || busy()) return;
+  me.atkCd = A.cd / st.aspdMul; me.sw++; me.a = me.aim;
+  spawnFx(0, me.x, me.y, me.aim, myColor, myClass, A.ranged ? -1 : st.arcAdd); SFX.play("swing", 1, myClass);
+  if (A.ranged) { fireShot(); return; }
+  const half = (A.arc + st.arcAdd) / 2 * DEG;
+  for (const e of enemies()) if (inArc(e, A.range, half, me.aim)) deal(e, A.dmg, { basic: true });
+}
+/* knock back everyone nearby, allies included; every body hit heals the pusher */
+function doPush() {
+  const P = CONFIG.push, st = me.st;
+  if (me.dn || me.pushCd > 0 || me.cast || me.move) return;
+  if (me.ch) interruptChannel("밀치기");
+  me.pushCd = P.cd * st.pushCdMul;
+  const R = P.radius * st.pushRadiusMul;
+  emitFx(15, st.pushRadiusMul);
+  me.pu = [++me.evId, Math.round(me.x), Math.round(me.y), Math.round(R)];
+  let hits = 0;
+  for (const e of enemies()) if (edgeDist(e) <= R) { deal(e, P.dmg * st.pushDmgMul, { noBuff: true }); hits++; }
+  const S = curS;
+  for (const p of others) {
+    const pr = p.presence; if (pr.dn || (S && S.st === "fight" && pr.r !== S.run)) continue;
+    const d = disp.get(p.peer) || pr; if (dist(d.x, d.y, me.x, me.y) <= R + CONFIG.player.radius) hits++;
+  }
+  if (hits && me.hp < me.mh) {
+    const heal = Math.round(me.mh * P.healPct * st.pushHealMul * Math.min(hits, P.maxTargets));
+    me.hp = Math.min(me.mh, me.hp + heal); float(me.x, me.y - 44, "+" + heal, "#7fd3a3", true); SFX.play("heal", .6);
+  }
+}
+function knockMe(fromX, fromY, force) {
+  const P = CONFIG.push, dx = me.x - fromX, dy = me.y - fromY, d = Math.hypot(dx, dy);
+  const ux = d > .5 ? dx / d : Math.cos(Math.random() * TAU), uy = d > .5 ? dy / d : Math.sin(Math.random() * TAU);
+  me.kb = { vx: ux * force / P.time, vy: uy * force / P.time, t: P.time };
+  me.order = null;
+  if (me.ch) interruptChannel("밀려남");
+  if (me.rvP > 0) { me.rvP = 0; me.rv = null; }
+  float(me.x, me.y - 40, "밀려남", "#9fd8ff");
 }
 function hitAll(fn, base, opts) { let n = 0; for (const e of enemies()) if (fn(e)) { deal(e, base, opts); n++; } return n; }
 
@@ -1238,17 +1296,7 @@ function hurt(n, why) {
 }
 function bossHit(dmg, guardable) {
   if (me.dn || dmg <= 0) return;
-  if (me.dashT > 0 || me.ifr > 0) { float(me.x, me.y - 30, "회피", "#9fd8ff"); SFX.play("evade"); return; }
-  if (me.guardT > 0 && guardable) {
-    const st = me.st, C = CLASSES[myClass];
-    me.counterT = CONFIG.guard.counterTime + st.counterTimeAdd; me.counterMul = CONFIG.guard.counterMul + st.counterAdd;
-    me.ifr = Math.max(CONFIG.guard.parryIframe, st.parryIframe);
-    if (st.parryReset) me.guardCd = 0;
-    float(me.x, me.y - 34, "막기! 다음 공격 ×" + me.counterMul.toFixed(1), "#ffd166", true);
-    spawnFx(1, me.x, me.y, me.a, myColor); SFX.play("parry");
-    if (st.perfectCounter) hitAll(e => edgeDist(e) <= 130, C.atk.dmg * st.perfectCounter, { noBuff: true });
-    return;
-  }
+  if (me.ifr > 0) { float(me.x, me.y - 30, "무효", "#9fd8ff"); SFX.play("evade"); return; }
   if (me.wardUntil > nowS()) { me.wardUntil = 0; me.ifr = .4; float(me.x, me.y - 30, "결계", "#9fd8ff"); SFX.play("ward", .6); return; }
   hurt(dmg);
 }
@@ -1327,7 +1375,7 @@ function useSkill(i) {
       me.ifr = Math.max(me.ifr, .3);
     }
   } else if (myClass === "paladin") {
-    if (i === 0) { emitFx(8); me.guardT = Math.max(me.guardT, sk.guard); hitAll(e => inArc(e, sk.range, 55 * DEG, a), sk.dmg * st.bashMul); }
+    if (i === 0) { emitFx(8); hitAll(e => inArc(e, sk.range, 55 * DEG, a), sk.dmg * st.bashMul); }
     else if (i === 1) {
       const wr = sk.wardRange * st.wardRangeMul;
       emitFx(9, st.wardRangeMul); me.wd = [++me.evId, Math.round(me.x), Math.round(me.y), r3(st.wardRangeMul), st.wardHeal]; me.wardUntil = nowS() + sk.wardTime;
@@ -1419,7 +1467,7 @@ addEventListener("keyup", e => {
   keys.delete(e.code); released.add(e.code);
   if (e.code === "Tab") showTab(false);
 });
-addEventListener("blur", () => { keys.clear(); if (me.ch) released.add(SKILL_KEYS[me.ch.i]); showTab(false); });
+addEventListener("blur", () => { keys.clear(); mouse.down = false; if (me.ch) released.add(SKILL_KEYS[me.ch.i]); showTab(false); });
 const cv = $("#cv"), ctx = cv.getContext("2d");
 let view = { s: 1, ox: 0, oy: 0, dpr: 1, cw: 1280, ch: 720 };
 function toArena(cx, cy) { const r = cv.getBoundingClientRect(); return [(cx - r.left - view.ox) / view.s, (cy - r.top - view.oy) / view.s]; }
@@ -1436,6 +1484,7 @@ function issueRightClick(x, y) {
   me.eng = null;
 }
 function issueLeftClick(x, y) {
+  mouse.down = true;
   if (!armed || me.dn) return;
   const e = enemyAt(x, y);
   if (me.ch) interruptChannel("이동");
@@ -1453,6 +1502,7 @@ cv.addEventListener("pointerdown", e => {
   else if (e.button === 0) issueLeftClick(x, y);
 });
 addEventListener("pointermove", e => { [mouse.x, mouse.y] = toArena(e.clientX, e.clientY); });
+addEventListener("pointerup", e => { if (e.button === 0) mouse.down = false; });
 cv.addEventListener("contextmenu", e => e.preventDefault());
 function resize() {
   const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
@@ -1483,7 +1533,7 @@ function updateBoss(dt, S, idleT) {
   for (const key of addDisp.keys()) if (!seen.has(key)) addDisp.delete(key);
 }
 function moveToward(tx, ty, dt, stopAt) {
-  const C = me.st, sp = CONFIG.player.moveSpeed * C.moveMul * (me.guardT > 0 ? CONFIG.guard.slowMul : 1);
+  const C = me.st, sp = CONFIG.player.moveSpeed * C.moveMul;
   const dx = tx - me.x, dy = ty - me.y, d = Math.hypot(dx, dy);
   if (d <= (stopAt || 0) + .5) return true;
   const step = Math.min(d - (stopAt || 0), sp * dt);
@@ -1492,35 +1542,14 @@ function moveToward(tx, ty, dt, stopAt) {
 }
 function processOrder(dt) {
   const C = CLASSES[myClass], st = me.st, range = C.atk.range + (C.atk.ranged ? st.rangeAdd : 0);
-  const o = me.order; let target = null;
-  const nearestIn = r => { let best = null, bd = 1e9; for (const e of enemies()) { const d = edgeDist(e); if (d <= r && d < bd) { bd = d; best = e; } } return best; };
-  if (o && o.t === "atk") {
+  const o = me.order;
+  if (o && o.t === "atk") {   // follow an enemy until it is in main-skill range (no auto attack)
     const e = findEnemy(o.id);
     if (!e) me.order = null;
-    else if (edgeDist(e) <= range) target = e;
-    else moveToward(e.x, e.y, dt, e.r + range - 4);
-  } else if (o && o.t === "amove") {
-    let e = me.eng != null ? findEnemy(me.eng) : null;
-    if (!e) { e = nearestIn(CONFIG.controls.acquireRange); me.eng = e ? e.id : null; }
-    if (e) { if (edgeDist(e) <= range) target = e; else moveToward(e.x, e.y, dt, e.r + range - 4); }
-    else if (moveToward(o.x, o.y, dt, CONFIG.controls.arriveDist)) me.order = null;
+    else if (edgeDist(e) > range - 6) moveToward(e.x, e.y, dt, e.r + range - 10);
+    else me.a = Math.atan2(e.y - me.y, e.x - me.x);
   } else if (o && o.t === "move") {
     if (moveToward(o.x, o.y, dt, CONFIG.controls.arriveDist)) me.order = null;
-  } else {
-    target = nearestIn(range); // idle or hold: only what is already in reach
-  }
-  if (target) {
-    me.a = Math.atan2(target.y - me.y, target.x - me.x);
-    if (me.atkCd <= 0 && me.guardT <= 0) {
-      me.atkCd = C.atk.cd / st.aspdMul; me.sw++;
-      spawnFx(0, me.x, me.y, me.a, myColor, myClass, C.atk.ranged ? -1 : st.arcAdd); SFX.play("swing", 1, myClass);
-      if (C.atk.ranged) fireShot(target);
-      else {
-        const half = (C.atk.arc + st.arcAdd) / 2 * DEG;
-        deal(target, C.atk.dmg, { basic: true });
-        for (const e of enemies()) if (e.id !== target.id && inArc(e, range, half, me.a)) deal(e, C.atk.dmg * .6, { basic: true, noBuff: true });
-      }
-    }
   }
 }
 function updateMe(dt, T, S) {
@@ -1530,7 +1559,7 @@ function updateMe(dt, T, S) {
   }
   const C = CLASSES[myClass], st = me.st, fighting = S && S.st === "fight";
   me.aim = Math.atan2(mouse.y - me.y, mouse.x - me.x);
-  for (const k of ["ifr", "dashCd", "atkCd", "guardT", "guardCd", "counterT", "hitT", "dashBuffT", "shadowT", "chFlash"]) me[k] = Math.max(0, me[k] - dt);
+  for (const k of ["ifr", "dashCd", "atkCd", "pushCd", "guardT", "guardCd", "counterT", "hitT", "dashBuffT", "shadowT", "chFlash"]) me[k] = Math.max(0, me[k] - dt);
   for (let i = 0; i < 3; i++) me.cd[i] = Math.max(0, me.cd[i] - dt);
   updateShots(dt);
 
@@ -1542,19 +1571,18 @@ function updateMe(dt, T, S) {
   if (me.dn) { queued.clear(); released.clear(); me.rv = null; return; }
 
   // instant inputs
-  if (queued.has("KeyA")) setArmed(true);
-  if (queued.has("Escape")) setArmed(false);
   if (queued.has("KeyS")) { me.order = null; me.eng = null; if (me.ch) interruptChannel("정지"); }
   if (queued.has("KeyH")) { me.order = { t: "hold" }; me.eng = null; }
-  if (queued.has("KeyG") && me.guardCd <= 0 && !me.cast) { if (me.ch) interruptChannel("방어"); me.guardT = C.guard.dur + st.guardAdd; me.guardCd = C.guard.cd; SFX.play("guard"); }
+  if (queued.has("KeyD")) doPush();
   if (queued.has("Space") && me.dashCd <= 0 && !me.move && !me.cast) {
-    if (me.ch) interruptChannel("대시");
-    me.dashT = CONFIG.dash.time; me.ddx = Math.cos(me.aim); me.ddy = Math.sin(me.aim); me.dashCd = CONFIG.dash.cd * st.dashCdMul; me.ifr = Math.max(me.ifr, CONFIG.dash.iframe);
+    if (me.ch) interruptChannel("회피");
+    me.dashT = CONFIG.dash.time; me.ddx = Math.cos(me.aim); me.ddy = Math.sin(me.aim); me.dashCd = CONFIG.dash.cd * st.dashCdMul; me.order = null;
     if (st.dashBuff) me.dashBuffT = st.dashBuffTime;
     SFX.play("dash");
   }
   SKILL_KEYS.forEach((k, i) => { if (queued.has(k)) useSkill(i); });
   if (me.ch && released.has(SKILL_KEYS[me.ch.i])) releaseChannel();
+  if ((keys.has("KeyW") || mouse.down) && !(S && S.st === "augment")) castMain();
   queued.clear(); released.clear();
 
   // channel
@@ -1575,7 +1603,8 @@ function updateMe(dt, T, S) {
     me.x = m.x0 + (m.tx - m.x0) * k; me.y = m.y0 + (m.ty - m.y0) * k;
     if (m.onTick) m.onTick();
     if (m.t >= m.dur) { me.move = null; if (m.onEnd) m.onEnd(); }
-  } else if (me.dashT > 0) { me.dashT -= dt; me.x += me.ddx * CONFIG.dash.speed * dt; me.y += me.ddy * CONFIG.dash.speed * dt; }
+  } else if (me.dashT > 0) { me.dashT -= dt; me.x += me.ddx * CONFIG.dash.speed * st.dashDistMul * dt; me.y += me.ddy * CONFIG.dash.speed * st.dashDistMul * dt; }
+  if (me.kb) { me.kb.t -= dt; me.x += me.kb.vx * dt; me.y += me.kb.vy * dt; if (me.kb.t <= 0) me.kb = null; }
   if (me.multi) {
     me.multi.t -= dt;
     if (me.multi.t <= 0) { me.multi.t = .1; me.multi.left--; emitFx(5); const hit = enemies().filter(e => inArc(e, me.multi.range, 45 * DEG, me.aim)); for (const e of hit) deal(e, me.multi.dmg); if (me.multi.left <= 0) me.multi = null; }
@@ -1608,7 +1637,7 @@ function updateMe(dt, T, S) {
     for (const k in me.ad) if (!(S.adds || []).some(x => String(x.i) === k)) delete me.ad[k];
     let inPool = null;
     for (const p of S.pools || []) if (T >= p.t0 && dist(me.x, me.y, p.x, p.y) <= p.r) { inPool = p; break; }
-    if (inPool) { me.poolT -= dt; if (me.poolT <= 0) { me.poolT = CONFIG.pool.tickEvery; if (me.ifr <= 0 && me.dashT <= 0) hurt(inPool.d); } } else me.poolT = 0;
+    if (inPool) { me.poolT -= dt; if (me.poolT <= 0) { me.poolT = CONFIG.pool.tickEvery; if (me.ifr <= 0) hurt(inPool.d); } } else me.poolT = 0;
     if (st.regen) { me.regenT += dt; if (me.regenT >= CONFIG.combat.regenEvery) { me.regenT = 0; if (!me.dn && me.hp < me.mh) { me.hp = Math.min(me.mh, me.hp + st.regen); float(me.x, me.y - 30, "+" + st.regen, "#7fd3a3"); } } }
     if (me.poisonT > 0) {
       me.poisonT -= dt; me.poisonAcc += dt;
@@ -1618,8 +1647,10 @@ function updateMe(dt, T, S) {
   // wards / heals from teammates
   for (const p of others) {
     const pr = p.presence;
-    if (pr.wd && seenWd.get(p.peer) !== pr.wd[0]) { const first = !seenWd.has(p.peer); seenWd.set(p.peer, pr.wd[0]); if (!first && dist(me.x, me.y, pr.wd[1], pr.wd[2]) <= CLASSES.paladin.skills[1].wardRange * pr.wd[3]) { me.wardUntil = nowS() + CLASSES.paladin.skills[1].wardTime; float(me.x, me.y - 30, "결계", "#9fd8ff"); SFX.play("ward", .7); if (pr.wd[4] && me.hp < me.mh) me.hp = Math.min(me.mh, me.hp + pr.wd[4]); } }
-    if (pr.hl && seenHl.get(p.peer) !== pr.hl[0]) { const first = !seenHl.has(p.peer); seenHl.set(p.peer, pr.hl[0]); if (!first && me.hp < me.mh && dist(me.x, me.y, pr.hl[1], pr.hl[2]) <= CLASSES.paladin.skills[2].healRange) { me.hp = Math.min(me.mh, me.hp + (pr.hl[4] || 25)); float(me.x, me.y - 30, "+" + (pr.hl[4] || 25), "#7fd3a3"); SFX.play("heal"); } }
+    const fresh = (map, ev) => { const prev = map.get(p.peer); if (!ev) { if (prev === undefined) map.set(p.peer, 0); return false; } if (prev === ev[0]) return false; map.set(p.peer, ev[0]); return prev !== undefined; };
+    if (fresh(seenWd, pr.wd) && dist(me.x, me.y, pr.wd[1], pr.wd[2]) <= CLASSES.paladin.skills[1].wardRange * pr.wd[3]) { me.wardUntil = nowS() + CLASSES.paladin.skills[1].wardTime; float(me.x, me.y - 30, "결계", "#9fd8ff"); SFX.play("ward", .7); if (pr.wd[4] && me.hp < me.mh) me.hp = Math.min(me.mh, me.hp + pr.wd[4]); }
+    if (fresh(seenHl, pr.hl) && me.hp < me.mh && dist(me.x, me.y, pr.hl[1], pr.hl[2]) <= CLASSES.paladin.skills[2].healRange) { me.hp = Math.min(me.mh, me.hp + (pr.hl[4] || 25)); float(me.x, me.y - 30, "+" + (pr.hl[4] || 25), "#7fd3a3"); SFX.play("heal"); }
+    if (fresh(seenPu, pr.pu) && dist(me.x, me.y, pr.pu[1], pr.pu[2]) <= pr.pu[3] + CONFIG.player.radius) knockMe(pr.pu[1], pr.pu[2], CONFIG.push.allyForce);
   }
 }
 function updateOthers(dt) {
@@ -1667,7 +1698,7 @@ function teleCol(a, al) {
   const def = ATK[a.k];
   if (def.c === "stack") return "rgba(95,214,196," + al + ")";
   if (def.c === "spread") return "rgba(184,146,255," + al + ")";
-  return (def.g ? "rgba(255,209,102," : "rgba(255,111,125,") + al + ")";
+  return "rgba(255,111,125," + al + ")";
 }
 function drawTele(a, T, S) {
   const def = ATK[a.k];
@@ -1806,7 +1837,7 @@ function drawBoss(T, S, idleT) {
   ctx.save(); ctx.globalAlpha = alpha * (S && S.st === "augment" ? .45 : 1); ctx.translate(x, y); ctx.scale(scale, scale);
   const casting = fighting && S.bs === "cast", rec = fighting && S.bs === "rec";
   const cdef = casting ? ATK[S.cur] : null;
-  const auraCol = cdef ? (cdef.c === "stack" ? "rgba(95,214,196," : cdef.c ? "rgba(184,146,255," : cdef.g ? "rgba(255,209,102," : "rgba(255,111,125,") : ["rgba(" + B.floor + ",", "rgba(243,230,200,", "rgba(255,111,125,"][ph];
+  const auraCol = cdef ? (cdef.c === "stack" ? "rgba(95,214,196," : cdef.c ? "rgba(184,146,255," : "rgba(255,111,125,") : ["rgba(" + B.floor + ",", "rgba(243,230,200,", "rgba(255,111,125,"][ph];
   const pulse = (casting ? .35 : .16) + .08 * Math.sin(idleT * (casting ? 12 : 4));
   const ag = ctx.createRadialGradient(0, 0, B.r * .85, 0, 0, B.r * 2); ag.addColorStop(0, auraCol + pulse + ")"); ag.addColorStop(1, auraCol + "0)");
   ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(0, 0, B.r * 2, 0, TAU); ctx.fill();
@@ -1982,6 +2013,9 @@ function drawFx() {
         if (u < .08) { ctx.fillStyle = "#fff3c4"; ctx.beginPath(); ctx.arc(c * 22, sn * 22 - 8, 12, 0, TAU); ctx.fill(); }
         ctx.globalAlpha = al; ctx.strokeStyle = f.col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(c * Math.max(18, p0 - 60), sn * Math.max(18, p0 - 60) - 8); ctx.lineTo(c * p0, sn * p0 - 8); ctx.stroke();
         ctx.fillStyle = "rgba(200,200,220," + al * .4 + ")"; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(-c * (10 + u * 60) + (i - 1.5) * 8, -sn * (10 + u * 60) + 6, 7 + u * 10, 0, TAU); ctx.fill(); } break; }
+      case 15: { const al = 1 - u / .4; if (al <= 0) break; const R = CONFIG.push.radius * (f.e || 1);
+        ctx.fillStyle = "rgba(159,216,255," + al * .18 + ")"; ctx.beginPath(); ctx.arc(0, 0, R * Math.min(1, u / .12), 0, TAU); ctx.fill();
+        ctx.strokeStyle = "rgba(220,240,255," + al + ")"; ctx.lineWidth = 5 * al + 1; ctx.beginPath(); ctx.arc(0, 0, R * Math.min(1, .3 + u / .15), 0, TAU); ctx.stroke(); break; }
       case 11: { const al = 1 - u / .45; if (al <= 0) break; ctx.strokeStyle = "rgba(255,111,125," + al + ")"; ctx.lineWidth = 4;
         for (let i = 0; i < 6; i++) { const a = i * TAU / 6 + .3; ctx.beginPath(); ctx.moveTo(Math.cos(a) * (10 + u * 30), Math.sin(a) * (10 + u * 30) - 40); ctx.lineTo(Math.cos(a) * (22 + u * 40), Math.sin(a) * (22 + u * 40) - 40); ctx.stroke(); }
         ctx.beginPath(); ctx.moveTo(-8, -48); ctx.lineTo(8, -32); ctx.moveTo(8, -48); ctx.lineTo(-8, -32); ctx.stroke(); break; }
@@ -2075,7 +2109,7 @@ function drawHUD(T, S) {
   if (S && S.st === "fight" && S.bs === "cast" && ATK[S.cur]) {
     const d = ATK[S.cur];
     ctx.textAlign = "center"; ctx.font = '700 16px "Gowun Batang", serif'; ctx.lineWidth = 4; ctx.strokeStyle = "rgba(13,18,34,.9)"; ctx.strokeText(d.name + "  ·  " + d.hint, AW / 2, y + 34);
-    ctx.fillStyle = d.c === "stack" ? "#5fd6c4" : d.c ? "#b892ff" : d.g ? "#ffd166" : "#ff6f7d";
+    ctx.fillStyle = d.c === "stack" ? "#5fd6c4" : d.c ? "#b892ff" : "#ff6f7d";
     ctx.fillText(d.name + "  ·  " + d.hint, AW / 2, y + 34);
   }
   // my hp
@@ -2087,21 +2121,21 @@ function drawHUD(T, S) {
   ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.font = '500 12px "IBM Plex Sans KR", sans-serif';
   let sy = hy - 16;
   const line = (txt, col) => { ctx.fillStyle = col; ctx.fillText(txt, hx, sy); sy -= 18; };
-  if (me.counterT > 0) line("반격 준비 · 다음 공격 ×" + me.counterMul.toFixed(1) + "  " + me.counterT.toFixed(1) + "초", "#ffd166");
   if (me.dashBuffT > 0) line("돌격 · 다음 공격 +" + Math.round(me.st.dashBuff * 100) + "%", "#ffd166");
   if (me.wardUntil > nowS()) line("결계 · 피해 1회 무효", "#9fd8ff");
   if (me.shadowT > 0) line("그림자 · 모든 공격 백어택", "#b9a0ff");
   const o = me.order;
-  line(armed ? "공격 대상 지정 중 · 왼쪽 클릭 (ESC 취소)" : o ? ({ move: "이동 중", atk: "공격 중", amove: "공격하며 이동", hold: "제자리 유지" }[o.t]) : "대기", armed ? "#ff6f7d" : "#8f97b3");
+  line(o ? ({ move: "이동 중", atk: "추적 중", hold: "제자리 유지" }[o.t] || "대기") : "대기", "#8f97b3");
   // skill bar
-  const sx = AW / 2 - (5 * 76 + 4 * 8) / 2, sY = AH - 66;
-  drawSlot(sx, sY, "SPC", "대시", "", me.dashCd, CONFIG.dash.cd * me.st.dashCdMul, null);
-  drawSlot(sx + 84, sY, "G", "방어", "", me.guardCd, C.guard.cd, { active: me.guardT > 0 });
+  const sx = AW / 2 - (6 * 76 + 5 * 8 + 14) / 2, sY = AH - 66;
+  drawSlot(sx, sY, "W", C.atk.name, "주력", me.atkCd, C.atk.cd / me.st.aspdMul, null);
   for (let i = 0; i < 3; i++) {
     const sk = C.skills[i];
     const state = me.ch && me.ch.i === i ? { ch: true, stage: me.ch.stage, p: clamp(me.ch.t / sk.channel[2], 0, 1) } : null;
-    drawSlot(sx + 168 + i * 84, sY, "QER"[i] + (sk.channel ? " ⟳" : ""), sk.name, sk.tier, me.cd[i], skillCd(i), state);
+    drawSlot(sx + 84 + i * 84, sY, "QER"[i] + (sk.channel ? " ⟳" : ""), sk.name, sk.tier, me.cd[i], skillCd(i), state);
   }
+  drawSlot(sx + 350, sY, "SPC", "회피", "", me.dashCd, CONFIG.dash.cd * me.st.dashCdMul, null);
+  drawSlot(sx + 434, sY, "D", "밀치기", "", me.pushCd, CONFIG.push.cd * me.st.pushCdMul, null);
   if (S && S.st === "fight") {
     ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillStyle = "#8f97b3"; ctx.font = '500 12px "IBM Plex Mono", monospace';
     ctx.fillText(fmtTime(T) + "   피해 " + me.dm, AW - 22, 70);
@@ -2237,7 +2271,7 @@ function updateUi(now, S, players, T) {
     setHTML($("#chips"), players.map(p => '<span class="chip"><i style="background:' + safeCol(p.pr.c) + '"></i><b>' + esc(p.pr.n) + "</b><small>" + CLASSES[p.pr.k].name + "</small>" + (p.peer === hostPeer ? "<em>방장</em>" : "") + (p.me ? "<em>나</em>" : "") + "</span>").join(""));
     $("#startBtn").hidden = !isHost;
     $("#lobbyHint").textContent = isHost
-      ? (net.mode === "solo" ? "보스를 오른쪽 클릭해 공격하며 조작을 익혀 보세요." : players.length + "/" + MAX_PLAYERS + "명 · 방장은 이 탭을 앞에 띄워 두세요")
+      ? (net.mode === "solo" ? "오른쪽 클릭으로 다가가 W나 왼쪽 클릭으로 주력기를 써 보세요." : players.length + "/" + MAX_PLAYERS + "명 · 방장은 이 탭을 앞에 띄워 두세요")
       : (hostH ? "방장이 게임을 시작하기를 기다리는 중" : "방장과 동기화하는 중…");
   }
   if (st === "wipe" || st === "victory") {
@@ -2286,7 +2320,7 @@ function audioEvents(S, T) {
     if (!aud.seenCast.has(ck) && T < a.th) {
       aud.seenCast.add(ck);
       if (a.k === "decoy") SFX.play("summon");
-      else SFX.riser(a.th - T, def.c ? "c" : def.g ? "y" : "r");
+      else SFX.riser(a.th - T, def.c ? "c" : "r");
     }
     if (a.k === "decoy" && T < a.th) { const left = Math.ceil(a.th - T); if (left <= 3 && left !== aud.beep) { aud.beep = left; SFX.play("beep"); } }
     if (T >= a.th && T - a.th < .3 && !aud.seenImpact.has(ck)) {
@@ -2356,6 +2390,7 @@ for (const key of Object.keys(CLASSES)) {
   const b = document.createElement("button"); b.className = "cls"; b.id = "cls-" + key; b.type = "button";
   b.setAttribute("aria-pressed", key === myClass ? "true" : "false");
   b.innerHTML = '<img class="clsArt" alt="" src="' + CONFIG.sprites[key].src + '">' + "<b>" + C.name + '</b><span class="role">' + C.role + " · 체력 " + C.hp + "</span><p>" + C.desc + "</p><ol>" +
+    "<li><span>W 주력</span>" + C.atk.name + " · 피해 " + C.atk.dmg + " · " + C.atk.cd + "초<br><em>" + C.atk.note + "</em></li>" +
     C.skills.map((s, i) => "<li><span>" + "QER"[i] + " " + s.tier + "</span>" + s.name + " · 피해 " + s.dmg + " · " + s.cd + "초<br><em>" + s.note + "</em></li>").join("") + "</ol>";
   b.addEventListener("click", () => { myClass = key; save("sr.class", key); recalcStats(); clsBox.querySelectorAll(".cls").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); });
   clsBox.appendChild(b);
