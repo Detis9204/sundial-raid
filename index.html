@@ -390,8 +390,9 @@ const CONFIG = {
     flurry:   { name: "삼연참",         g: true,  warn: .85, rec: 1.1, dmg: 16, r: 230, half: 45, step: .4, count: 3, hint: "세 번 연속 · 타이밍 맞춰 회피" },
     pounce:   { name: "도약 강습",      g: false, warn: 1.1, rec: 1.4, dmg: 30, r: 130, hint: "가장 먼 사람 주의" },
     whirl:    { name: "회전 칼날",      g: false, warn: 1.0, rec: 1.0, dmg: 20, r: 230, hint: "멀리 벗어나기" },
-    sandpool: { name: "모래 늪",        g: false, warn: 1.4, rec: .9,  dmg: 12, r: 85, life: 14, tick: 8, extra: 2, hint: "발밑에 늪이 생김" },
-    sandwall: { name: "모래 장벽",      g: false, warn: 1.6, rec: 1.1, dmg: 15, r: 70, life: 12, hint: "틈으로 지나가기" },
+    /* sandpool: follows each player for `track` seconds, then locks in place and lands `lockWarn` later */
+    sandpool: { name: "모래 늪",        g: false, warn: 1.4, track: 2.0, lockWarn: .75, minLockWarn: .6, rec: .9, dmg: 12, r: 85, life: 14, tick: 8, extra: 2, hint: "늪이 따라옵니다. 멈추는 순간 벗어나세요" },
+    sandwall: { name: "모래 장벽",      g: false, warn: 1.6, rec: 1.1, dmg: 15, r: 70, life: 12, tick: 8, hint: "틈으로 지나가기" },
     pull:     { name: "모래 소용돌이",  g: false, warn: 2.2, rec: 1.6, dmg: 32, r: 230, pull: 70, hint: "바깥으로 버티기" },
     summon:   { name: "태엽 병정 소환", g: false, warn: 1.4, rec: 1.8, dmg: 0, count: 2, hint: "병정을 먼저 처치" },
     decoy:    { name: "태엽 분신",      g: false, warn: 9.0, rec: 1.2, dmg: 12, count: 2, bigParty: 3, hint: "분신을 부숴야 함", fixed: true },
@@ -979,6 +980,9 @@ function hostTick(now) {
   if (T > 2 && pl.length && pl.every(p => p.pr.dn >= 1)) { H.st = "wipe"; H.end = H.ft; return; }
   H.atk = H.atk.filter(a => a.th > T - .7);
   H.pools = H.pools.filter(p => p.t1 > T);
+  for (const a of H.atk) if (a.k === "sandpool" && a.lk && T < a.lk) {   // tracking phase: follow everyone still standing
+    a.p = pl.filter(p => !p.pr.dn).map(p => [Math.round(p.pr.x), Math.round(p.pr.y)]).concat(a.ex || []);
+  }
   hostL.pending = hostL.pending.filter(ev => { if (T >= ev.at) { ev.fn(T); return false; } return true; });
   const alive = pl.filter(p => !p.pr.dn);
   if (!alive.length) return;
@@ -1292,14 +1296,19 @@ function castAttack(kind, T, alive) {
     }
     case "sandpool": case "sandwall": {
       let pts = [];
-      if (kind === "sandpool") { pts = alive.map(p => [Math.round(p.pr.x), Math.round(p.pr.y)]); for (let k = 0; k < def.extra + X * 2; k++) pts.push(randPt(90)); }
+      const ex = [];
+      if (kind === "sandpool") { for (let k = 0; k < def.extra + X * 2; k++) ex.push(randPt(90)); pts = alive.map(p => [Math.round(p.pr.x), Math.round(p.pr.y)]).concat(ex); }
       else {
         const vertical = Math.random() < .5, step = def.r * 1.6, n = Math.ceil((vertical ? AH : AW) / step) + 1;
         const gap = 1 + Math.floor(Math.random() * (n - 3)), line = vertical ? 200 + Math.random() * 880 : 160 + Math.random() * 400;
         for (let k = 0; k < n; k++) { if (k === gap || k === gap + 1) continue; pts.push(vertical ? [Math.round(line), Math.round(k * step)] : [Math.round(k * step), Math.round(line)]); }
       }
-      const e = E({ p: pts });
-      hostL.pending.push({ at: th, fn: t => { for (const q of e.p) H.pools.push({ i: ++H.pid, x: q[0], y: q[1], r: def.r, t0: r3(t + CONFIG.pool.arm), t1: r3(t + def.life), d: Math.round(def.tick * sc.dmgMul) }); } });
+      let e;
+      if (kind === "sandpool") {   // track the players, then lock and land
+        const lk = r3(T + def.track * tempo), hit = r3(lk + Math.max(def.minLockWarn, def.lockWarn * tempo * D.warnMul));
+        e = E({ p: pts, ex, lk, th: hit }); end = hit;
+      } else e = E({ p: pts });
+      hostL.pending.push({ at: e.th, fn: t => { for (const q of e.p) H.pools.push({ i: ++H.pid, x: q[0], y: q[1], r: def.r, t0: r3(t + CONFIG.pool.arm), t1: r3(t + def.life), d: Math.round((def.tick || def.dmg) * sc.dmgMul * D.dmgMul) }); } });
       break;
     }
     case "summon": {
@@ -1541,6 +1550,7 @@ function goDown() {
   SFX.play("downed"); float(me.x, me.y - 40, "쓰러짐", "#ff6f7d", true);
 }
 function hurt(n, why) {
+  n = Number(n); if (!isFinite(n) || n <= 0) return;
   if (me.dn) return;
   if (me.ch) interruptChannel("피격");
   if (me.rvP > 0) { me.rvP = 0; me.rv = null; float(me.x, me.y - 56, "부활 취소", "#ff6f7d"); }
@@ -2004,6 +2014,17 @@ function drawTele(a, T, S) {
     if (flash < 0) { label(hideInfo() ? "모이기" : "모이기 " + n + "/" + a.need, c.x, c.y - a.r - 14, hideInfo() ? "#5fd6c4" : ok ? "#7fd3a3" : "#5fd6c4", true); label(ok ? "인원 충족 · 피해 없음" : "원 안에 " + a.need + "명 모이면 피해 없음", c.x, c.y + a.r + 16, ok ? "#7fd3a3" : "#f3e6c8"); }
     ctx.restore(); return;
   }
+  if (a.k === "sandpool" && a.lk && T < a.lk) {   // still following: dashed rings that move with the players
+    const r = def.r, left = a.lk - T;
+    for (const q of a.p || []) {
+      ctx.strokeStyle = "rgba(242,196,107,.85)"; ctx.lineWidth = 2; ctx.setLineDash([8, 6]); ctx.lineDashOffset = -T * 40;
+      ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = "rgba(242,196,107,.08)"; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(q[0] - 10, q[1]); ctx.lineTo(q[0] + 10, q[1]); ctx.moveTo(q[0], q[1] - 10); ctx.lineTo(q[0], q[1] + 10); ctx.stroke();
+    }
+    if (!hideInfo()) label("추적 " + left.toFixed(1), me.x, me.y - r - 14, "#f2c46b");
+    ctx.restore(); return;
+  }
   if (a.k === "eclipse") {
     if (flash > 0) { ctx.restore(); return; }
     ctx.beginPath(); ctx.rect(-50, -50, AW + 100, AH + 100); ctx.moveTo(a.x + a.r, a.y); ctx.arc(a.x, a.y, a.r, 0, TAU, true);
@@ -2442,7 +2463,7 @@ function drawHUD(T, S) {
   ctx.fillStyle = "rgba(13,18,34,.88)"; ctx.fillRect(hx - 2, hy - 2, 224, 16);
   ctx.fillStyle = "#2c3558"; ctx.fillRect(hx, hy, 220, 12);
   ctx.fillStyle = me.hp / me.mh < .3 ? "#ff6f7d" : "#e86b78"; ctx.fillRect(hx, hy, 220 * clamp(me.hp / me.mh, 0, 1), 12);
-  ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillStyle = "#f3e6c8"; ctx.fillText(Math.max(0, Math.round(me.hp)) + " / " + me.mh, hx + 6, hy + 6.5);
+  ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillStyle = "#f3e6c8"; ctx.fillText(Math.max(0, Math.round(me.hp) || 0) + " / " + me.mh, hx + 6, hy + 6.5);
   ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.font = '500 12px "IBM Plex Sans KR", sans-serif';
   let sy = hy - 16;
   const line = (txt, col) => { ctx.fillStyle = col; ctx.fillText(txt, hx, sy); sy -= 18; };
