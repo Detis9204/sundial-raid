@@ -402,9 +402,18 @@ const CONFIG = {
     warp:     { name: "시간 도약",      g: false, warn: 1.2, rec: 1.2, dmg: 30, r: 120, hint: "보스가 나타날 자리에서 벗어나기" },
     hop:      { name: "연속 도약",      g: false, warn: .9,  rec: 1.4, dmg: 24, r: 100, count: 3, step: .7, hint: "착지 지점 피하기" },
     /* must-dodge gimmicks (gm): ignore 결계, boss is invulnerable while they run */
-    meteor:   { name: "시계탑 붕괴",    gm: true, warn: 1.3, rec: 0, dmg: 40, r: 95, waves: 5, gap: 1.0, per: 5, hint: "무적 · 떨어지는 잔해를 끝까지 피하세요" },
+    /* hora: the sundial's hands sweep the floor */
     sweep:    { name: "시침 회전",      gm: true, warn: .7,  rec: 0, dmg: 40, r: 900, half: 8, steps: 28, step: .18, beams: 2, hint: "무적 · 회전하는 시침을 따라 돌며 피하세요" },
-    lanes:    { name: "자오선 낙인",    gm: true, warn: 1.2, rec: 0, dmg: 45, w: 160, waves: 4, gap: 1.3, hint: "무적 · 빛나지 않는 줄로 옮겨 가세요" },
+    /* seka: the second hand slashes across the arena from wall to wall, chasing players */
+    slash:    { name: "초침 난무",      gm: true, warn: .75, rec: 0, dmg: 35, w: 45, count: 6, gap: 1.0, hint: "무적 · 세카가 그어 대는 직선을 피하세요" },
+    /* klepsy: walls of sand sweep across the arena; stand in the gap */
+    sandwave: { name: "모래 해일",      gm: true, warn: 1.3, rec: 0, dmg: 40, bw: 80, gh: 170, waves: 3, waveGap: 2.6, band: .11, hint: "무적 · 모래벽의 틈에 서서 해일을 넘기세요" },
+    /* mekan: numbered clockwork bombs go off in order */
+    bomb:     { name: "시한 태엽 폭탄", gm: true, warn: 2.0, rec: 0, dmg: 40, r: 110, count: 14, groups: 4, step: .9, hint: "무적 · 숫자 순서대로 터집니다. 이미 터진 자리로" },
+    /* dualis: only the moving circle of light is safe */
+    eclipse:  { name: "일식",           gm: true, warn: .9,  rec: 0, dmg: 20, r: 150, steps: 12, step: .55, move: 140, hint: "무적 · 움직이는 빛 안에 머무르세요" },
+    /* tollia: three bells ring out overlapping ripples */
+    ripple:   { name: "대종 공명",      gm: true, warn: 1.0, rec: 0, dmg: 35, w: 110, bands: 5, step: .45, bells: 3, bellGap: 1.1, hint: "무적 · 세 종에서 퍼지는 파문 사이로" },
     mhit:     { name: "병정 베기",      g: true,  warn: .85, rec: 0,   dmg: 7,  r: 42, hint: "" },
   },
   bosses: {
@@ -413,37 +422,37 @@ const CONFIG = {
               pools: [[["cleave", 3], ["spin", 2], ["donut", 1], ["mark", 2]],
                       [["cleave", 2], ["spin", 2], ["donut", 1], ["mark", 2], ["charge", 2], ["heavy", 2], ["warp", 1]],
                       [["cleave", 2], ["spin", 1], ["donut", 1], ["mark", 2], ["charge", 2], ["heavy", 2], ["clock", 2], ["hop", 1]]],
-              force: [null, "charge", "clock"], gimmicks: ["sweep", "meteor"] },
+              force: [null, "charge", "clock"], gimmicks: ["sweep"] },
     seka:   { name: "세카", title: "초침 사냥꾼", look: "blade", r: 50, speed: [130, 150, 170],
               pal: ["#eef0f6", "#9aa3b8", "#5a1622", "#1a1420", "#ff5d6c"], floor: "255,93,108",
               pools: [[["rush", 3], ["flurry", 3], ["cleave", 1]],
                       [["rush", 3], ["flurry", 3], ["pounce", 2], ["whirl", 2], ["hop", 2]],
                       [["rush", 2], ["flurry", 3], ["pounce", 2], ["whirl", 2], ["heavy", 2], ["hop", 2], ["warp", 1]]],
-              force: ["flurry", "pounce", "rush"], gimmicks: ["lanes", "sweep"] },
+              force: ["flurry", "pounce", "rush"], gimmicks: ["slash"] },
     klepsy: { name: "클렙시", title: "모래시계 여왕", look: "hourglass", r: 62, speed: [115, 130, 145],
               pal: ["#f7e1a8", "#c9a35a", "#3e6f70", "#14232a", "#f2c46b"], floor: "242,196,107",
               pools: [[["sandpool", 3], ["spin", 2], ["mark", 1]],
                       [["sandpool", 2], ["spin", 1], ["sandwall", 2], ["pull", 2], ["warp", 2]],
                       [["sandpool", 2], ["sandwall", 2], ["pull", 2], ["donut", 1], ["mark", 1], ["haven", 2]]],
-              force: ["sandpool", "sandwall", "pull"], gimmicks: ["meteor", "lanes"] },
+              force: ["sandpool", "sandwall", "pull"], gimmicks: ["sandwave"] },
     mekan:  { name: "메카니카", title: "태엽 인형사", look: "gear", r: 60, speed: [80, 90, 100],
               pal: ["#f0b98a", "#b56a35", "#4d2a14", "#1c1612", "#ffae5c"], floor: "255,174,92",
               pools: [[["summon", 1], ["gear", 3], ["cleave", 2]],
                       [["summon", 1], ["gear", 2], ["cleave", 2], ["decoy", 1], ["spin", 1]],
                       [["summon", 1], ["gear", 2], ["decoy", 1], ["heavy", 2], ["spin", 1], ["cleave", 1], ["warp", 1]]],
-              force: ["summon", "decoy", "summon"], gimmicks: ["lanes", "meteor"] },
+              force: ["summon", "decoy", "summon"], gimmicks: ["bomb"] },
     dualis: { name: "듀얼리스", title: "쌍극의 시계", look: "dual", r: 60, speed: [95, 105, 115],
               pal: ["#fff1c9", "#d9b25c", "#5a3f9e", "#151229", "#b892ff"], floor: "184,146,255",
               pools: [[["stack", 2], ["spread", 2], ["cleave", 2], ["charge", 1]],
                       [["stack", 2], ["spread", 2], ["polarity", 3], ["cleave", 1], ["haven", 1], ["hop", 1]],
                       [["stack", 2], ["spread", 2], ["polarity", 2], ["donut", 1], ["heavy", 1], ["charge", 1], ["warp", 1]]],
-              force: ["stack", "polarity", "spread"], gimmicks: ["sweep", "lanes"] },
+              force: ["stack", "polarity", "spread"], gimmicks: ["eclipse"] },
     tollia: { name: "톨리아", title: "종탑의 집행자", look: "bell", r: 60, speed: [100, 112, 124],
               pal: ["#e6f4ff", "#7fb2d9", "#2b4a6e", "#101a2b", "#9fd8ff"], floor: "159,216,255",
               pools: [[["ring", 3], ["haven", 2], ["cleave", 2], ["mark", 1], ["warp", 1]],
                       [["ring", 3], ["haven", 2], ["spin", 1], ["heavy", 2], ["spread", 1], ["hop", 1]],
                       [["ring", 2], ["haven", 2], ["heavy", 2], ["charge", 1], ["clock", 1], ["stack", 1]]],
-              force: ["ring", "haven", "ring"], gimmicks: ["meteor", "sweep"] },
+              force: ["ring", "haven", "ring"], gimmicks: ["ripple"] },
   },
   /* invulnerable gimmick phases: boss walks to the centre, can't be hurt, runs a must-dodge sequence, then collapses (groggy) */
   gimmick: { every: 38, hardEveryMul: .8, moveTime: .9, groggy: 5.0, groggyBonus: .5 },
@@ -1072,31 +1081,68 @@ function startGimmick(T) {
   const d = Math.round(def.dmg * sc.dmgMul * D.dmgMul), start = T + G.moveTime + .4, warn = def.warn * D.warnMul;
   const push = o => H.atk.push(Object.assign({ i: ++H.aid, k: kind, d, x: 640, y: 360, a: 0 }, o));
   let end = start;
-  if (kind === "meteor") {
-    const waves = def.waves + X, gap = def.gap * tempo * D.warnMul;
-    for (let k = 0; k < waves; k++) {
-      const at = start + k * gap;
-      hostL.pending.push({ at, fn: t => {
-        const pts = playersList().filter(p => p.pr.r === H.run && !p.pr.dn).map(p => [Math.round(p.pr.x), Math.round(p.pr.y)]);
-        for (let n = 0; n < def.per + X * 2; n++) pts.push([Math.round(80 + Math.random() * (AW - 160)), Math.round(110 + Math.random() * (AH - 180))]);
-        for (const q of pts) push({ t0: r3(t), th: r3(t + warn), x: q[0], y: q[1] });
-      } });
-      end = at + warn;
-    }
-  } else if (kind === "sweep") {
+  const randIn = (px, py) => [Math.round(px + Math.random() * (AW - px * 2)), Math.round(py + Math.random() * (AH - py * 2))];
+  const alivePts = () => playersList().filter(p => p.pr.r === H.run && !p.pr.dn).map(p => p.pr);
+  if (kind === "sweep") {
     const steps = def.steps, beams = def.beams + X, dir = Math.random() < .5 ? 1 : -1, a0 = Math.random() * TAU, stepT = def.step * tempo * D.warnMul;
     for (let k = 0; k < steps; k++) {
       const th = start + warn + k * stepT;
       for (let b = 0; b < beams; b++) push({ t0: r3(th - warn), th: r3(th), a: r3(a0 + dir * k * Math.PI / steps + b * TAU / beams) });
       end = th;
     }
-  } else if (kind === "lanes") {
-    const waves = def.waves + X, gap = def.gap * tempo * D.warnMul;
-    for (let k = 0; k < waves; k++) {
-      const vert = k % 2 === 0, len = vert ? AW : AH, n = Math.ceil(len / def.w), par = Math.floor(Math.random() * 2);
-      const t0 = start + k * gap, th = t0 + warn;
-      for (let c = 0; c < n; c++) if (c % 2 === par) push({ t0: r3(t0), th: r3(th), o: vert ? 1 : 0, a0: c * def.w, a1: Math.min(len, (c + 1) * def.w) });
+  } else if (kind === "slash") {
+    const n = def.count + X * 2, gap = def.gap * tempo * D.warnMul;
+    for (let k = 0; k < n; k++) {
+      const at = start + k * gap;
+      hostL.pending.push({ at, fn: t => {
+        const ps = alivePts(), q = ps.length ? ps[Math.floor(Math.random() * ps.length)] : { x: 640, y: 360 };
+        const ang = Math.atan2(q.y - H.by, q.x - H.bx), L = lineLen(H.bx, H.by, ang, 1500);
+        push({ t0: r3(t), th: r3(t + warn), x: Math.round(H.bx), y: Math.round(H.by), a: r3(ang), l: L });
+        const x0 = H.bx, y0 = H.by, x1 = H.bx + Math.cos(ang) * L, y1 = H.by + Math.sin(ang) * L;
+        hostL.pending.push({ at: t + warn, fn: t2 => { hostL.anim = { t0: t2, dur: .2, x0, y0, x1, y1 }; } });
+      } });
+      end = at + warn + .2;
+    }
+  } else if (kind === "sandwave") {
+    const waves = def.waves + X, wg = def.waveGap * tempo * D.warnMul, gh = def.gh - X * 30, n = Math.ceil(AW / def.bw);
+    for (let w = 0; w < waves; w++) {
+      const ws = start + w * wg, dir = w % 2 ? -1 : 1, g0 = Math.round(110 + Math.random() * (AH - 220 - gh)), g1 = g0 + gh;
+      for (let c = 0; c < n; c++) {
+        const x0 = dir > 0 ? c * def.bw : AW - (c + 1) * def.bw, th = ws + warn + c * def.band * tempo;
+        push({ t0: r3(ws), th: r3(th), o: 1, a0: x0, a1: x0 + def.bw, g0, g1 });
+        end = th;
+      }
+    }
+  } else if (kind === "bomb") {
+    const n = def.count + X * 4, groups = def.groups;
+    for (let k = 0; k < n; k++) {
+      const g = k % groups, q = randIn(70, 90), th = start + warn + g * def.step * tempo * D.warnMul;
+      push({ t0: r3(start), th: r3(th), x: q[0], y: q[1], n: g + 1 });
+      end = Math.max(end, th);
+    }
+  } else if (kind === "eclipse") {
+    const steps = def.steps + X * 3, stepT = def.step * tempo * D.warnMul, r = def.r - X * 30;
+    let x = 640, y = 360, ang = Math.random() * TAU;
+    for (let k = 0; k < steps; k++) {
+      ang += (Math.random() - .5) * 1.4;
+      let nx = x + Math.cos(ang) * def.move, ny = y + Math.sin(ang) * def.move;
+      if (nx < r + 40 || nx > AW - r - 40) { ang = Math.PI - ang; nx = clamp(nx, r + 40, AW - r - 40); }
+      if (ny < r + 60 || ny > AH - r - 40) { ang = -ang; ny = clamp(ny, r + 60, AH - r - 40); }
+      x = nx; y = ny;
+      const th = start + warn + k * stepT;
+      push({ t0: r3(th - warn), th: r3(th), x: Math.round(x), y: Math.round(y), r });
       end = th;
+    }
+  } else if (kind === "ripple") {
+    const spots = [[150, 160], [1130, 160], [150, 610], [1130, 610], [640, 130], [640, 640]].sort(() => Math.random() - .5);
+    const bells = def.bells + X;
+    for (let b = 0; b < bells; b++) {
+      const q = spots[b % spots.length], bs = start + b * def.bellGap * tempo * D.warnMul;
+      for (let k = 0; k < def.bands; k++) {
+        const th = bs + warn + k * def.step * tempo;
+        push({ t0: r3(bs + k * def.step * tempo), th: r3(th), x: q[0], y: q[1], r0: k * def.w, r1: (k + 1) * def.w });
+        end = Math.max(end, th);
+      }
     }
   }
   H.bt = r3(end + .4);
@@ -1438,11 +1484,14 @@ function inAtk(a, px, py) {
   const def = ATK[a.k], dx = px - a.x, dy = py - a.y, d = Math.hypot(dx, dy), pad = 8;
   switch (a.k) {
     case "cleave": case "flurry": return d <= def.r + pad && angDiff(Math.atan2(dy, dx), a.a) <= def.half * DEG + Math.atan2(pad, Math.max(d, 1));
-    case "spin": case "whirl": case "mark": case "heavy": case "pounce": case "pull": case "mhit": case "warp": case "hop": case "meteor": return d <= def.r + pad;
+    case "spin": case "whirl": case "mark": case "heavy": case "pounce": case "pull": case "mhit": case "warp": case "hop": return d <= def.r + pad;
     case "sweep": return angDiff(Math.atan2(dy, dx), a.a) <= def.half * DEG + Math.atan2(pad, Math.max(d, 1));
-    case "lanes": { const v = a.o ? px : py; return v >= a.a0 - pad && v <= a.a1 + pad; }
+    case "bomb": return d <= def.r + pad;
+    case "sandwave": return px >= a.a0 - pad && px <= a.a1 + pad && !(py >= a.g0 && py <= a.g1);
+    case "eclipse": return d > a.r;
+    case "ripple": return d >= a.r0 && d <= a.r1;
     case "donut": return d >= def.r - pad;
-    case "charge": case "rush": case "gear": { const ux = Math.cos(a.a), uy = Math.sin(a.a), pr = dx * ux + dy * uy, back = a.k === "gear" ? 0 : bossDef(curS).r; return pr >= -back && pr <= a.l + back && Math.abs(dx * uy - dy * ux) <= def.w + pad; }
+    case "charge": case "rush": case "gear": case "slash": { const ux = Math.cos(a.a), uy = Math.sin(a.a), pr = dx * ux + dy * uy, back = a.k === "gear" || a.k === "slash" ? 0 : bossDef(curS).r; return pr >= -back && pr <= a.l + back && Math.abs(dx * uy - dy * ux) <= def.w + pad; }
     case "clock": return quadOf(dx, dy) !== a.s;
   }
   return false;
@@ -1851,6 +1900,15 @@ function drawTele(a, T, S) {
     if (flash < 0) { label("모이기 " + n + "/" + a.need, c.x, c.y - a.r - 14, ok ? "#7fd3a3" : "#5fd6c4"); label(ok ? "인원 충족 · 피해 없음" : "원 안에 " + a.need + "명 모이면 피해 없음", c.x, c.y + a.r + 16, ok ? "#7fd3a3" : "#f3e6c8"); }
     ctx.restore(); return;
   }
+  if (a.k === "eclipse") {
+    if (flash > 0) { ctx.restore(); return; }
+    ctx.beginPath(); ctx.rect(-50, -50, AW + 100, AH + 100); ctx.moveTo(a.x + a.r, a.y); ctx.arc(a.x, a.y, a.r, 0, TAU, true);
+    ctx.fillStyle = "rgba(40,20,70," + (.18 + .2 * p) + ")"; ctx.fill("evenodd");
+    const g = ctx.createRadialGradient(a.x, a.y, a.r * .2, a.x, a.y, a.r); g.addColorStop(0, "rgba(255,241,201," + (.1 + .25 * p) + ")"); g.addColorStop(1, "rgba(255,241,201,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = "rgba(255,230,160," + (.4 + .6 * p) + ")"; ctx.lineWidth = 2 + 2 * p; ctx.stroke();
+    ctx.restore(); return;
+  }
   if (a.k === "haven") {
     const al = flash > 0 ? .5 * flash : .1 + .25 * p;
     ctx.beginPath(); ctx.rect(-50, -50, AW + 100, AH + 100);
@@ -1896,12 +1954,13 @@ function drawTele(a, T, S) {
   const shape = () => {
     switch (a.k) {
       case "cleave": case "flurry": pathCone(a.x, a.y, def.r, a.a, def.half * DEG); return 1;
-      case "spin": case "whirl": case "mark": case "heavy": case "pounce": case "pull": case "mhit": case "warp": case "hop": case "meteor": ctx.beginPath(); ctx.arc(a.x, a.y, def.r, 0, TAU); return 1;
+      case "spin": case "whirl": case "mark": case "heavy": case "pounce": case "pull": case "mhit": case "warp": case "hop": ctx.beginPath(); ctx.arc(a.x, a.y, def.r, 0, TAU); return 1;
       case "sweep": pathCone(a.x, a.y, def.r, a.a, def.half * DEG); return 1;
-      case "lanes": ctx.beginPath(); if (a.o) ctx.rect(a.a0, -10, a.a1 - a.a0, AH + 20); else ctx.rect(-10, a.a0, AW + 20, a.a1 - a.a0); return 1;
-      case "ring": ctx.beginPath(); ctx.arc(a.x, a.y, a.r1, 0, TAU); if (a.r0 > 0) { ctx.moveTo(a.x + a.r0, a.y); ctx.arc(a.x, a.y, a.r0, 0, TAU, true); return 2; } return 1;
+      case "bomb": ctx.beginPath(); ctx.arc(a.x, a.y, def.r, 0, TAU); return 1;
+      case "sandwave": ctx.beginPath(); ctx.rect(a.a0, -10, a.a1 - a.a0, a.g0 + 10); ctx.rect(a.a0, a.g1, a.a1 - a.a0, AH - a.g1 + 10); return 1;
+      case "ring": case "ripple": ctx.beginPath(); ctx.arc(a.x, a.y, a.r1, 0, TAU); if (a.r0 > 0) { ctx.moveTo(a.x + a.r0, a.y); ctx.arc(a.x, a.y, a.r0, 0, TAU, true); return 2; } return 1;
       case "donut": ctx.beginPath(); ctx.rect(-50, -50, AW + 100, AH + 100); ctx.moveTo(a.x + def.r, a.y); ctx.arc(a.x, a.y, def.r, 0, TAU, true); return 2;
-      case "charge": case "rush": case "gear": { const back = a.k === "gear" ? 0 : bossDef(S).r; ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.a); ctx.beginPath(); ctx.rect(-back, -def.w, a.l + back * 2, def.w * 2); ctx.restore(); return 1; }
+      case "charge": case "rush": case "gear": case "slash": { const back = a.k === "gear" || a.k === "slash" ? 0 : bossDef(S).r; ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.a); ctx.beginPath(); ctx.rect(-back, -def.w, a.l + back * 2, def.w * 2); ctx.restore(); return 1; }
       case "clock": { ctx.beginPath(); for (let q = 0; q < 4; q++) { if (q === a.s) continue; const s0 = -Math.PI / 2 + q * Math.PI / 2; ctx.moveTo(a.x, a.y); ctx.arc(a.x, a.y, 1500, s0, s0 + Math.PI / 2); ctx.closePath(); } return 1; }
       case "sandpool": case "sandwall": case "summon": { ctx.beginPath(); const r = a.k === "summon" ? 40 : def.r; for (const q of a.p || []) { ctx.moveTo(q[0] + r, q[1]); ctx.arc(q[0], q[1], r, 0, TAU); } return 1; }
     }
@@ -1913,10 +1972,12 @@ function drawTele(a, T, S) {
   if (shape()) { ctx.strokeStyle = a.k === "summon" ? "rgba(255,174,92,.9)" : teleCol(a, .85); ctx.lineWidth = 2; ctx.stroke(); }
   // filling progress: scale toward the hit time
   ctx.save();
-  if (["cleave", "flurry", "spin", "whirl", "mark", "heavy", "pounce", "pull", "mhit", "warp", "hop", "meteor", "sweep"].includes(a.k)) {
+  if (["cleave", "flurry", "spin", "whirl", "mark", "heavy", "pounce", "pull", "mhit", "warp", "hop", "sweep", "bomb"].includes(a.k)) {
     const cx = a.x, cy = a.y; ctx.translate(cx, cy); ctx.scale(p, p); ctx.translate(-cx, -cy); fill(.3);
   } else fill(.08 + .28 * p);
   ctx.restore();
+  if (a.k === "bomb") { const left = Math.max(0, a.th - T); label(String(a.n), a.x, a.y - 4, left < .9 ? "#ffd166" : "#f3e6c8"); ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.fillStyle = "#f3e6c8"; ctx.fillText(left.toFixed(1), a.x, a.y + 14); }
+  if (a.k === "sandwave" && a.a0 % (CONFIG.bossAttacks.sandwave.bw * 4) === 0) label("틈", a.a0 + (a.a1 - a.a0) / 2, (a.g0 + a.g1) / 2, "#7fd3a3");
   if (a.k === "clock") { const s0 = -Math.PI / 2 + a.s * Math.PI / 2 + Math.PI / 4; label("안전", a.x + Math.cos(s0) * 170, a.y + Math.sin(s0) * 170, "#7fd3a3"); }
   if (a.k === "pull") {
     ctx.strokeStyle = "rgba(242,196,107,.6)"; ctx.lineWidth = 2;
@@ -2453,7 +2514,7 @@ let stChangeAt = performance.now();
 const aud = { bs: "", seenCast: new Set(), seenImpact: new Set(), st: "", ph: -1, run: -1, adds: 0, beep: -1 };
 const IMPACT = { cleave: "imp_slam", flurry: "imp_slam", mark: "imp_slam", pounce: "imp_slam", heavy: "imp_heavy", spin: "imp_sweep", whirl: "imp_sweep",
   donut: "imp_blast", clock: "imp_blast", pull: "imp_blast", stack: "imp_blast", spread: "imp_blast", polarity: "imp_blast",
-  charge: "imp_charge", rush: "imp_charge", warp: "imp_blast", hop: "imp_slam", meteor: "imp_slam", sweep: "imp_small", lanes: "imp_blast", ring: "imp_slam", haven: "imp_blast", sandpool: "imp_sand", sandwall: "imp_sand", gear: "imp_gear", decoy: "imp_decoy", mhit: "imp_small", summon: "summon" };
+  charge: "imp_charge", rush: "imp_charge", warp: "imp_blast", hop: "imp_slam", sweep: "imp_small", slash: "imp_charge", sandwave: "imp_sand", bomb: "imp_heavy", eclipse: "imp_small", ripple: "imp_slam", ring: "imp_slam", haven: "imp_blast", sandpool: "imp_sand", sandwall: "imp_sand", gear: "imp_gear", decoy: "imp_decoy", mhit: "imp_small", summon: "summon" };
 function audioEvents(S, T) {
   const st = S ? S.st : "lobby";
   if (S && S.run !== aud.run) { aud.run = S.run; aud.seenCast.clear(); aud.seenImpact.clear(); aud.ph = -1; }
@@ -2479,7 +2540,7 @@ function audioEvents(S, T) {
       continue;
     }
     if (def.gm) {   // gimmick pieces: one gong at the start, light impacts after
-      if (T >= a.th && T - a.th < .3 && !aud.seenImpact.has(a.i)) { aud.seenImpact.add(a.i); if (a.k !== "sweep" || a.i % 2 === 0) SFX.play(IMPACT[a.k], a.k === "sweep" ? .6 : .8); }
+      if (T >= a.th && T - a.th < .3 && !aud.seenImpact.has(a.i)) { aud.seenImpact.add(a.i); const GV = { sweep: .5, slash: .9, sandwave: .35, bomb: .45, eclipse: .25, ripple: .45 }; if (!["sweep", "sandwave"].includes(a.k) || a.i % 2 === 0) SFX.play(IMPACT[a.k] || "imp_slam", GV[a.k] || .8); }
       continue;
     }
     if (!aud.seenCast.has(ck) && T < a.th && T >= a.t0) {
