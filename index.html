@@ -313,7 +313,10 @@ const CONFIG = {
   dash: { cd: 2.0, time: .16, speed: 760, iframe: 0 },
   /* 밀치기: knocks back everyone around (allies too). Each body hit heals the pusher. */
   /* 밀치기: no damage. Targets are flung away (speed), slow down with friction and bounce off the arena walls. */
-  push: { cd: 7, radius: 110, speed: 950, friction: 5, bounce: .6, enemySpeedMul: .8, bossSpeedMul: .55, healPct: .06, maxTargets: 3 },
+  /* bossImmune: while casting these (dashes / leaps) the boss can't be pushed.
+     bossCentered: telegraphs anchored on the boss move with it when it is pushed mid-cast; target-placed ones stay put. */
+  push: { bossImmune: ["charge", "rush", "pounce", "hop", "warp"], bossCentered: ["cleave", "flurry", "spin", "whirl", "donut", "pull", "clock", "ring", "gear"],
+          cd: 7, radius: 110, speed: 950, friction: 5, bounce: .6, enemySpeedMul: .8, bossSpeedMul: .55, healPct: .06, maxTargets: 3 },
   channel: { overhold: 1.2, interruptCdRatio: .3, fizzleCd: 1.0, stageMul: [0, .45, .75, 1.0], flashTime: .35 },
   revive: { downedTime: 15, holdTime: 3, range: 80, hpRatio: .3 },
   combat: { recDmgBonus: .2, backAttackMul: 1.4, backAngle: 2.1, minionShieldPerUnit: .15, minionShieldMin: .55, closeRange: 120, regenEvery: 5, poisonTick: .5 },
@@ -981,13 +984,17 @@ function hostTick(now) {
   if (!alive.length) return;
   const dt = Math.min(.05, (now - (hostL.last || now)) / 1000); hostL.last = now;
   const tempo = curTempo();
+  if (hostL.bossKb && bossPushImmune(H)) hostL.bossKb = null;
   if (hostL.bossKb) {
-    const k = hostL.bossKb, P = CONFIG.push;
+    const k = hostL.bossKb, P = CONFIG.push, ox = H.bx, oy = H.by;
     H.bx += k.vx * dt; H.by += k.vy * dt;
     if (H.bx < 90 || H.bx > AW - 90) { k.vx = -k.vx * P.bounce; H.bx = clamp(H.bx, 90, AW - 90); }
     if (H.by < 140 || H.by > AH - 80) { k.vy = -k.vy * P.bounce; H.by = clamp(H.by, 140, AH - 80); }
+    // boss-centred attacks being wound up travel with the boss
+    const mx = H.bx - ox, my = H.by - oy;
+    if (mx || my) for (const a of H.atk) if (a.th > T && P.bossCentered.includes(a.k)) { a.x = Math.round(a.x + mx); a.y = Math.round(a.y + my); }
     const f = Math.exp(-P.friction * dt); k.vx *= f; k.vy *= f;
-    if (Math.hypot(k.vx, k.vy) < 30 || hostL.anim || H.bs === "gimmick") hostL.bossKb = null;
+    if (Math.hypot(k.vx, k.vy) < 30) hostL.bossKb = null;
   }
   if (hostL.anim && T >= hostL.anim.t0) {
     const a = hostL.anim, k = a.lin ? clamp((T - a.t0) / a.dur, 0, 1) : ease((T - a.t0) / a.dur);
@@ -1033,7 +1040,7 @@ function hostTick(now) {
     }
     // the boss is shoved directly away from the pusher, unless it is mid-dash or in an invulnerable gimmick
     const bdx = H.bx - pu[1], bdy = H.by - pu[2], bd = Math.hypot(bdx, bdy) || 1;
-    if (bd <= pu[3] + B.r && !hostL.anim && H.bs !== "gimmick") {
+    if (bd <= pu[3] + B.r && !bossPushImmune(H)) {
       const sp = CONFIG.push.speed * CONFIG.push.bossSpeedMul * (pu[4] || 1);
       hostL.bossKb = { vx: bdx / bd * sp, vy: bdy / bd * sp };
     }
@@ -1125,6 +1132,9 @@ function separateAdds(H, B) {
   }
 }
 /* gimmick: walk to the centre, become invulnerable, run a must-dodge sequence, then collapse */
+function bossPushImmune(H) {
+  return !!hostL.anim || H.bs === "gimmick" || (H.bs === "cast" && CONFIG.push.bossImmune.includes(H.cur));
+}
 function startGimmick(T) {
   const H = HS, B = BOSSES[H.boss], G = CONFIG.gimmick, D = diffCfg(), X = D.extra, sc = CONFIG.stages[H.stage], tempo = curTempo();
   const kind = B.gimmicks[Math.floor(Math.random() * B.gimmicks.length)], def = ATK[kind];
