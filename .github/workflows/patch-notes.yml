@@ -1,0 +1,69 @@
+# 패치가 GitHub Pages에 배포되면 커밋 메시지를 모아 디스코드에 패치 노트로 올린다.
+# 커밋 제목 = 한 줄 요약, 본문 = 세부 내용. "[skip notes]"가 들어간 커밋은 건너뛴다.
+# 다른 채널로 보내려면 저장소 Settings → Secrets → Actions에 DISCORD_PATCH_WEBHOOK을 만들면 그쪽을 쓴다.
+name: 패치 노트 디스코드 알림
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  pages: read
+concurrency:
+  group: patch-notes
+  cancel-in-progress: false
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pages 배포 완료 대기
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 1 40); do
+            s=$(gh api "repos/${{ github.repository }}/pages/builds/latest" --jq '.status + " " + .commit' 2>/dev/null || true)
+            echo "[$i] $s"
+            if [ "${s%% *}" = "built" ] && [ "${s#* }" = "${{ github.sha }}" ]; then echo "deployed"; exit 0; fi
+            sleep 15
+          done
+          echo "배포 확인 시간 초과 - 그래도 올림"
+      - name: 디스코드에 요약 올리기
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_PATCH_WEBHOOK || 'https://discord.com/api/webhooks/1558534163546513471/e92SDViKWc1IVhD1VZCCdxFD-v1X3cVCSp6xmGaDjuz2MYWLM9qTheFVW55UhNLVVSuZ' }}
+          COMMITS: ${{ toJson(github.event.commits) }}
+          SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request, datetime
+          commits = json.loads(os.environ.get("COMMITS") or "[]")
+          out = []
+          for c in commits:
+              msg = c.get("message", "")
+              if "[skip notes]" in msg:
+                  continue
+              rows = [l.rstrip() for l in msg.splitlines() if l.strip() and not l.startswith(("Co-Authored-By:", "Claude-Session:"))]
+              if not rows:
+                  continue
+              out.append("**▸ " + rows[0] + "**")
+              out += [l if l.lstrip().startswith(("-", "•", "·")) else "  " + l for l in rows[1:]]
+          if not out:
+              print("올릴 내용 없음"); raise SystemExit(0)
+          desc = "\n".join(out)
+          if len(desc) > 3900:
+              desc = desc[:3900] + "\n…"
+          payload = {
+              "username": "해시계 레이드 패치",
+              "allowed_mentions": {"parse": []},
+              "embeds": [{
+                  "title": "패치 노트",
+                  "url": "https://detis9204.github.io/sundial-raid/",
+                  "description": desc,
+                  "color": 0xE8B45A,
+                  "footer": {"text": "게임 페이지를 새로고침하면 적용돼요 · " + os.environ["SHA"][:7]},
+                  "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              }],
+          }
+          req = urllib.request.Request(os.environ["WEBHOOK"], data=json.dumps(payload).encode(),
+                                       headers={"Content-Type": "application/json", "User-Agent": "sundial-raid-patch-notes/1.0"})
+          with urllib.request.urlopen(req) as r:
+              print("discord:", r.status)
+          PY
