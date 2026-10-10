@@ -309,7 +309,8 @@ const CONFIG = {
   audio: { master: .7, sfx: 1.0, music: .3, verb: .32, verbTime: 2.2, drive: 6, riserVol: .14, riserMax: 3.0,
            bpm: [112, 118, 124, 130, 136, 140, 128, 134, 140, 146, 152, 158], bpmPerPhase: 8, calmBpm: 76, keys: [50, 49, 52, 47, 48, 45, 50, 49, 52, 47, 48, 45], lowHpRatio: .3 },
   net: { maxPlayers: 8, sendMs: 33 },
-  player: { moveSpeed: 250, radius: 12 },
+  /* outline drawn around your own character so you can always find yourself */
+  player: { moveSpeed: 250, radius: 12, outlineColor: "#ffe066", outlineWidth: 2.5 },
   controls: { acquireRange: 170, arriveDist: 6, markerTime: .6, pickPad: 12 },
   /* 회피: no invulnerability, just a quick burst of movement toward the cursor */
   dash: { cd: 2.0, time: .16, speed: 760, iframe: 0 },
@@ -523,7 +524,20 @@ const AW = CONFIG.arena.w, AH = CONFIG.arena.h, TAU = Math.PI * 2;
 const TRANS = CONFIG.stageFlow.transition;
 const CLASSES = CONFIG.classes, ATK = CONFIG.bossAttacks, BOSSES = CONFIG.bosses;
 const AUG = {}; for (const a of CONFIG.augments) AUG[a.id] = a;
-const SPRITES = {};
+const SPRITES = {}, SILHOUETTES = {};
+/* a solid-colour copy of a sprite, drawn a few px around it to make an outline */
+function silhouette(k, img) {
+  if (!SILHOUETTES[k]) {
+    const c = document.createElement("canvas"); c.width = img.width; c.height = img.height;
+    const g = c.getContext("2d"); g.drawImage(img, 0, 0); g.globalCompositeOperation = "source-in"; g.fillStyle = CONFIG.player.outlineColor; g.fillRect(0, 0, c.width, c.height);
+    SILHOUETTES[k] = c;
+  }
+  return SILHOUETTES[k];
+}
+function drawOutlined(k, img, x, y, w, h, isMe) {
+  if (isMe) { const sil = silhouette(k, img), o = CONFIG.player.outlineWidth; for (let i = 0; i < 8; i++) { const an = i * Math.PI / 4; ctx.drawImage(sil, x + Math.cos(an) * o, y + Math.sin(an) * o, w, h); } }
+  ctx.drawImage(img, x, y, w, h);
+}
 for (const k in CONFIG.sprites) { const img = new Image(); img.onload = () => { img.ready = true; }; img.src = CONFIG.sprites[k].src; SPRITES[k] = img; }
 const RARITY = [{ name: "일반", col: "#b9bccb" }, { name: "희귀", col: "#6fb7ff" }, { name: "영웅", col: "#c38bff" }];
 const COLORS = ["#7fd3c7", "#f28b6b", "#b9a0ff", "#8ecbff", "#ff9ecf", "#a8e07a"];
@@ -2312,7 +2326,7 @@ function drawPlayer(x, y, pr, isMe, peer, T) {
       ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(0, 10, 15, 6, 0, 0, TAU); ctx.stroke();
       ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(Math.cos(pr.a) * 26, 10 + Math.sin(pr.a) * 12); ctx.lineTo(Math.cos(pr.a + .35) * 18, 10 + Math.sin(pr.a + .35) * 8); ctx.lineTo(Math.cos(pr.a - .35) * 18, 10 + Math.sin(pr.a - .35) * 8); ctx.closePath(); ctx.fill();
       const flip = (Math.cos(pr.a) < 0 ? -1 : 1) * (cfg.facesRight ? 1 : -1);
-      ctx.save(); ctx.scale(flip, 1); ctx.imageSmoothingEnabled = false; ctx.drawImage(spr, -w / 2, 12 - h, w, h); ctx.restore();
+      ctx.save(); ctx.scale(flip, 1); ctx.imageSmoothingEnabled = false; drawOutlined(k, spr, -w / 2, 12 - h, w, h, isMe); ctx.restore();
       if (pr.gd) { ctx.save(); ctx.rotate(pr.a); ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, -8, 26, -1.1, 1.1); ctx.stroke(); ctx.restore(); }
     } else {
     ctx.save(); ctx.rotate(pr.a);
@@ -2335,7 +2349,7 @@ function drawPlayer(x, y, pr, isMe, peer, T) {
     ctx.save(); ctx.rotate(Math.PI / 2); ctx.globalAlpha *= .85;
     if (spr && spr.ready) {
       const h = CONFIG.sprites[k].h * .85, w = h * spr.width / spr.height;
-      ctx.filter = pr.dn === 2 ? "grayscale(1) brightness(.6)" : "brightness(.75)"; ctx.imageSmoothingEnabled = false; ctx.drawImage(spr, -w / 2, -h / 2, w, h); ctx.filter = "none";
+      ctx.filter = pr.dn === 2 ? "grayscale(1) brightness(.6)" : "brightness(.75)"; ctx.imageSmoothingEnabled = false; drawOutlined(k, spr, -w / 2, -h / 2, w, h, isMe); ctx.filter = "none";
     } else {
       ctx.fillStyle = pr.dn === 2 ? "#5b6178" : col; ctx.beginPath(); ctx.ellipse(0, 0, 15, 8, 0, 0, TAU); ctx.fill();
       ctx.strokeStyle = "#0d1222"; ctx.lineWidth = 2; ctx.stroke();
