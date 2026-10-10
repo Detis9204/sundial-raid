@@ -1933,6 +1933,8 @@ function damageFor(a, S) {
 /* ---------- skills ---------- */
 function skillCd(i) { return CLASSES[myClass].skills[i].cd * me.st.cdMul[i]; }
 function busy() { return !!(me.ch || me.cast || me.move || me.multi || me.burst || me.dashT > 0); }
+/* 난사 keeps firing while you walk: only movement ignores it */
+function moveBusy() { return !!(me.ch || me.cast || me.move || me.multi || me.dashT > 0); }
 function startMove(dur, tx, ty, onTick, onEnd) {
   tx = clamp(tx, 14, AW - 14); ty = clamp(ty, 14, AH - 14);
   me.move = { t: 0, dur, x0: me.x, y0: me.y, tx, ty, onTick, onEnd };
@@ -2241,7 +2243,7 @@ function moveToward(tx, ty, dt, stopAt) {
   const dx = tx - me.x, dy = ty - me.y, d = Math.hypot(dx, dy);
   if (d <= (stopAt || 0) + .5) return true;
   const step = Math.min(d - (stopAt || 0), sp * dt);
-  me.x += dx / d * step; me.y += dy / d * step; me.a = Math.atan2(dy, dx);
+  me.x += dx / d * step; me.y += dy / d * step; me.a = me.burst ? me.aim : Math.atan2(dy, dx);
   return false;
 }
 function processOrder(dt) {
@@ -2351,7 +2353,7 @@ function updateMe(dt, T, S) {
     }
   }
   if (!reviving) { me.rvT = null; me.rvP = 0; }
-  if (!busy() && !reviving && S && S.st !== "augment") processOrder(dt);
+  if (!moveBusy() && !reviving && S && S.st !== "augment") processOrder(dt);
 
   // pull & body separation
   if (fighting) for (const a of S.atk || []) if (a.k === "pull" && T >= a.t0 && T < a.th) { const dx = a.x - me.x, dy = a.y - me.y, d = Math.hypot(dx, dy); if (d > 30) { me.x += dx / d * ATK.pull.pull * dt; me.y += dy / d * ATK.pull.pull * dt; } }
