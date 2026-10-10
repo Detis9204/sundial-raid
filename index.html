@@ -108,6 +108,19 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #myAug{position:absolute;right:12px;bottom:84px;max-width:260px;display:flex;flex-direction:column;align-items:flex-end;gap:5px;pointer-events:none}
 #myAug .lbl{background:rgba(13,18,34,.8);padding:2px 6px;border-radius:3px}
 #myAug .icons{justify-content:flex-end}
+#fbModal{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:16px;background:rgba(5,8,18,.62)}
+#fbForm{width:min(520px,100%);box-sizing:border-box;padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px}
+#fbForm h3{margin:0;font-family:var(--f-ko);font-size:18px}
+#fbForm .fbNote{margin:0;font-size:12.5px;color:#b9bccb;line-height:1.5}
+.fbCats{display:flex;flex-wrap:wrap;gap:6px}
+.fbCats button{font:500 13px var(--f-body);padding:6px 12px}
+.fbCats button[aria-pressed="true"]{border-color:var(--brass);color:var(--brass);background:#1a1f36}
+#fbText{font:14px/1.55 var(--f-body);color:var(--bone);background:var(--night);border:1px solid var(--line);border-radius:4px;padding:10px 12px;resize:vertical;min-height:120px}
+#fbText:focus-visible{outline:2px solid var(--brass);outline-offset:1px}
+#fbForm .fbFoot{display:flex;align-items:center;gap:8px}
+#fbStatus{flex:1;font-size:12.5px;color:var(--muted)}
+#fbStatus.err{color:#ff6f7d}
+#fbStatus.ok{color:#7fd3a3}
 #toast{position:fixed;z-index:30;left:50%;top:70px;transform:translateX(-50%);padding:8px 14px;font-size:13px;pointer-events:none}
 #tip{position:fixed;z-index:20;max-width:250px;padding:10px 12px;font-size:12.5px;line-height:1.5;pointer-events:none;display:flex;flex-direction:column;gap:3px}
 #tip b{font-family:var(--f-ko);font-size:15px}
@@ -213,6 +226,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div class="row">
         <button class="btn primary" id="createBtn" disabled>새 방 만들기</button>
         <button class="btn" id="soloBtn">혼자 연습</button>
+        <button class="btn" id="fbMenuBtn">피드백 보내기</button>
       </div>
       <div class="status" id="status">연결 라이브러리를 불러오는 중…</div>
       <p class="touchnote">이 프로토타입은 키보드와 마우스가 있는 컴퓨터에서 플레이할 수 있어요.</p>
@@ -238,6 +252,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button class="btn" id="musicBtn">음악 끄기</button>
     <button class="btn" id="muteBtn">소리 끄기</button>
     <button class="btn" id="copyBtn">코드 복사</button>
+    <button class="btn" id="fbBtn">피드백</button>
     <button class="btn" id="leaveBtn">나가기</button>
   </div>
 
@@ -291,6 +306,24 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
   <div id="tip" class="panel" hidden></div>
   <div id="toast" class="panel" hidden></div>
+  <div id="fbModal" hidden>
+    <form id="fbForm" class="panel" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
+      <h3 id="fbTitle">피드백 보내기</h3>
+      <p class="fbNote">개발 디스코드 채널로 바로 전송돼요. 지금 고른 직업, 스테이지, 보스, 난이도가 자동으로 함께 붙어요.</p>
+      <div class="fbCats" role="group" aria-label="종류">
+        <button type="button" class="btn" data-cat="버그" aria-pressed="true">버그</button>
+        <button type="button" class="btn" data-cat="밸런스" aria-pressed="false">밸런스</button>
+        <button type="button" class="btn" data-cat="제안" aria-pressed="false">제안</button>
+        <button type="button" class="btn" data-cat="기타" aria-pressed="false">기타</button>
+      </div>
+      <textarea id="fbText" maxlength="1500" placeholder="무엇이 어땠는지 적어 주세요. 예) 5스테이지 모이기 패턴에서 원이 너무 늦게 보여요." aria-label="피드백 내용"></textarea>
+      <div class="fbFoot">
+        <span id="fbStatus" aria-live="polite"></span>
+        <button type="button" class="btn" id="fbCancel">닫기</button>
+        <button type="submit" class="btn primary" id="fbSend">보내기</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -309,6 +342,8 @@ const CONFIG = {
   audio: { master: .7, sfx: 1.0, music: .3, verb: .32, verbTime: 2.2, drive: 6, riserVol: .14, riserMax: 3.0,
            bpm: [112, 118, 124, 130, 136, 140, 128, 134, 140, 146, 152, 158], bpmPerPhase: 8, calmBpm: 76, keys: [50, 49, 52, 47, 48, 45, 50, 49, 52, 47, 48, 45], lowHpRatio: .3 },
   net: { maxPlayers: 8, sendMs: 33 },
+  /* 피드백 버튼 → 디스코드 웹후크. cooldown: seconds between sends from one browser */
+  feedback: { webhook: "https://discord.com/api/webhooks/1558534163546513471/e92SDViKWc1IVhD1VZCCdxFD-v1X3cVCSp6xmGaDjuz2MYWLM9qTheFVW55UhNLVVSuZ", cooldown: 30, maxLen: 1500 },
   /* outline drawn around your own character so you can always find yourself */
   player: { moveSpeed: 250, radius: 12, outlineColor: "#4ade80", outlineWidth: 2.5, tetherOutline: "#22e36b", hasteOutline: "#ffd166" },
   controls: { acquireRange: 170, arriveDist: 6, markerTime: .6, pickPad: 12 },
@@ -2028,8 +2063,9 @@ const mouse = { x: 640, y: 300, in: false };
 let queued = new Set(), released = new Set(), armed = false;
 function inGame() { return net.mode !== "off"; }
 const SKILL_KEYS = ["KeyW", "KeyE", "KeyR"];
+function fbOpen() { const m = document.getElementById("fbModal"); return !!(m && !m.hidden); }
 addEventListener("keydown", e => {
-  if (!inGame() || e.target.tagName === "INPUT") return;
+  if (!inGame() || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || fbOpen()) return;
   if (["Space", "Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
   if (e.code === "Tab") { showTab(true); return; }
   if (!e.repeat) queued.add(e.code);
@@ -3177,7 +3213,7 @@ function syncMuteBtn() { $("#muteBtn").textContent = SFX.muted ? "소리 켜기"
 $("#musicBtn").addEventListener("click", () => { SFX.init(); SFX.toggleMusic(); syncMuteBtn(); });
 syncMuteBtn();
 $("#muteBtn").addEventListener("click", () => { SFX.init(); SFX.toggle(); syncMuteBtn(); });
-addEventListener("keydown", e => { if (!inGame() || e.target.tagName === "INPUT" || e.repeat) return; if (e.code === "KeyM") { SFX.init(); SFX.toggle(); syncMuteBtn(); } if (e.code === "KeyN") { SFX.init(); SFX.toggleMusic(); syncMuteBtn(); } });
+addEventListener("keydown", e => { if (!inGame() || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || fbOpen() || e.repeat) return; if (e.code === "KeyM") { SFX.init(); SFX.toggle(); syncMuteBtn(); } if (e.code === "KeyN") { SFX.init(); SFX.toggleMusic(); syncMuteBtn(); } });
 $("#createBtn").addEventListener("click", () => createRoom(0));
 $("#joinBtn").addEventListener("click", () => joinRoom($("#code").value));
 $("#code").addEventListener("keydown", e => { if (e.key === "Enter") joinRoom($("#code").value); });
@@ -3194,6 +3230,54 @@ $("#diffHard").addEventListener("click", () => { if (isHost && HS) { HS.diff = "
 $("#retryBtn").addEventListener("click", () => { if (isHost && HS && HS.st === "wipe") startFight(performance.now()); });
 $("#restartBtn").addEventListener("click", () => { if (isHost) startGame(performance.now()); });
 $("#toLobbyBtn").addEventListener("click", () => { if (isHost) HS = lobbyState(HS); });
+/* ---------- 피드백 → Discord ---------- */
+let fbCat = "버그";
+function fbContext() {
+  const S = curS, C = CLASSES[myClass], out = [];
+  out.push(["플레이어", myName + " · " + C.name]);
+  out.push(["접속", net.mode === "solo" ? "혼자 연습" : net.mode === "host" ? "방장 · " + (others.length + 1) + "명" : net.mode === "client" ? "참가 · " + (others.length + 1) + "명" : "메뉴"]);
+  if (S) {
+    const B = bossDef(S), st = { lobby: "대기실", augment: "증강 선택", fight: "전투", clear: "클리어", wipe: "전멸", victory: "승리" }[S.st] || S.st;
+    out.push(["상황", "스테이지 " + (S.stage + 1) + " · " + B.name + " · " + (CONFIG.difficulty[S.diff] || CONFIG.difficulty.normal).name + " · " + st]);
+    if (S.st === "fight") out.push(["전투", "페이즈 " + ((S.ph | 0) + 1) + " · 보스 체력 " + Math.round(clamp(S.hp / S.mhp, 0, 1) * 100) + "% · " + fmtTime(curT) + " · 내 체력 " + Math.max(0, Math.round(me.hp)) + "/" + me.mh]);
+  }
+  if (me.ag.length) out.push(["내 증강", me.ag.map(id => AUG[id] ? AUG[id].name : id).join(", ").slice(0, 1000)]);
+  out.push(["환경", (navigator.userAgent.match(/(Edg|Chrome|Firefox|Safari)\/[\d.]+/) || ["?"])[0] + " · " + innerWidth + "×" + innerHeight]);
+  return out;
+}
+function fbShow(v) {
+  const m = $("#fbModal");
+  if (v) { keys.clear(); queued.clear(); m.hidden = false; $("#fbStatus").textContent = ""; $("#fbStatus").className = ""; setTimeout(() => $("#fbText").focus(), 0); }
+  else { m.hidden = true; }
+}
+async function fbSend() {
+  const F = CONFIG.feedback, txt = $("#fbText").value.trim(), stEl = $("#fbStatus"), btn = $("#fbSend");
+  const say = (t, c) => { stEl.textContent = t; stEl.className = c || ""; };
+  if (txt.length < 2) { say("내용을 적어 주세요.", "err"); return; }
+  const last = +load("sr.fbAt", "0") || 0, wait = Math.ceil(F.cooldown - (Date.now() - last) / 1000);
+  if (wait > 0) { say(wait + "초 뒤에 다시 보낼 수 있어요.", "err"); return; }
+  const colors = { 버그: 0xff6f7d, 밸런스: 0xe8b45a, 제안: 0x7fd3a3, 기타: 0x8f97b3 };
+  const body = {
+    username: "해시계 레이드 피드백", allowed_mentions: { parse: [] },
+    embeds: [{ title: "[" + fbCat + "] " + myName, description: txt.slice(0, F.maxLen), color: colors[fbCat] || 0x8f97b3,
+      fields: fbContext().map(([name, value]) => ({ name, value: String(value).slice(0, 1000) || "-", inline: false })), timestamp: new Date().toISOString() }],
+  };
+  btn.disabled = true; say("보내는 중…");
+  try {
+    const r = await fetch(F.webhook, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    save("sr.fbAt", String(Date.now())); $("#fbText").value = "";
+    say("보냈어요. 고마워요!", "ok"); setTimeout(() => { if (stEl.className === "ok") fbShow(false); }, 1200);
+  } catch (err) { say("전송에 실패했어요. 잠시 뒤 다시 시도해 주세요.", "err"); }
+  finally { btn.disabled = false; }
+}
+$("#fbBtn").addEventListener("click", () => fbShow(true));
+$("#fbMenuBtn").addEventListener("click", () => fbShow(true));
+$("#fbCancel").addEventListener("click", () => fbShow(false));
+$("#fbModal").addEventListener("mousedown", e => { if (e.target.id === "fbModal") fbShow(false); });
+$("#fbModal").addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); fbShow(false); } });
+$("#fbForm").addEventListener("submit", e => { e.preventDefault(); fbSend(); });
+document.querySelectorAll(".fbCats button").forEach(b => b.addEventListener("click", () => { fbCat = b.dataset.cat; document.querySelectorAll(".fbCats button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); }));
 recalcStats();
 })();
 </script>
