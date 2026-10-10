@@ -305,7 +305,7 @@ const DEG = Math.PI / 180;
 const CONFIG = {
   arena: { w: 1280, h: 720 },
   /* character art: drawn pixel-crisp, flipped to face the way the character looks. facesRight = which way the source image looks. */
-  sprites: { knight: { src: "assets/knight.png", h: 50, facesRight: true }, paladin: { src: "assets/paladin.png", h: 50, facesRight: true }, rogue: { src: "assets/rogue.png", h: 48, facesRight: true }, gunner: { src: "assets/gunner.png", h: 50, facesRight: true }, gladiator: { src: "assets/gladiator.png", h: 52, facesRight: true }, acrobat: { src: "assets/acrobat.png", h: 46, facesRight: true }, saint: { src: "assets/saint.png", h: 74, facesRight: true, nameY: -66 } },
+  sprites: { knight: { src: "assets/knight.png", h: 50, facesRight: true }, paladin: { src: "assets/paladin.png", h: 50, facesRight: true }, rogue: { src: "assets/rogue.png", h: 48, facesRight: true }, gunner: { src: "assets/gunner.png", h: 50, facesRight: true }, gladiator: { src: "assets/gladiator.png", h: 52, facesRight: true }, acrobat: { src: "assets/acrobat.png", h: 46, facesRight: true }, saint: { src: "assets/saint.png", h: 74, facesRight: true, nameY: -66 }, wizard: { src: "assets/wizard.png", h: 56, facesRight: true, nameY: -50 } },
   audio: { master: .7, sfx: 1.0, music: .3, verb: .32, verbTime: 2.2, drive: 6, riserVol: .14, riserMax: 3.0,
            bpm: [112, 118, 124, 130, 136, 140, 128, 134, 140, 146, 152, 158], bpmPerPhase: 8, calmBpm: 76, keys: [50, 49, 52, 47, 48, 45, 50, 49, 52, 47, 48, 45], lowHpRatio: .3 },
   net: { maxPlayers: 8, sendMs: 33 },
@@ -409,6 +409,18 @@ const CONFIG = {
         { name: "맥동", tier: "강화", cd: 9, dmg: 90, heal: 12, buff: .25, buffTime: 6, note: "끈 대상에게 추가 효과 · 아군: 6초간 공격력 +25% / 적: 피해 90, 내 체력 12 회복" },
         { name: "부름", tier: "보조", cd: 12, dmg: 0, heal: 15, note: "끈으로 이어진 아군을 내 곁으로 끌어오고, 나와 그 아군 모두 체력 15 회복 (아군과 연결돼 있어야 사용 가능)" },
         { name: "찬가", tier: "결정", cd: 75, dmg: 0, dur: 10, spd: .5, dmg: 0, amp: .3, note: "10초간 아군 전체 이동 속도 +50%, 주는 피해 +30%" },
+      ] },
+    /* 마법사: every spell lands where the cursor is, but each cast roots you for a moment (후딜레이) */
+    wizard: {
+      name: "마법사", role: "원거리 · 광역 · 긴 후딜레이", desc: "커서 위치에 마법을 꽂는다. 사거리가 가장 길지만 시전 뒤 잠깐 움직일 수 없다.",
+      hp: 75,
+      atk: { name: "마력탄", dmg: 85, cd: 2.0, range: 400, arc: 0, blast: true, radius: 55, recover: .45, note: "커서 위치에 작은 폭발 · 시전 뒤 0.45초 경직" },
+      skills: [
+        { name: "운석 낙하", tier: "공격", cd: 9, dmg: 320, range: 400, radius: 110, delay: .7, recover: .7, note: "커서 위치에 0.7초 뒤 운석 낙하 · 시전 뒤 0.7초 경직" },
+        { name: "순간이동", tier: "보조", cd: 10, dmg: 0, range: 320, note: "이동 · 커서 위치로 즉시 순간이동 (최대 320)" },
+        { name: "사중 영창", tier: "결정", cd: 60, dmg: 1500, nova: [130, 150, 170], novaDmg: [150, 180, 210], window: 5, gap: .6, recover: .4,
+          range: 400, finalR: 160, finalDelay: .9, finalRecover: 1.0,
+          note: "R을 4번까지 이어서 사용 · 1~3단: 내 주변 폭발(점점 커짐) / 4단 종장: 커서 위치에 0.9초 뒤 큰 피해 · 5초 안에 다음 단계를 쓰지 않으면 끝남" },
       ] },
   },
   /* g: guardable (yellow). c: co-op gimmick colour. dmg is before the stage multiplier. */
@@ -554,6 +566,9 @@ const CONFIG = {
     { id: "sa_bond",  g: "絆", name: "질긴 인연",    rar: 0, cls: "saint", v: [5, 100], desc: v => `빛의 끈 지속 +${v[0]}초, 끊어지는 거리 +${v[1]}`, fx: (s, v) => { s.tlDur += v[0]; s.tlRange += v[1]; } },
     { id: "sa_glow",  g: "輝", name: "눈부신 끈",    rar: 1, cls: "saint", v: 1, desc: v => `빛의 끈 회복량·피해 +${pc(v)}`, fx: (s, v) => { s.tlMul += v; } },
     { id: "sa_hymn",  g: "頌", name: "울려 퍼지는 찬가", rar: 2, cls: "saint", v: [4, .1], desc: v => `찬가 지속 +${v[0]}초, 이동 속도·피해 증가 효과 +${pc(v[1])}`, fx: (s, v) => { s.hsTime += v[0]; s.hsAdd += v[1]; } },
+    { id: "wz_focus", g: "智", name: "숙련된 영창", rar: 0, cls: "wizard", v: [.25, .25], desc: v => `마력탄 범위 +${pc(v[0])}, 시전 뒤 경직 -${pc(v[1])}`, fx: (s, v) => { s.wzQRad *= 1 + v[0]; s.wzRec *= 1 - v[1]; } },
+    { id: "wz_meteor",g: "隕", name: "거대 운석",    rar: 1, cls: "wizard", v: [.5, .25], desc: v => `운석 낙하 피해 +${pc(v[0])}, 범위 +${pc(v[1])}`, fx: (s, v) => { s.wzMetMul *= 1 + v[0]; s.wzMetRad *= 1 + v[1]; } },
+    { id: "wz_final", g: "終", name: "종장의 서",    rar: 2, cls: "wizard", v: [.5, .3], desc: v => `종장 피해 +${pc(v[0])}, 1~3단 폭발 범위 +${pc(v[1])}`, fx: (s, v) => { s.wzFinMul *= 1 + v[0]; s.wzNovaRad *= 1 + v[1]; } },
     { id: "gn_snipe", g: "狙", name: "명사수",       rar: 2, cls: "gunner",  v: [.5, .4], desc: v => `정밀 저격 최대 충전 피해 +${pc(v[0])}, 최대 충전으로 쏘면 재사용 대기시간 ${pc(v[1])} 돌려받음`, fx: (s, v) => { s.snipeMax += v[0]; s.snipeRefund = v[1]; } },
   ],
 };
@@ -772,7 +787,7 @@ const SFX = (() => {
   };
 })();
 /* effects: 0 swing,1 parry,2 spin,3 lunge,4 quake,5 stab,6 blink,7 exec,8 bash,9 ward,10 hammer,11 break */
-const FX_SOUND = ["swing", "parry", "spin", "lunge", "quake", "stab", "blink", "exec", "bash", "ward", "hammer", "interrupt", "pierce", "snipe", "shot", "push", "", "quake", "ward"];
+const FX_SOUND = ["swing", "parry", "spin", "lunge", "quake", "stab", "blink", "exec", "bash", "ward", "hammer", "interrupt", "pierce", "snipe", "shot", "push", "", "quake", "ward", "pierce", "hammer", "exec", "spin"];
 
 /* ---------- storage (per-viewer convenience) ---------- */
 function load(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
@@ -812,7 +827,7 @@ function sanitize(p) {
     rv: (Array.isArray(p.rv) && typeof p.rv[0] === "string") ? [p.rv[0].slice(0, 64), num(p.rv[1], 0, 1, 0), num(p.rv[2], .05, 1, .3)] : null,
     gd: p.gd ? 1 : 0, bk: p.bk ? 1 : 0, ct: p.ct ? 1 : 0,
     sw: Math.round(num(p.sw, 0, 1e9, 0)), cx: Math.round(num(p.cx, 0, 1e9, 0)),
-    fx: (Array.isArray(p.fx) && p.fx.length >= 5) ? [num(p.fx[0], 0, 1e9, 0), Math.round(num(p.fx[1], 0, 20, 0)), num(p.fx[2], -100, AW + 100, 0), num(p.fx[3], -100, AH + 100, 0), num(p.fx[4], -7, 7, 0), num(p.fx[5], -1, 3000, 0)] : null,
+    fx: (Array.isArray(p.fx) && p.fx.length >= 5) ? [num(p.fx[0], 0, 1e9, 0), Math.round(num(p.fx[1], 0, 30, 0)), num(p.fx[2], -100, AW + 100, 0), num(p.fx[3], -100, AH + 100, 0), num(p.fx[4], -7, 7, 0), num(p.fx[5], -1, 3000, 0)] : null,
     wd: trip(p.wd), hl: trip(p.hl),
     pu: (Array.isArray(p.pu) && p.pu.length >= 4) ? [num(p.pu[0], 0, 1e9, 0), num(p.pu[1], 0, AW, 0), num(p.pu[2], 0, AH, 0), num(p.pu[3], 0, 400, 110), num(p.pu[4], .5, 3, 1)] : null,
     ag: Array.isArray(p.ag) ? p.ag.filter(x => typeof x === "string" && AUG[x]).slice(0, 40) : [],
@@ -1470,7 +1485,7 @@ const me = { x: 640, y: 600, hp: 100, mh: 100, dn: 0, downT: 0, ifr: 0, dashT: 0
   wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, poisonAcc: 0, regenT: 0, undyingUsed: false, poolT: 0,
   cast: null, move: null, multi: null, ch: null, chFlash: 0, sw: 0, cx: 0, fx: null, fxN: 0, wd: null, hl: null, evId: 0,
   rv: null, rvT: null, rvP: 0, hitT: 0, ag: [], pk: -1, offer: null, offerKey: -1, st: null, shots: [], shotN: 0, pushCd: 0, kb: null, pu: null,
-  tp: null, tl: null, tm: null, hs: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, hasteSpd: 0, hasteAmp: 0 };
+  tp: null, tl: null, tm: null, hs: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, hasteSpd: 0, hasteAmp: 0, pend: [], rs: null };
 let resolved = new Set(), fxList = [], floats = [], markers = [], disp = new Map(), addDisp = new Map();
 const seenSw = new Map(), seenFx = new Map(), seenWd = new Map(), seenHl = new Map(), seenCx = new Map(), seenPu = new Map(), seenTm = new Map(), seenHs = new Map();
 let shake = 0, bossFlash = 0;
@@ -1481,7 +1496,7 @@ function baseStats() {
     counterAdd: 0, counterTimeAdd: 0, dashBuff: 0, dashBuffTime: 0, lifesteal: 0, closeBonus: 0, reviveSpd: 1, reviveHp: 0,
     parryIframe: 0, parryReset: false, perfectCounter: 0, undying: 0, maxChargeBonus: 0,
     arcAdd: 0, spinRange: 1, spinMul: 1, quakeEcho: 0, poisonTime: 0, poisonDps: 0, shadowBack: 0, execLow: 0, execMul: 0,
-    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0, glMinAdd: 0, glMaxAdd: 0, glStance: 0, acVolley: 0, acGambleMul: 1, acGambleIfr: 0, pushHealMul: 1, pushCdMul: 1, pushRadiusMul: 1, pushDmgMul: 1, pushForceMul: 1, dashDistMul: 1, tlDur: 0, tlRange: 0, tlMul: 1, hsTime: 0, hsAdd: 0 };
+    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0, glMinAdd: 0, glMaxAdd: 0, glStance: 0, acVolley: 0, acGambleMul: 1, acGambleIfr: 0, pushHealMul: 1, pushCdMul: 1, pushRadiusMul: 1, pushDmgMul: 1, pushForceMul: 1, dashDistMul: 1, tlDur: 0, tlRange: 0, tlMul: 1, hsTime: 0, hsAdd: 0, wzQRad: 1, wzRec: 1, wzMetMul: 1, wzMetRad: 1, wzFinMul: 1, wzNovaRad: 1 };
 }
 function recalcStats() {
   const s = baseStats();
@@ -1497,7 +1512,7 @@ function resetMe() {
   me.x = 460 + Math.random() * 360; me.y = 610; me.order = null; me.eng = null;
   Object.assign(me, { cd: [0, 0, 0], atkCd: 0, dashCd: 0, dashT: 0, guardT: 0, guardCd: 0, counterT: 0, wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, regenT: 0, undyingUsed: false,
     cast: null, move: null, multi: null, burst: null, ch: null, rv: null, rvT: null, rvP: 0, poolT: 0, shots: [], shotN: 0, pushCd: 0, kb: null,
-    tp: null, tl: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0 });
+    tp: null, tl: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, pend: [], rs: null });
   resolved = new Set();
 }
 function nowS() { return performance.now() / 1000; }
@@ -1512,6 +1527,7 @@ function myPresence() {
 }
 function float(x, y, txt, col, big) { floats.push({ x: x + (Math.random() - .5) * 30, y, txt: String(txt), col, t: 0, big: !!big }); }
 function spawnFx(type, x, y, a, col, k, extra) { fxList.push({ type, x, y, a, col, k: k || "knight", t: 0, e: extra || 0 }); }
+function emitFxAt(type, x, y, extra) { me.fx = [++me.fxN, type, Math.round(x), Math.round(y), Math.round(me.aim * 100) / 100, r3(extra || 0)]; spawnFx(type, x, y, me.aim, myColor, myClass, extra); SFX.play(FX_SOUND[type], 1, myClass); }
 function emitFx(type, extra, vol) { me.fx = [++me.fxN, type, Math.round(me.x), Math.round(me.y), Math.round(me.aim * 100) / 100, r3(extra || 0)]; spawnFx(type, me.x, me.y, me.aim, myColor, myClass, extra); SFX.play(FX_SOUND[type], vol == null ? 1 : vol, myClass); }
 
 /* ---------- enemies ---------- */
@@ -1628,10 +1644,32 @@ function applyHaste(dur, spd, amp) {
   if (!(me.hasteT > 0)) float(me.x, me.y - 46, "찬가 · 이속 +" + pc(spd), "#ffd166", true);
   me.hasteT = Math.max(me.hasteT, dur); me.hasteSpd = spd; me.hasteAmp = amp;
 }
+/* ---------- 마법사 ---------- */
+function wizTarget(range) {   // the cursor, pulled in to max range
+  const d = Math.min(range, dist(me.x, me.y, mouse.x, mouse.y));
+  return { x: clamp(me.x + Math.cos(me.aim) * d, 0, AW), y: clamp(me.y + Math.sin(me.aim) * d, 0, AH) };
+}
+function recover(t) { me.cast = { t, max: t }; }   // 후딜레이: no moving or casting until it ends
+function wizardQ() {
+  const A = CLASSES.wizard.atk, st = me.st, p = wizTarget(A.range + st.rangeAdd), r = A.radius * st.wzQRad;
+  me.atkCd = A.cd / st.aspdMul; me.a = me.aim; recover(A.recover * st.wzRec);
+  emitFxAt(19, p.x, p.y, r);
+  hitAll(e => dist(e.x, e.y, p.x, p.y) <= r + e.r, A.dmg, { basic: true });
+}
+function updatePend(dt) {   // delayed spells (meteor, final verse)
+  for (const q of me.pend) {
+    q.t -= dt;
+    if (q.t <= 0) { q.done = true; hitAll(e => dist(e.x, e.y, q.x, q.y) <= q.r + e.r, q.dmg); shake = q.big ? .4 : .2; SFX.play(q.big ? "imp_heavy" : "imp_blast", q.big ? 1 : .7); }
+  }
+  me.pend = me.pend.filter(q => !q.done);
+  if (me.cast) { me.cast.t -= dt; if (me.cast.t <= 0) me.cast = null; }
+  if (me.rs) { me.rs.left -= dt; if (me.rs.left <= 0) { me.rs = null; me.cd[2] = Math.max(me.cd[2], skillCd(2)); float(me.x, me.y - 46, "영창 끝", "#8f97b3"); } }
+}
 /* the main skill replaces the basic attack: short cooldown, aimed at the cursor */
 function castMain() {
   const C = CLASSES[myClass], st = me.st, A = C.atk;
   if (me.dn || me.atkCd > 0 || busy()) return;
+  if (A.blast) { wizardQ(); return; }
   me.atkCd = A.cd / st.aspdMul; me.sw++; me.a = me.aim;
   spawnFx(0, me.x, me.y, me.aim, myColor, myClass, A.ranged ? -1 : st.arcAdd); SFX.play("swing", 1, myClass);
   if (A.tether) { me.tp = { x: me.x + Math.cos(me.aim) * 18, y: me.y + Math.sin(me.aim) * 18 - 8, a: me.aim, left: A.range + st.rangeAdd }; return; }
@@ -1698,7 +1736,7 @@ function interruptChannel(reason) {
 function goDown() {
   me.hp = 0; me.dn = 1; me.downT = CONFIG.revive.downedTime; me.order = null; me.eng = null;
   interruptChannel(); me.cast = null; me.move = null; me.multi = null; me.burst = null; me.guardT = 0; me.rv = null; me.rvT = null; me.rvP = 0;
-  me.tp = null; me.tl = null;
+  me.tp = null; me.tl = null; me.rs = null;
   SFX.play("downed"); float(me.x, me.y - 40, "쓰러짐", "#ff6f7d", true);
 }
 function hurt(n, why) {
@@ -1847,6 +1885,33 @@ function useSkill(i) {
       const dur = sk.dur + st.hsTime, spd = sk.spd + st.hsAdd, amp = sk.amp + st.hsAdd;
       me.hs = [++me.evId, dur, r3(spd), r3(amp)];
       emitFx(18, 220); applyHaste(dur, spd, amp);
+    }
+  } else if (myClass === "wizard") {
+    if (i === 0) {   // 운석 낙하
+      const p = wizTarget(sk.range), r = sk.radius * st.wzMetRad;
+      recover(sk.recover * st.wzRec);
+      me.pend.push({ t: sk.delay, x: p.x, y: p.y, r, dmg: sk.dmg * st.wzMetMul });
+      emitFxAt(20, p.x, p.y, r);
+    } else if (i === 1) {   // 순간이동: straight to the cursor, no travel
+      const p = wizTarget(sk.range);
+      spawnFx(6, me.x, me.y, 0, myColor, myClass);
+      me.x = clamp(p.x, 14, AW - 14); me.y = clamp(p.y, 14, AH - 14); me.order = null; me.kb = null;
+      emitFx(6);
+    } else {   // 사중 영창: steps 1-3 burst around me, step 4 is the big one at the cursor
+      const rs = me.rs || (me.rs = { step: 0, left: 0 });
+      rs.step++; rs.left = sk.window;
+      if (rs.step < 4) {
+        const r = sk.nova[rs.step - 1] * st.wzNovaRad;
+        recover(sk.recover * st.wzRec); me.cd[2] = sk.gap;
+        emitFx(22, r); shake = .12;
+        hitAll(e => edgeDist(e) <= r, sk.novaDmg[rs.step - 1]);
+        float(me.x, me.y - 50, "영창 " + rs.step + "/4", "#c9b8ff", true);
+      } else {
+        const p = wizTarget(sk.range), r = sk.finalR;
+        me.rs = null; recover(sk.finalRecover * st.wzRec);
+        me.pend.push({ t: sk.finalDelay, x: p.x, y: p.y, r, dmg: sk.dmg * st.wzFinMul, big: true });
+        emitFxAt(21, p.x, p.y, r); float(me.x, me.y - 50, "종장", "#ffd166", true);
+      }
     }
   } else if (myClass === "gunner") {
     if (i === 1) {
@@ -2077,7 +2142,7 @@ function updateMe(dt, T, S) {
   me.atkCd = Math.max(0, me.atkCd - dt * cdRate);
   for (const k of ["ifr", "dashCd", "pushCd", "guardT", "guardCd", "counterT", "hitT", "dashBuffT", "shadowT", "chFlash"]) me[k] = Math.max(0, me[k] - dt);
   for (let i = 0; i < 3; i++) me.cd[i] = Math.max(0, me.cd[i] - dt * cdRate);
-  updateShots(dt); updateTether(dt);
+  updateShots(dt); updateTether(dt); updatePend(dt);
 
   if (me.dn === 1) {
     let beingRevived = false;
@@ -2203,7 +2268,7 @@ function updateOthers(dt) {
   }
   for (const key of disp.keys()) if (!seen.has(key)) disp.delete(key);
   for (const f of fxList) f.t += dt;
-  fxList = fxList.filter(f => f.t < .5);
+  fxList = fxList.filter(f => f.t < (f.type === 20 ? 1.2 : f.type === 21 ? 1.5 : .5));
   for (const f of floats) { f.t += dt; f.y -= 34 * dt; }
   floats = floats.filter(f => f.t < 1.1);
   for (const m of markers) m.t += dt;
@@ -2519,6 +2584,10 @@ function drawPlayer(x, y, pr, isMe, peer, T) {
     if (pr.gd) { ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, 21, -1.1, 1.1); ctx.stroke(); }
     ctx.restore();
     }
+    if (isMe && me.cast && me.cast.max) {   // 후딜레이: can't move until the ring empties
+      const f = clamp(me.cast.t / me.cast.max, 0, 1);
+      ctx.strokeStyle = "rgba(201,184,255,.9)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 10, 19, 8, 0, -Math.PI / 2, -Math.PI / 2 + TAU * f); ctx.stroke();
+    }
     // small hp bar under everyone
     ctx.fillStyle = "rgba(13,18,34,.85)"; ctx.fillRect(-16, 19, 32, 4); ctx.fillStyle = "#ff6f7d"; ctx.fillRect(-16, 19, 32 * clamp(pr.hp / pr.mh, 0, 1), 4);
   } else {
@@ -2620,6 +2689,29 @@ function drawFx() {
       case 18: { const al = 1 - u / .45; if (al <= 0) break; const R = f.e || 80;   // 성녀 맥동 / 부름 / 찬가
         ctx.fillStyle = "rgba(255,209,102," + al * .14 + ")"; ctx.beginPath(); ctx.arc(0, 0, R * Math.min(1, u / .15), 0, TAU); ctx.fill();
         ctx.strokeStyle = "rgba(255,236,170," + al + ")"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, R * Math.min(1, .4 + u / .2), 0, TAU); ctx.stroke(); break; }
+      case 19: { const al = 1 - u / .35; if (al <= 0) break; const R = f.e || 55;   // 마력탄
+        ctx.fillStyle = "rgba(150,140,255," + al * .35 + ")"; ctx.beginPath(); ctx.arc(0, 0, R * Math.min(1, .5 + u / .1), 0, TAU); ctx.fill();
+        ctx.strokeStyle = "rgba(225,215,255," + al + ")"; ctx.lineWidth = 3; ctx.stroke(); break; }
+      case 20: case 21: {   // 운석 / 종장: warning, then impact
+        const W = (CLASSES.wizard || {}).skills, big = f.type === 21, D = big ? W[2].finalDelay : W[0].delay, R = f.e || 110;
+        const c1 = big ? "255,209,102" : "255,130,80", c2 = big ? "201,184,255" : "255,200,140";
+        if (u < D) {
+          const k = u / D;
+          ctx.fillStyle = "rgba(" + c1 + ",.12)"; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fill();
+          ctx.strokeStyle = "rgba(" + c1 + ",.8)"; ctx.lineWidth = 2; ctx.setLineDash([10, 7]); ctx.stroke(); ctx.setLineDash([]);
+          ctx.fillStyle = "rgba(" + c1 + ",.22)"; ctx.beginPath(); ctx.arc(0, 0, R * k, 0, TAU); ctx.fill();
+          const fx0 = -90 * (1 - k), fy0 = -300 * (1 - k);
+          ctx.strokeStyle = "rgba(" + c2 + ",.9)"; ctx.lineWidth = big ? 8 : 5; ctx.beginPath(); ctx.moveTo(fx0 - 30, fy0 - 100); ctx.lineTo(fx0, fy0); ctx.stroke();
+          ctx.fillStyle = "#fff3c4"; ctx.beginPath(); ctx.arc(fx0, fy0, big ? 12 : 8, 0, TAU); ctx.fill();
+        } else {
+          const v = (u - D) / .45; if (v >= 1) break;
+          ctx.fillStyle = "rgba(" + c1 + "," + (1 - v) * .5 + ")"; ctx.beginPath(); ctx.arc(0, 0, R * (.7 + .3 * v), 0, TAU); ctx.fill();
+          ctx.strokeStyle = "rgba(255,243,196," + (1 - v) + ")"; ctx.lineWidth = big ? 7 : 4; ctx.beginPath(); ctx.arc(0, 0, R * (.8 + .5 * v), 0, TAU); ctx.stroke();
+        }
+        break; }
+      case 22: { const al = 1 - u / .4; if (al <= 0) break; const R = f.e || 130;   // 영창 1~3단
+        ctx.fillStyle = "rgba(170,150,255," + al * .25 + ")"; ctx.beginPath(); ctx.arc(0, 0, R * Math.min(1, .3 + u / .12), 0, TAU); ctx.fill();
+        ctx.strokeStyle = "rgba(220,210,255," + al + ")"; ctx.lineWidth = 4; ctx.stroke(); break; }
       case 16: { const al = 1 - u / .4; if (al <= 0) break; const B = bossDef(curS);   // boss afterimage
         ctx.globalAlpha = al * .45; ctx.fillStyle = B.pal[1]; ctx.beginPath(); ctx.arc(0, 0, B.r, 0, TAU); ctx.fill();
         ctx.globalAlpha = al * .8; ctx.strokeStyle = B.pal[4]; ctx.lineWidth = 2; ctx.stroke(); break; }
@@ -2654,6 +2746,12 @@ function drawFx() {
 }
 function drawReticle() {
   const S = curS;
+  if (myClass === "wizard" && !me.dn) {   // spells land here
+    const W = CLASSES.wizard, p = wizTarget(W.atk.range + me.st.rangeAdd);
+    ctx.strokeStyle = "rgba(201,184,255,.55)"; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.arc(p.x, p.y, W.atk.radius * me.st.wzQRad, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    if (me.rs && me.rs.step === 3) { ctx.strokeStyle = "rgba(255,209,102,.7)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, W.skills[2].finalR, 0, TAU); ctx.stroke(); }
+  }
   const e = enemyAt(mouse.x, mouse.y);
   if (e && (!S || S.st === "fight" || S.st === "lobby")) { ctx.strokeStyle = armed ? "rgba(255,111,125,.9)" : "rgba(127,211,120,.7)"; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 8, 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
   if (!armed) return;
@@ -2737,6 +2835,8 @@ function drawHUD(T, S) {
   if (me.shadowT > 0) line("그림자 · 모든 공격 백어택", "#b9a0ff");
   if (me.linkBuff > 0) line("맥동 · 공격력 +" + pc(me.linkBuff), "#ffd166");
   if (me.linkHps > 0) line("빛의 끈 · 초당 체력 " + Math.round(me.linkHps * 10) / 10 + " 회복", "#7fd3a3");
+  if (me.rs) line("사중 영창 · " + (me.rs.step + 1) + "단계 준비 · " + me.rs.left.toFixed(1) + "초", "#c9b8ff");
+  if (me.cast && me.cast.max) line("시전 경직", "#c9b8ff");
   if (me.hasteT > 0) line("찬가 · 이동 속도 +" + pc(me.hasteSpd) + ", 피해 +" + pc(me.hasteAmp) + " · " + me.hasteT.toFixed(1) + "초", "#ffd166");
 
   if (me.tl) { const t = me.tl, who = t.k === 1 ? ((others.find(o => o.peer === t.id) || { presence: { n: "아군" } }).presence.n) : (t.id === "b" ? "보스" : "소환물"); line("빛의 끈 · " + who + " · " + t.left.toFixed(1) + "초", t.k === 1 ? "#7fd3a3" : "#ffb347"); }
@@ -2748,7 +2848,8 @@ function drawHUD(T, S) {
   for (let i = 0; i < 3; i++) {
     const sk = C.skills[i];
     const state = me.ch && me.ch.i === i ? { ch: true, stage: me.ch.stage, p: clamp(me.ch.t / sk.channel[2], 0, 1) } : null;
-    drawSlot(sx + 84 + i * 84, sY, "WER"[i] + (sk.channel ? " ⟳" : ""), sk.name, sk.tier, me.cd[i], skillCd(i), state);
+    const chain = myClass === "wizard" && i === 2 && me.rs;
+    drawSlot(sx + 84 + i * 84, sY, "WER"[i] + (sk.channel ? " ⟳" : ""), chain ? (me.rs.step === 3 ? "종장" : "영창 " + (me.rs.step + 1)) : sk.name, chain ? (me.rs.step + 1) + "/4" : sk.tier, me.cd[i], chain ? sk.gap : skillCd(i), chain && me.cd[i] <= 0 ? { active: true } : state);
   }
   drawSlot(sx + 350, sY, "SPC", "회피", "", me.dashCd, CONFIG.dash.cd * me.st.dashCdMul, null);
   drawSlot(sx + 434, sY, "D", "밀치기", "", me.pushCd, CONFIG.push.cd * me.st.pushCdMul, null);
