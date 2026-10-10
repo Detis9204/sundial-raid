@@ -310,7 +310,7 @@ const CONFIG = {
            bpm: [112, 118, 124, 130, 136, 140, 128, 134, 140, 146, 152, 158], bpmPerPhase: 8, calmBpm: 76, keys: [50, 49, 52, 47, 48, 45, 50, 49, 52, 47, 48, 45], lowHpRatio: .3 },
   net: { maxPlayers: 8, sendMs: 33 },
   /* outline drawn around your own character so you can always find yourself */
-  player: { moveSpeed: 250, radius: 12, outlineColor: "#4ade80", outlineWidth: 2.5 },
+  player: { moveSpeed: 250, radius: 12, outlineColor: "#4ade80", outlineWidth: 2.5, tetherOutline: "#22e36b", hasteOutline: "#ffd166" },
   controls: { acquireRange: 170, arriveDist: 6, markerTime: .6, pickPad: 12 },
   /* 회피: no invulnerability, just a quick burst of movement toward the cursor */
   dash: { cd: 2.0, time: .16, speed: 760, iframe: 0 },
@@ -588,16 +588,18 @@ const CLASSES = CONFIG.classes, ATK = CONFIG.bossAttacks, BOSSES = CONFIG.bosses
 const AUG = {}; for (const a of CONFIG.augments) AUG[a.id] = a;
 const SPRITES = {}, SILHOUETTES = {};
 /* a solid-colour copy of a sprite, drawn a few px around it to make an outline */
-function silhouette(k, img) {
-  if (!SILHOUETTES[k]) {
+function silhouette(k, img, col) {
+  const key = k + "|" + col;
+  if (!SILHOUETTES[key]) {
     const c = document.createElement("canvas"); c.width = img.width; c.height = img.height;
-    const g = c.getContext("2d"); g.drawImage(img, 0, 0); g.globalCompositeOperation = "source-in"; g.fillStyle = CONFIG.player.outlineColor; g.fillRect(0, 0, c.width, c.height);
-    SILHOUETTES[k] = c;
+    const g = c.getContext("2d"); g.drawImage(img, 0, 0); g.globalCompositeOperation = "source-in"; g.fillStyle = col; g.fillRect(0, 0, c.width, c.height);
+    SILHOUETTES[key] = c;
   }
-  return SILHOUETTES[k];
+  return SILHOUETTES[key];
 }
-function drawOutlined(k, img, x, y, w, h, isMe) {
-  if (isMe) { const sil = silhouette(k, img), o = CONFIG.player.outlineWidth; for (let i = 0; i < 8; i++) { const an = i * Math.PI / 4; ctx.drawImage(sil, x + Math.cos(an) * o, y + Math.sin(an) * o, w, h); } }
+/* ol: null (no outline) or { col, w } */
+function drawOutlined(k, img, x, y, w, h, ol) {
+  if (ol) { const sil = silhouette(k, img, ol.col), o = ol.w; for (let i = 0; i < 8; i++) { const an = i * Math.PI / 4; ctx.drawImage(sil, x + Math.cos(an) * o, y + Math.sin(an) * o, w, h); } }
   ctx.drawImage(img, x, y, w, h);
 }
 for (const k in CONFIG.sprites) { const img = new Image(); img.onload = () => { img.ready = true; }; img.src = CONFIG.sprites[k].src; SPRITES[k] = img; }
@@ -841,6 +843,7 @@ function sanitize(p) {
     pk: Math.round(num(p.pk, -1, 1e9, -1)), ad,
     tl: (Array.isArray(p.tl) && p.tl.length >= 2 && typeof p.tl[1] === "string") ? [Math.round(num(p.tl[0], 1, 2, 1)), p.tl[1].slice(0, 64), num(p.tl[2], 0, 60, 0), num(p.tl[3], 0, 3, 0), num(p.tl[4], 0, 50, 0)] : null,
     tm: (Array.isArray(p.tm) && p.tm.length >= 4 && typeof p.tm[1] === "string") ? [num(p.tm[0], 0, 1e9, 0), p.tm[1].slice(0, 64), num(p.tm[2], 0, AW, 0), num(p.tm[3], 0, AH, 0), num(p.tm[4], 0, 200, 0)] : null,
+    ha: p.ha ? 1 : 0,
     sp: (Array.isArray(p.sp) && p.sp.length >= 3) ? [num(p.sp[0], 0, 1e9, 0), Math.round(num(p.sp[1], 0, 3, 0)), Math.round(num(p.sp[2], 0, 9, 0))] : null,
     hs: (Array.isArray(p.hs) && p.hs.length >= 4) ? [num(p.hs[0], 0, 1e9, 0), num(p.hs[1], 0, 30, 0), num(p.hs[2], 0, 1, 0), num(p.hs[3], 0, 2, 0)] : null,
 
@@ -1531,7 +1534,7 @@ function myPresence() {
     hp: Math.round(me.hp), mh: me.mh, dn: me.dn, bo: Math.round(me.downT * 10) / 10, dm: me.dm, r: me.run, game: me.game, rv: me.rv,
     gd: me.guardT > 0 ? 1 : 0, bk: me.wardUntil > nowS() ? 1 : 0, ct: me.counterT > 0 ? 1 : 0,
     sw: me.sw, cx: me.cx, fx: me.fx, wd: me.wd, hl: me.hl, pu: me.pu, ag: me.ag, pk: me.pk, ad: me.ad,
-    tl: me.tl ? [me.tl.k, me.tl.id, r3(me.tl.buffT), me.tl.buffMul, r3(CLASSES.saint.atk.allyHps * me.st.tlMul)] : null, tm: me.tm, hs: me.hs, sp: me.sp,
+    tl: me.tl ? [me.tl.k, me.tl.id, r3(me.tl.buffT), me.tl.buffMul, r3(CLASSES.saint.atk.allyHps * me.st.tlMul)] : null, tm: me.tm, hs: me.hs, sp: me.sp, ha: me.hasteT > 0 && !me.dn ? 1 : 0,
     ch: me.ch ? [me.ch.i, r3(Math.min(me.ch.t, chSk(myClass, me.ch.i).channel[2] + .01)), me.ch.stage] : null };
 }
 function float(x, y, txt, col, big) { floats.push({ x: x + (Math.random() - .5) * 30, y, txt: String(txt), col, t: 0, big: !!big }); }
@@ -2569,8 +2572,20 @@ function drawChannelFloor(k, a, x, y, stage, t, i) {
   if (sh.type === "circle") { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(sh.x, sh.y); ctx.stroke(); }
   ctx.restore();
 }
+/* who is on the ally end of a 성녀 tether right now */
+function isTethered(id) {
+  if (me.tl && me.tl.k === 1 && me.tl.id === id && !me.dn) return true;
+  for (const p of others) { const tl = p.presence.tl; if (tl && tl[0] === 1 && tl[1] === id && !p.presence.dn) return true; }
+  return false;
+}
+function outlineFor(pr, isMe, peer) {   // 찬가 (yellow) > tethered (green) > my own marker
+  if (pr.dn) return isMe ? { col: CONFIG.player.outlineColor, w: CONFIG.player.outlineWidth } : null;
+  if (pr.ha) return { col: CONFIG.player.hasteOutline, w: 3 };
+  if (isTethered(isMe ? myPeer : peer)) return { col: CONFIG.player.tetherOutline, w: 3 };
+  return isMe ? { col: CONFIG.player.outlineColor, w: CONFIG.player.outlineWidth } : null;
+}
 function drawPlayer(x, y, pr, isMe, peer, T) {
-  const col = safeCol(pr.c), k = pr.k;
+  const col = safeCol(pr.c), k = pr.k, ol = outlineFor(pr, isMe, peer);
   if (pr.ch && pr.dn === 0) drawChannelFloor(k, pr.a, x, y, pr.ch[2], pr.ch[1], pr.ch[0]);
   ctx.save(); ctx.translate(x, y);
   if (pr.dn === 2) { ctx.globalAlpha = .3; }
@@ -2585,7 +2600,7 @@ function drawPlayer(x, y, pr, isMe, peer, T) {
       ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(0, 10, 15, 6, 0, 0, TAU); ctx.stroke();
       ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(Math.cos(pr.a) * 26, 10 + Math.sin(pr.a) * 12); ctx.lineTo(Math.cos(pr.a + .35) * 18, 10 + Math.sin(pr.a + .35) * 8); ctx.lineTo(Math.cos(pr.a - .35) * 18, 10 + Math.sin(pr.a - .35) * 8); ctx.closePath(); ctx.fill();
       const flip = (Math.cos(pr.a) < 0 ? -1 : 1) * (cfg.facesRight ? 1 : -1);
-      ctx.save(); ctx.scale(flip, 1); ctx.imageSmoothingEnabled = false; drawOutlined(k, spr, -w / 2, 12 - h, w, h, isMe); ctx.restore();
+      ctx.save(); ctx.scale(flip, 1); ctx.imageSmoothingEnabled = false; drawOutlined(k, spr, -w / 2, 12 - h, w, h, ol); ctx.restore();
       if (pr.gd) { ctx.save(); ctx.rotate(pr.a); ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, -8, 26, -1.1, 1.1); ctx.stroke(); ctx.restore(); }
     } else {
     ctx.save(); ctx.rotate(pr.a);
@@ -2612,7 +2627,7 @@ function drawPlayer(x, y, pr, isMe, peer, T) {
     ctx.save(); ctx.rotate(Math.PI / 2); ctx.globalAlpha *= .85;
     if (spr && spr.ready) {
       const h = CONFIG.sprites[k].h * .85, w = h * spr.width / spr.height;
-      ctx.filter = pr.dn === 2 ? "grayscale(1) brightness(.6)" : "brightness(.75)"; ctx.imageSmoothingEnabled = false; drawOutlined(k, spr, -w / 2, -h / 2, w, h, isMe); ctx.filter = "none";
+      ctx.filter = pr.dn === 2 ? "grayscale(1) brightness(.6)" : "brightness(.75)"; ctx.imageSmoothingEnabled = false; drawOutlined(k, spr, -w / 2, -h / 2, w, h, ol); ctx.filter = "none";
     } else {
       ctx.fillStyle = pr.dn === 2 ? "#5b6178" : col; ctx.beginPath(); ctx.ellipse(0, 0, 15, 8, 0, 0, TAU); ctx.fill();
       ctx.strokeStyle = "#0d1222"; ctx.lineWidth = 2; ctx.stroke();
@@ -2664,6 +2679,7 @@ function drawTethers() {
   for (const { tl, pos } of list) {
     const q = tetherTarget(tl); if (!q) continue;
     const ally = tl[0] === 1, x0 = pos.x, y0 = pos.y - 14, x1 = q.x, y1 = q.y - (ally ? 14 : 0);
+    if (!ally && q.r) { ctx.setLineDash([]); ctx.strokeStyle = "rgba(34,227,107," + (.6 + .3 * Math.sin(now * 6)) + ")"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(q.x, q.y, q.r + 6, 0, TAU); ctx.stroke(); }
     ctx.setLineDash([]);
     if (tl[2] > 0) { ctx.strokeStyle = "rgba(255,209,102," + (.35 + .2 * Math.sin(now * 10)) + ")"; ctx.lineWidth = 11; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); }
     ctx.strokeStyle = ally ? "rgba(127,211,163,.35)" : "rgba(255,140,90,.35)"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
