@@ -1544,15 +1544,16 @@ function deal(e, base, opts) {
   if (!e) return 0;
   const st = me.st, fx = e.x, fy = e.y - e.r - 12;
   if (e.boss) bossFlash = .08;
-  if (!S || S.st !== "fight") { float(fx, fy, Math.round(base), "#8f97b3"); SFX.play("hit", .6); return 0; }
-  if (e.boss && S.bs === "gimmick") { float(fx, fy, "무적", "#ff6f7d"); SFX.play("clank"); return 0; }
-  if (e.boss && (S.bs === "shield" || T < S.ps + TRANS)) { float(fx, fy, "보호막", "#f3e6c8"); SFX.play("clank"); return 0; }
-  if (e.boss && S.hp <= 0) return 0;
+  const practice = !S || S.st !== "fight";   // lobby dummy: show the number with my buffs, but nothing is recorded
+  if (!practice && e.boss && S.bs === "gimmick") { float(fx, fy, "무적", "#ff6f7d"); SFX.play("clank"); return 0; }
+  if (!practice && e.boss && (S.bs === "shield" || T < S.ps + TRANS)) { float(fx, fy, "보호막", "#f3e6c8"); SFX.play("clank"); return 0; }
+  if (!practice && e.boss && S.hp <= 0) return 0;
   let mult = st.atkMul, tag = "", col = "#f3e6c8";
   if (me.counterT > 0 && !opts.noBuff) { mult *= me.counterMul; me.counterT = 0; tag = "반격 "; col = "#ffd166"; }
   if (me.dashBuffT > 0 && !opts.noBuff) { mult *= 1 + st.dashBuff; me.dashBuffT = 0; tag += "돌격 "; col = "#ffd166"; }
   if (st.closeBonus && edgeDist(e) <= CONFIG.combat.closeRange) mult *= 1 + st.closeBonus;
-  if (me.linkBuff) mult *= 1 + me.linkBuff;   // 성녀 맥동
+  if (me.linkBuff) { mult *= 1 + me.linkBuff; tag += "맥동 "; if (col === "#f3e6c8") col = "#ffd166"; }   // 성녀 맥동
+  if (practice) { float(fx, fy, tag + Math.max(1, Math.round(base * mult)), tag ? col : "#8f97b3"); SFX.play("hit", .6); return 0; }
   if (e.boss) {
     if (S.bs === "rec") mult *= 1 + CONFIG.combat.recDmgBonus + st.recBonus;
     else if (S.bs === "groggy") mult *= 1 + CONFIG.gimmick.groggyBonus + st.recBonus;
