@@ -453,16 +453,16 @@ const CONFIG = {
       skills: [
         { name: "운석 낙하", tier: "공격", cd: 9, dmg: 320, range: 400, radius: 110, delay: .7, recover: .9, note: "커서 위치에 0.7초 뒤 운석 낙하 · 시전 뒤 0.9초 경직" },
         { name: "순간이동", tier: "보조", cd: 10, dmg: 0, range: 320, note: "이동 · 커서 위치로 즉시 순간이동 (최대 320)" },
-        { name: "사중 영창", tier: "결정", cd: 70, dmg: 1500, nova: [130, 150, 170], novaDmg: [150, 180, 210], window: 5, gap: [1.5, 1.5, 2], recover: .55,
+        { name: "사중 영창", tier: "결정", cd: 40, dmg: 1500, nova: [130, 150, 170], novaDmg: [150, 180, 210], window: 15, gap: [10, 10, 10], recover: .55,
           range: 400, finalR: 160, finalDelay: .9, finalRecover: 1.3,
-          note: "R을 4번까지 이어서 사용 · 1~3단: 내 주변 폭발(점점 커짐), 단계마다 짧은 재사용 대기(1.5·1.5·2초) / 4단 종장: 커서 위치에 0.9초 뒤 큰 피해, 이후 70초 대기 · 5초 안에 다음 단계를 쓰지 않으면 끝남" },
+          note: "R을 4번까지 이어서 사용 · 1~3단: 내 주변 폭발(점점 커짐), 단계 사이 재사용 대기 10초 / 4단 종장: 커서 위치에 0.9초 뒤 큰 피해, 이후 40초 대기 · 대기가 끝나고 5초 안에 다음 단계를 쓰지 않으면 끝남" },
       ],
       /* 영창 대사: shown over the head on every cast. q/w/e pick one at random, r follows the step. */
       lines: [
-        ["마나여, 모여라!", "튀어라!", "마력탄!", "꿰뚫어라!"],
+        ["마나여, 모여라!", "터져라!", "마력탄!", "꿰뚫어라!"],
         ["별이여, 떨어져라!", "하늘의 돌이여, 내려와라!", "메테오!"],
         ["공간이여, 접혀라!", "블링크!", "저기로!"],
-        ["첫 번째 문장, 열려라!", "두 번째 문장, 타올라라!", "세 번째 문장, 휘몰아쳐라!", "종장 — 모든 것을 불살라라!"],
+        ["크큭… 봉인된 오른팔이 욱신거린다…!", "칠흑의 문장이여, 심연에서 깨어나라!", "이 힘… 더는 억누를 수 없다—!", "종장. 어둠의 왕이 명한다 — 「종말의 성흔」!!"],
       ] },
   },
   /* g: guardable (yellow). c: co-op gimmick colour. dmg is before the stage multiplier. */
@@ -1696,10 +1696,11 @@ function wizTarget(range) {   // the cursor, pulled in to max range
   const d = Math.min(range, dist(me.x, me.y, mouse.x, mouse.y));
   return { x: clamp(me.x + Math.cos(me.aim) * d, 0, AW), y: clamp(me.y + Math.sin(me.aim) * d, 0, AH) };
 }
+function bubbleLife(txt) { return clamp(1.2 + txt.length * .07, 1.6, 3.5); }   // longer lines stay up longer
 function chant(k, idx) {   // speech bubble over my head, mirrored to teammates
   const L = (CLASSES[myClass].lines || [])[k]; if (!L || !L.length) return;
   const i = idx == null ? Math.floor(Math.random() * L.length) : Math.min(idx, L.length - 1);
-  me.sp = [++me.spN, k, i]; bubbles.set(myPeer, { txt: L[i], t: 0 });
+  me.sp = [++me.spN, k, i]; bubbles.set(myPeer, { txt: L[i], t: 0, life: bubbleLife(L[i]) });
 }
 function recover(t) { me.cast = { t, max: t }; }   // 후딜레이: no moving or casting until it ends
 function wizardQ() {
@@ -2317,11 +2318,11 @@ function updateOthers(dt) {
     if (lastSw !== undefined && pr.sw !== lastSw) { spawnFx(0, d.x, d.y, pr.a, pr.c, pr.k); SFX.play("swing", .22, pr.k); }
     seenSw.set(p.peer, pr.sw);
     if (pr.fx) { const lf = seenFx.get(p.peer); if (lf !== undefined && lf !== pr.fx[0]) { spawnFx(pr.fx[1], pr.fx[2], pr.fx[3], pr.fx[4], pr.c, pr.k, pr.fx[5]); SFX.play(FX_SOUND[pr.fx[1]], .35, pr.k); } seenFx.set(p.peer, pr.fx[0]); } else if (!seenFx.has(p.peer)) seenFx.set(p.peer, 0);   // so their very first effect is shown too
-    if (pr.sp) { const ls = seenSp.get(p.peer); if (ls !== undefined && ls !== pr.sp[0]) { const L = (CLASSES[pr.k].lines || [])[pr.sp[1]]; if (L && L[pr.sp[2]]) bubbles.set(p.peer, { txt: L[pr.sp[2]], t: 0 }); } seenSp.set(p.peer, pr.sp[0]); } else if (!seenSp.has(p.peer)) seenSp.set(p.peer, 0);
+    if (pr.sp) { const ls = seenSp.get(p.peer); if (ls !== undefined && ls !== pr.sp[0]) { const L = (CLASSES[pr.k].lines || [])[pr.sp[1]]; if (L && L[pr.sp[2]]) bubbles.set(p.peer, { txt: L[pr.sp[2]], t: 0, life: bubbleLife(L[pr.sp[2]]) }); } seenSp.set(p.peer, pr.sp[0]); } else if (!seenSp.has(p.peer)) seenSp.set(p.peer, 0);
     const lc = seenCx.get(p.peer); if (lc !== undefined && lc !== pr.cx) { spawnFx(11, d.x, d.y, 0, pr.c, pr.k); float(d.x, d.y - 48, "끊김!", "#ff6f7d"); } seenCx.set(p.peer, pr.cx);
   }
   for (const key of disp.keys()) if (!seen.has(key)) disp.delete(key);
-  for (const [k, b] of bubbles) { b.t += dt; if (b.t > 1.6) bubbles.delete(k); }
+  for (const [k, b] of bubbles) { b.t += dt; if (b.t > b.life) bubbles.delete(k); }
   for (const f of fxList) f.t += dt;
   fxList = fxList.filter(f => f.t < (f.type === 20 ? 1.2 : f.type === 21 ? 1.5 : .5));
   for (const f of floats) { f.t += dt; f.y -= 34 * dt; }
@@ -2693,7 +2694,7 @@ function drawPlayer(x, y, pr, isMe, peer, T) {
   ctx.fillStyle = isMe ? "#f3e6c8" : col; ctx.fillText(name, 0, ny);
   const bb = bubbles.get(isMe ? myPeer : peer);
   if (bb && !pr.dn) {   // 영창 대사
-    const al = clamp(Math.min(bb.t / .08, (1.6 - bb.t) / .3), 0, 1), by = ny - 24 - Math.min(1, bb.t / .12) * 4;
+    const al = clamp(Math.min(bb.t / .08, (bb.life - bb.t) / .3), 0, 1), by = ny - 24 - Math.min(1, bb.t / .12) * 4;
     ctx.globalAlpha = al; ctx.font = '700 13px "Gowun Batang", serif';
     const bw = ctx.measureText(bb.txt).width + 16;
     ctx.fillStyle = "rgba(243,236,255,.95)"; ctx.strokeStyle = "#8b7fd6"; ctx.lineWidth = 1.5;
