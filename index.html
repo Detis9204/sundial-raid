@@ -637,6 +637,14 @@ const CONFIG = {
     { id: "lg_phoenix", g: "鳳", name: "불사조의 심장", rar: 3, v: [2, .6, 500], desc: v => `스테이지마다 1회, 쓰러지면 ${v[0]}초 뒤 체력 ${pc(v[1])}로 되살아나며 주변에 피해 ${v[2]}의 화염 폭발`, fx: (s, v) => { s.phoenix = v; } },
     { id: "lg_berserk", g: "狂", name: "광전사의 피",   rar: 3, v: 1.0, desc: v => `잃은 체력만큼 공격력이 올라 체력 30% 이하에서 최대 +${pc(v)}`, fx: (s, v) => { s.berserk = v; } },
     { id: "lg_chrono",  g: "刻", name: "시간을 베는 자", rar: 3, v: [.5, .35], desc: v => `회피 재사용 대기시간 -${pc(v[0])}, 회피하는 동안 ${v[1]}초 무적`, fx: (s, v) => { s.dashCdMul *= 1 - v[0]; s.dashIfr = Math.max(s.dashIfr, v[1]); } },
+    { id: "kn_legend", g: "劍", name: "검성의 경지",    rar: 3, cls: "knight",    v: [3, 2, 450], desc: v => `베기(Q) ${v[0]}번째마다 앞으로 검기가 날아가 일직선(${v[2]})의 적 모두에게 베기 피해의 ${v[1]}배`, fx: (s, v) => { s.knWave = v; } },
+    { id: "ro_legend", g: "影", name: "그림자 군주",    rar: 3, cls: "rogue",     v: .4, desc: v => `모든 공격이 언제나 백어택, 백어택 피해 배율 +${v} (1.4배 → ${(1.4 + v).toFixed(1)}배)`, fx: (s, v) => { s.roAlwaysBack = true; s.backAdd += v; } },
+    { id: "pa_legend", g: "盾", name: "불멸의 성벽",    rar: 3, cls: "paladin",   v: 1, desc: v => `밀치기(D)를 쓰면 범위 안 동료 모두와 나에게 결계(피해 1회 무효)`, fx: (s, v) => { s.pushWard = v; } },
+    { id: "gn_legend", g: "彈", name: "탄환 폭풍",      rar: 3, cls: "gunner",    v: [3, 12], desc: v => `관통탄(W)이 ${v[0]}발로 갈라져 부채꼴(${v[1]}° 간격)로 발사`, fx: (s, v) => { s.gnFan = v; } },
+    { id: "gl_legend", g: "鬪", name: "투신 강림",      rar: 3, cls: "gladiator", v: [1.5, .5], desc: v => `차지 기술을 끝까지 모아 쓰면 ${v[0]}초 무적, 그 기술 재사용 대기시간 ${pc(v[1])} 즉시 감소`, fx: (s, v) => { s.glGod = v; } },
+    { id: "ac_legend", g: "札", name: "죽음의 패",      rar: 3, cls: "acrobat",   v: [3, 10], desc: v => `카드 투척과 난사가 한 번에 ${v[0]}장씩 부채꼴(${v[1]}° 간격)로 날아감`, fx: (s, v) => { s.acFan = v; } },
+    { id: "sa_legend", g: "唱", name: "천상의 합창",    rar: 3, cls: "saint",     v: [5, 4], desc: v => `찬가 지속 +${v[0]}초, 찬가를 받은 아군은 매초 체력 ${v[1]} 회복`, fx: (s, v) => { s.hsTime += v[0]; s.hsRegen += v[1]; } },
+    { id: "wz_legend", g: "禁", name: "금지된 영창",    rar: 3, cls: "wizard",    v: [.2, 1], desc: v => `사중 영창 단계 사이 대기 10초 → ${10 * v[0]}초, 종장 피해 +${pc(v[1])}`, fx: (s, v) => { s.wzGapMul *= v[0]; s.wzFinMul *= 1 + v[1]; } },
     { id: "gn_snipe", g: "狙", name: "명사수",       rar: 2, cls: "gunner",  v: [.5, .4], desc: v => `정밀 저격 최대 충전 피해 +${pc(v[0])}, 최대 충전으로 쏘면 재사용 대기시간 ${pc(v[1])} 즉시 감소`, fx: (s, v) => { s.snipeMax += v[0]; s.snipeRefund = v[1]; } },
   ],
 };
@@ -906,7 +914,7 @@ function sanitize(p) {
     tm: (Array.isArray(p.tm) && p.tm.length >= 4 && typeof p.tm[1] === "string") ? [num(p.tm[0], 0, 1e9, 0), p.tm[1].slice(0, 64), num(p.tm[2], 0, AW, 0), num(p.tm[3], 0, AH, 0), num(p.tm[4], 0, 200, 0)] : null,
     ha: p.ha ? 1 : 0,
     sp: (Array.isArray(p.sp) && p.sp.length >= 3) ? [num(p.sp[0], 0, 1e9, 0), Math.round(num(p.sp[1], 0, 3, 0)), Math.round(num(p.sp[2], 0, 9, 0))] : null,
-    hs: (Array.isArray(p.hs) && p.hs.length >= 4) ? [num(p.hs[0], 0, 1e9, 0), num(p.hs[1], 0, 30, 0), num(p.hs[2], 0, 1, 0), num(p.hs[3], 0, 2, 0)] : null,
+    hs: (Array.isArray(p.hs) && p.hs.length >= 4) ? [num(p.hs[0], 0, 1e9, 0), num(p.hs[1], 0, 30, 0), num(p.hs[2], 0, 1, 0), num(p.hs[3], 0, 2, 0), num(p.hs[4], 0, 50, 0)] : null,
 
     ch: (Array.isArray(p.ch) && p.ch.length >= 3) ? [Math.round(num(p.ch[0], 0, 3, 0)), num(p.ch[1], 0, 3, 0), Math.round(num(p.ch[2], 0, 3, 0))] : null,
   };
@@ -1554,7 +1562,7 @@ function castAttack(kind, T, alive) {
    ===================================================================== */
 const me = { x: 640, y: 600, hp: 100, mh: 100, dn: 0, downT: 0, ifr: 0, dashT: 0, ddx: 0, ddy: 0, dm: 0, ad: {}, run: -1, game: -1,
   a: -Math.PI / 2, aim: 0, order: null, eng: null, cd: [0, 0, 0], atkCd: 0, dashCd: 0, guardT: 0, guardCd: 0, counterT: 0, counterMul: 2,
-  wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, poisonAcc: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0, poolT: 0,
+  wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, poisonAcc: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0, waveN: 0, hsRegenAcc: 0, hasteRegen: 0, poolT: 0,
   cast: null, move: null, multi: null, ch: null, chFlash: 0, sw: 0, cx: 0, fx: null, fxN: 0, wd: null, hl: null, evId: 0,
   rv: null, rvT: null, rvP: 0, hitT: 0, ag: [], pk: -1, offer: null, offerKey: -1, st: null, shots: [], shotN: 0, pushCd: 0, kb: null, pu: null,
   tp: null, tl: null, tm: null, hs: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, hasteSpd: 0, hasteAmp: 0, pend: [], rs: null, sp: null, spN: 0 };
@@ -1569,7 +1577,7 @@ function baseStats() {
     counterAdd: 0, counterTimeAdd: 0, dashBuff: 0, dashBuffTime: 0, lifesteal: 0, closeBonus: 0, reviveSpd: 1, reviveHp: 0,
     parryIframe: 0, parryReset: false, perfectCounter: 0, undying: 0, maxChargeBonus: 0,
     arcAdd: 0, spinRange: 1, spinMul: 1, quakeEcho: 0, poisonTime: 0, poisonDps: 0, shadowBack: 0, execLow: 0, execMul: 0,
-    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0, glMinAdd: 0, glMaxAdd: 0, glStance: 0, acVolley: 0, acGambleMul: 1, acGambleIfr: 0, pushHealMul: 1, pushCdMul: 1, pushRadiusMul: 1, pushDmgMul: 1, pushForceMul: 1, dashDistMul: 1, tlDur: 0, tlRange: 0, tlMul: 1, hsTime: 0, hsAdd: 0, wzQRad: 1, wzRec: 1, wzMetMul: 1, wzMetRad: 1, wzFinMul: 1, wzNovaRad: 1, thunderP: 0, thunderMul: 0, phoenix: null, berserk: 0, dashIfr: 0 };
+    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0, glMinAdd: 0, glMaxAdd: 0, glStance: 0, acVolley: 0, acGambleMul: 1, acGambleIfr: 0, pushHealMul: 1, pushCdMul: 1, pushRadiusMul: 1, pushDmgMul: 1, pushForceMul: 1, dashDistMul: 1, tlDur: 0, tlRange: 0, tlMul: 1, hsTime: 0, hsAdd: 0, wzQRad: 1, wzRec: 1, wzMetMul: 1, wzMetRad: 1, wzFinMul: 1, wzNovaRad: 1, thunderP: 0, thunderMul: 0, phoenix: null, berserk: 0, dashIfr: 0, knWave: null, roAlwaysBack: false, backAdd: 0, pushWard: 0, gnFan: null, glGod: null, acFan: null, hsRegen: 0, wzGapMul: 1 };
 }
 function recalcStats() {
   const s = baseStats();
@@ -1656,7 +1664,7 @@ function dealCore(e, base, opts) {
   if (e.boss) {
     if (S.bs === "rec") mult *= 1 + CONFIG.combat.recDmgBonus + st.recBonus;
     else if (S.bs === "groggy") mult *= 1 + CONFIG.gimmick.groggyBonus + st.recBonus;
-    if (myClass === "rogue" && (me.shadowT > 0 || angDiff(Math.atan2(me.y - e.y, me.x - e.x), S.bf) > CONFIG.combat.backAngle)) { mult *= CONFIG.combat.backAttackMul; tag += "백어택 "; if (col === "#f3e6c8") col = "#b9a0ff"; }
+    if (myClass === "rogue" && (me.shadowT > 0 || st.roAlwaysBack || angDiff(Math.atan2(me.y - e.y, me.x - e.x), S.bf) > CONFIG.combat.backAngle)) { mult *= CONFIG.combat.backAttackMul + st.backAdd; tag += "백어택 "; if (col === "#f3e6c8") col = "#b9a0ff"; }
     const mc = S.boss === "mekan" ? (S.adds || []).filter(a => a.k === "minion").length : 0;
     if (mc) { mult *= Math.max(CONFIG.combat.minionShieldMin, 1 - CONFIG.combat.minionShieldPerUnit * mc); tag += "태엽 보호막 "; col = "#8f97b3"; }
   }
@@ -1675,6 +1683,15 @@ function onLine(e, x, y, a, len, w) {
   return along >= -e.r && along <= len + e.r && Math.abs(dx * sn - dy * c) <= w + e.r;
 }
 function fireShot(baseDmg) {
+  const st = me.st;
+  if (st.acFan) {   // 죽음의 패
+    const n = st.acFan[0], step = st.acFan[1] * DEG, a0 = me.aim;
+    for (let k = 0; k < n; k++) { me.aim = a0 + (k - (n - 1) / 2) * step; fireOne(baseDmg); }
+    me.aim = a0; return;
+  }
+  fireOne(baseDmg);
+}
+function fireOne(baseDmg) {
   const st = me.st, C = CLASSES[myClass];
   let dmg = baseDmg || C.atk.dmg; me.shotN++;
   const head = st.headEvery && me.shotN % st.headEvery === 0;
@@ -1722,10 +1739,10 @@ function updateTether(dt) {
   if (t.k === 2) { t.acc += dt; while (t.acc >= 1) { t.acc -= 1; deal(q.e, A.enemyDps * st.tlMul, { noBuff: true }); } }
 }
 /* 찬가: everyone who hears it moves faster and recovers cooldowns faster */
-function applyHaste(dur, spd, amp) {
+function applyHaste(dur, spd, amp, regen) {
   if (me.dn || !(dur > 0)) return;
   if (!(me.hasteT > 0)) float(me.x, me.y - 46, "찬가 · 이속 +" + pc(spd), "#ffd166", true);
-  me.hasteT = Math.max(me.hasteT, dur); me.hasteSpd = spd; me.hasteAmp = amp;
+  me.hasteT = Math.max(me.hasteT, dur); me.hasteSpd = spd; me.hasteAmp = amp; me.hasteRegen = regen || 0;
 }
 /* ---------- 마법사 ---------- */
 function wizTarget(range) {   // the cursor, pulled in to max range
@@ -1765,6 +1782,10 @@ function castMain() {
   if (A.ranged) { fireShot(); return; }
   const half = (A.arc + st.arcAdd) / 2 * DEG;
   for (const e of enemies()) if (inArc(e, A.range, half, me.aim)) deal(e, A.dmg, { basic: true });
+  if (st.knWave && ++me.waveN % st.knWave[0] === 0) {   // 검성의 경지
+    const L = st.knWave[2]; emitFx(12, L); shake = .12;
+    hitAll(e => onLine(e, me.x, me.y, me.aim, L, 26), A.dmg * st.knWave[1], { tag: "검기 " });
+  }
 }
 /* knock back everyone nearby, allies included; every body hit heals the pusher */
 function doPush() {
@@ -1775,6 +1796,11 @@ function doPush() {
   const R = P.radius * st.pushRadiusMul;
   emitFx(15, st.pushRadiusMul);
   me.pu = [++me.evId, Math.round(me.x), Math.round(me.y), Math.round(R), r3(st.pushForceMul)];
+  if (st.pushWard) {   // 불멸의 성벽: everyone the push reaches gets a ward
+    const W = CLASSES.paladin.skills[1];
+    me.wd = [++me.evId, Math.round(me.x), Math.round(me.y), r3(clamp((R + CONFIG.player.radius) / W.wardRange, .2, 3)), st.wardHeal];
+    me.wardUntil = nowS() + W.wardTime; float(me.x, me.y - 52, "불멸의 성벽", "#9fd8ff", true); spawnFx(9, me.x, me.y, 0, myColor, myClass, R / 340);
+  }
   let hits = 0;
   for (const e of enemies()) if (edgeDist(e) <= R) { float(e.x, e.y - e.r - 12, "밀침", "#9fd8ff"); hits++; }
   const S = curS;
@@ -1974,8 +2000,8 @@ function useSkill(i) {
       if (me.hp < me.mh) { me.hp = Math.min(me.mh, me.hp + sk.heal); float(me.x, me.y - 44, "+" + sk.heal, "#7fd3a3"); }
     } else {   // 찬가: the whole team
       const dur = sk.dur + st.hsTime, spd = sk.spd + st.hsAdd, amp = sk.amp + st.hsAdd;
-      me.hs = [++me.evId, dur, r3(spd), r3(amp)];
-      emitFx(18, 220); applyHaste(dur, spd, amp);
+      me.hs = [++me.evId, dur, r3(spd), r3(amp), st.hsRegen];
+      emitFx(18, 220); applyHaste(dur, spd, amp, st.hsRegen);
     }
   } else if (myClass === "wizard") {
     if (i === 0) {   // 운석 낙하
@@ -1993,7 +2019,7 @@ function useSkill(i) {
       rs.step++; rs.left = sk.window; chant(3, rs.step - 1);
       if (rs.step < 4) {
         const r = sk.nova[rs.step - 1] * st.wzNovaRad;
-        recover(sk.recover * st.wzRec); me.cd[2] = sk.gap[rs.step - 1];
+        recover(sk.recover * st.wzRec); me.cd[2] = sk.gap[rs.step - 1] * st.wzGapMul;
         emitFx(22, r); shake = .12;
         hitAll(e => edgeDist(e) <= r, sk.novaDmg[rs.step - 1]);
         float(me.x, me.y - 50, "영창 " + rs.step + "/4", "#c9b8ff", true);
@@ -2012,7 +2038,11 @@ function useSkill(i) {
       startMove(.18, me.x - ux * sk.back, me.y - uy * sk.back);
     } else if (i === 0) {
       emitFx(12, sk.len); shake = .1;
-      hitAll(e => onLine(e, me.x, me.y, a, sk.len, sk.w), sk.dmg);
+      if (st.gnFan) {   // 탄환 폭풍
+        const n = st.gnFan[0], step = st.gnFan[1] * DEG;
+        for (let k = 0; k < n; k++) { const an = a + (k - (n - 1) / 2) * step; if (k !== (n - 1) / 2) spawnFx(12, me.x, me.y, an, myColor, myClass, sk.len); hitAll(e => onLine(e, me.x, me.y, an, sk.len, sk.w), sk.dmg); }
+        shake = .2;
+      } else hitAll(e => onLine(e, me.x, me.y, a, sk.len, sk.w), sk.dmg);
     }
   }
 }
@@ -2025,6 +2055,10 @@ function releaseChannel() {
   setCd(ch.i, chCd(ch.i));
   let mul = C.chargeScaling ? chargeMul(sk, ch.t) : CONFIG.channel.stageMul[s] * (s === 3 ? 1 + st.maxChargeBonus : 1);
   const a = me.aim; me.a = a;
+  if (st.glGod && s === 3) {   // 투신 강림
+    me.ifr = Math.max(me.ifr, st.glGod[0]); setCd(ch.i, getCd(ch.i) * (1 - st.glGod[1]));
+    float(me.x, me.y - 64, "투신 강림!", "#ffb347", true); shake = Math.max(shake, .3);
+  }
   if (myClass === "knight") {
     const range = sk.range[s - 1];
     emitFx(4, range, .55 + s * .2); shake = .15 + s * .05;
@@ -2348,11 +2382,12 @@ function updateMe(dt, T, S) {
     if (fresh(seenHl, pr.hl) && me.hp < me.mh && dist(me.x, me.y, pr.hl[1], pr.hl[2]) <= CLASSES.paladin.skills[2].healRange) { me.hp = Math.min(me.mh, me.hp + (pr.hl[4] || 25)); float(me.x, me.y - 30, "+" + (pr.hl[4] || 25), "#7fd3a3"); SFX.play("heal"); }
     if (fresh(seenPu, pr.pu) && dist(me.x, me.y, pr.pu[1], pr.pu[2]) <= pr.pu[3] + CONFIG.player.radius) knockMe(pr.pu[1], pr.pu[2], CONFIG.push.speed * (pr.pu[4] || 1));
     if (fresh(seenTm, pr.tm) && pr.tm[1] === myPeer) { me.order = null; me.move = null; me.kb = null; if (me.ch) interruptChannel("부름"); startMove(.3, pr.tm[2], pr.tm[3]); if (pr.tm[4] && me.hp < me.mh) { me.hp = Math.min(me.mh, me.hp + pr.tm[4]); float(me.x, me.y - 30, "+" + pr.tm[4], "#7fd3a3"); } float(me.x, me.y - 46, "부름", "#7fd3a3"); SFX.play("heal", .6); }
-    if (fresh(seenHs, pr.hs) && !(S && S.st === "fight" && pr.r !== S.run)) applyHaste(pr.hs[1], pr.hs[2], pr.hs[3]);
+    if (fresh(seenHs, pr.hs) && !(S && S.st === "fight" && pr.r !== S.run)) applyHaste(pr.hs[1], pr.hs[2], pr.hs[3], pr.hs[4]);
     if (pr.tl && pr.tl[0] === 1 && pr.tl[1] === myPeer && !pr.dn) { hps += pr.tl[4]; if (pr.tl[2] > 0) buff = Math.max(buff, pr.tl[3]); }
   }
   if (buff > 0 && !me.linkBuff) float(me.x, me.y - 44, "공격력 +" + pc(buff), "#ffd166", true);
   me.linkBuff = buff; me.linkHps = hps;
+  if (me.hasteT > 0 && me.hasteRegen > 0) { me.hsRegenAcc += dt; while (me.hsRegenAcc >= 1) { me.hsRegenAcc -= 1; if (me.hp < me.mh) { const h = Math.min(me.mh - me.hp, me.hasteRegen); me.hp += h; float(me.x, me.y - 30, "+" + Math.round(h), "#ffd166"); } } } else me.hsRegenAcc = 0;
   if (hps > 0) { me.linkAcc += dt; while (me.linkAcc >= 1) { me.linkAcc -= 1; if (me.hp < me.mh) { const h = Math.min(me.mh - me.hp, hps); me.hp += h; float(me.x, me.y - 30, "+" + Math.round(h * 10) / 10, "#7fd3a3"); } } }
   else me.linkAcc = 0;
 }
@@ -2993,7 +3028,7 @@ function drawHUD(T, S) {
     const sk = C.skills[i];
     const state = me.ch && me.ch.i === i ? { ch: true, stage: me.ch.stage, p: clamp(me.ch.t / sk.channel[2], 0, 1) } : null;
     const chain = myClass === "wizard" && i === 2 && me.rs;
-    drawSlot(sx + 84 + i * 84, sY, "WER"[i] + (sk.channel ? " ⟳" : ""), chain ? (me.rs.step === 3 ? "종장" : "영창 " + (me.rs.step + 1)) : sk.name, chain ? (me.rs.step + 1) + "/4" : sk.tier, me.cd[i], chain ? sk.gap[me.rs.step - 1] : skillCd(i), chain && me.cd[i] <= 0 ? { active: true } : state);
+    drawSlot(sx + 84 + i * 84, sY, "WER"[i] + (sk.channel ? " ⟳" : ""), chain ? (me.rs.step === 3 ? "종장" : "영창 " + (me.rs.step + 1)) : sk.name, chain ? (me.rs.step + 1) + "/4" : sk.tier, me.cd[i], chain ? sk.gap[me.rs.step - 1] * me.st.wzGapMul : skillCd(i), chain && me.cd[i] <= 0 ? { active: true } : state);
   }
   drawSlot(sx + 350, sY, "SPC", "회피", "", me.dashCd, CONFIG.dash.cd * me.st.dashCdMul, null);
   drawSlot(sx + 434, sY, "D", "밀치기", "", me.pushCd, CONFIG.push.cd * me.st.pushCdMul, null);
