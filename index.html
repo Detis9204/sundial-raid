@@ -108,6 +108,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #myAug{position:absolute;right:12px;bottom:84px;max-width:260px;display:flex;flex-direction:column;align-items:flex-end;gap:5px;pointer-events:none}
 #myAug .lbl{background:rgba(13,18,34,.8);padding:2px 6px;border-radius:3px}
 #myAug .icons{justify-content:flex-end}
+#toast{position:fixed;z-index:30;left:50%;top:70px;transform:translateX(-50%);padding:8px 14px;font-size:13px;pointer-events:none}
 #tip{position:fixed;z-index:20;max-width:250px;padding:10px 12px;font-size:12.5px;line-height:1.5;pointer-events:none;display:flex;flex-direction:column;gap:3px}
 #tip b{font-family:var(--f-ko);font-size:15px}
 #tip .rar{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em}
@@ -289,6 +290,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </div>
 
   <div id="tip" class="panel" hidden></div>
+  <div id="toast" class="panel" hidden></div>
 </div>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -835,6 +837,7 @@ function joinRoom(code) {
 function hostLost() { leaveGame(); setStatus("방장과 연결이 끊겼습니다. 방장이 방을 다시 열면 새 코드로 들어오세요.", true); }
 
 function enterGame() {
+  armBackGuard();
   $("#menuWrap").hidden = true;
   $("#bar").hidden = false; $("#party").hidden = false; $("#myAug").hidden = false;
   $("#barLabel").textContent = net.mode === "solo" ? "혼자 연습" : (net.mode === "host" ? "방장" : "방");
@@ -1816,6 +1819,20 @@ cv.addEventListener("pointerdown", e => {
 addEventListener("pointermove", e => { [mouse.x, mouse.y] = toArena(e.clientX, e.clientY); });
 addEventListener("pointerup", e => { if (e.button === 0) mouse.down = false; });
 cv.addEventListener("contextmenu", e => e.preventDefault());
+/* ---- keep the room alive: no browser menu / back navigation while playing ---- */
+document.addEventListener("contextmenu", e => { if (inGame()) e.preventDefault(); });
+// a right-click on the HUD panels still counts as a move order on the floor beneath
+for (const id of ["#bar", "#party", "#myAug", "#lobby"]) $(id).addEventListener("pointerdown", e => {
+  if (e.button !== 2 || !inGame()) return;
+  e.preventDefault(); const [x, y] = toArena(e.clientX, e.clientY); mouse.x = x; mouse.y = y; issueRightClick(x, y);
+});
+// mouse side buttons (back / forward)
+for (const ev of ["mousedown", "mouseup", "pointerup"]) addEventListener(ev, e => { if (inGame() && (e.button === 3 || e.button === 4)) e.preventDefault(); }, true);
+let toastTimer = 0;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2600); }
+function armBackGuard() { try { history.pushState({ sundialRaid: 1 }, ""); } catch (e) {} }
+addEventListener("popstate", () => { if (inGame()) { armBackGuard(); toast("방을 나가려면 오른쪽 위 '나가기'를 누르세요"); } });
+addEventListener("beforeunload", e => { if (net.mode === "host" || net.mode === "client") { e.preventDefault(); e.returnValue = ""; } });
 function resize() {
   const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
   cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr));
