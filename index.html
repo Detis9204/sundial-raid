@@ -403,8 +403,8 @@ const CONFIG = {
     saint: {
       name: "성녀", role: "보조 · 연결형", desc: "빛의 끈으로 아군을 치유하고 적을 태운다. 끈으로 이어진 대상에게 W·E 효과가 더해지고, R로 팀 전체를 가속한다.",
       hp: 85,
-      atk: { name: "빛의 끈", dmg: 0, cd: 1.2, range: 280, arc: 0, ranged: true, tether: true, speed: 900, dur: 10, breakDist: 300, allyHps: 2, enemyDps: 5,
-             note: "처음 맞은 아군·적과 10초 연결 · 아군 초당 체력 2 회복 / 적 초당 5 피해 · 300 넘게 멀어지면 끊김" },
+      atk: { name: "빛의 끈", dmg: 0, cd: 1.2, range: 360, arc: 0, ranged: true, tether: true, speed: 1000, hitR: 28, dur: 10, breakDist: 400, allyHps: 3, enemyDps: 5,
+             note: "처음 맞은 아군·적과 10초 연결 · 아군 초당 체력 3 회복 / 적 초당 5 피해 · 400 넘게 멀어지면 끊김" },
       skills: [
         { name: "맥동", tier: "강화", cd: 9, dmg: 90, heal: 12, buff: .25, buffTime: 6, note: "끈 대상에게 추가 효과 · 아군: 6초간 공격력 +25% / 적: 피해 90, 내 체력 12 회복" },
         { name: "부름", tier: "보조", cd: 12, dmg: 0, heal: 15, note: "끈으로 이어진 아군을 내 곁으로 끌어오고, 나와 그 아군 모두 체력 15 회복 (아군과 연결돼 있어야 사용 가능)" },
@@ -1623,9 +1623,9 @@ function updateTether(dt) {
     sh.x += Math.cos(sh.a) * step; sh.y += Math.sin(sh.a) * step; sh.left -= step;
     for (const p of others) {
       const pr = p.presence; if (pr.dn || (S && S.st === "fight" && pr.r !== S.run)) continue;
-      const d = disp.get(p.peer) || pr; if (dist(sh.x, sh.y, d.x, d.y - 8) <= 20) { hit = { k: 1, id: p.peer, x: d.x, y: d.y }; break; }
+      const d = disp.get(p.peer) || pr; if (dist(sh.x, sh.y, d.x, d.y - 8) <= A.hitR) { hit = { k: 1, id: p.peer, x: d.x, y: d.y }; break; }
     }
-    if (!hit) for (const e of enemies()) if (dist(sh.x, sh.y, e.x, e.y) <= e.r + 6) { hit = { k: 2, id: String(e.id), x: e.x, y: e.y - e.r }; break; }
+    if (!hit) for (const e of enemies()) if (dist(sh.x, sh.y, e.x, e.y) <= e.r + A.hitR - 14) { hit = { k: 2, id: String(e.id), x: e.x, y: e.y - e.r }; break; }
     if (hit) {
       me.tp = null; me.tl = { k: hit.k, id: hit.id, left: A.dur + st.tlDur, buffT: 0, buffMul: 0, acc: 0 };
       float(hit.x, hit.y - 30, "연결", hit.k === 1 ? "#7fd3a3" : "#ffb347"); SFX.play("heal", .35);
