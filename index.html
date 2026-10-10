@@ -408,7 +408,7 @@ const CONFIG = {
       skills: [
         { name: "맥동", tier: "강화", cd: 9, dmg: 90, heal: 12, buff: .25, buffTime: 6, note: "끈 대상에게 추가 효과 · 아군: 6초간 공격력 +25% / 적: 피해 90, 내 체력 12 회복" },
         { name: "부름", tier: "보조", cd: 12, dmg: 0, heal: 15, note: "끈으로 이어진 아군을 내 곁으로 끌어오고, 나와 그 아군 모두 체력 15 회복 (아군과 연결돼 있어야 사용 가능)" },
-        { name: "찬가", tier: "결정", cd: 75, dmg: 0, dur: 10, spd: .5, cdr: .5, note: "10초간 아군 전체 이동 속도 +50%, 재사용 대기시간 50% 감소" },
+        { name: "찬가", tier: "결정", cd: 75, dmg: 0, dur: 10, spd: .5, dmg: 0, amp: .3, note: "10초간 아군 전체 이동 속도 +50%, 주는 피해 +30%" },
       ] },
   },
   /* g: guardable (yellow). c: co-op gimmick colour. dmg is before the stage multiplier. */
@@ -553,7 +553,7 @@ const CONFIG = {
     { id: "pa_wrath", g: "罰", name: "천벌",         rar: 2, cls: "paladin", v: [2, .4], desc: v => `심판의 망치 회복량 ${v[0]}배, 착지 범위 +${pc(v[1])}`, fx: (s, v) => { s.hammerHealMul *= v[0]; s.hammerRadiusMul *= 1 + v[1]; } },
     { id: "sa_bond",  g: "絆", name: "질긴 인연",    rar: 0, cls: "saint", v: [5, 100], desc: v => `빛의 끈 지속 +${v[0]}초, 끊어지는 거리 +${v[1]}`, fx: (s, v) => { s.tlDur += v[0]; s.tlRange += v[1]; } },
     { id: "sa_glow",  g: "輝", name: "눈부신 끈",    rar: 1, cls: "saint", v: 1, desc: v => `빛의 끈 회복량·피해 +${pc(v)}`, fx: (s, v) => { s.tlMul += v; } },
-    { id: "sa_hymn",  g: "頌", name: "울려 퍼지는 찬가", rar: 2, cls: "saint", v: [4, .1], desc: v => `찬가 지속 +${v[0]}초, 이동 속도·재사용 대기시간 감소 효과 +${pc(v[1])}`, fx: (s, v) => { s.hsTime += v[0]; s.hsAdd += v[1]; } },
+    { id: "sa_hymn",  g: "頌", name: "울려 퍼지는 찬가", rar: 2, cls: "saint", v: [4, .1], desc: v => `찬가 지속 +${v[0]}초, 이동 속도·피해 증가 효과 +${pc(v[1])}`, fx: (s, v) => { s.hsTime += v[0]; s.hsAdd += v[1]; } },
     { id: "gn_snipe", g: "狙", name: "명사수",       rar: 2, cls: "gunner",  v: [.5, .4], desc: v => `정밀 저격 최대 충전 피해 +${pc(v[0])}, 최대 충전으로 쏘면 재사용 대기시간 ${pc(v[1])} 돌려받음`, fx: (s, v) => { s.snipeMax += v[0]; s.snipeRefund = v[1]; } },
   ],
 };
@@ -819,7 +819,7 @@ function sanitize(p) {
     pk: Math.round(num(p.pk, -1, 1e9, -1)), ad,
     tl: (Array.isArray(p.tl) && p.tl.length >= 2 && typeof p.tl[1] === "string") ? [Math.round(num(p.tl[0], 1, 2, 1)), p.tl[1].slice(0, 64), num(p.tl[2], 0, 60, 0), num(p.tl[3], 0, 3, 0), num(p.tl[4], 0, 50, 0)] : null,
     tm: (Array.isArray(p.tm) && p.tm.length >= 4 && typeof p.tm[1] === "string") ? [num(p.tm[0], 0, 1e9, 0), p.tm[1].slice(0, 64), num(p.tm[2], 0, AW, 0), num(p.tm[3], 0, AH, 0), num(p.tm[4], 0, 200, 0)] : null,
-    hs: (Array.isArray(p.hs) && p.hs.length >= 4) ? [num(p.hs[0], 0, 1e9, 0), num(p.hs[1], 0, 30, 0), num(p.hs[2], 0, 1, 0), num(p.hs[3], 0, .8, 0)] : null,
+    hs: (Array.isArray(p.hs) && p.hs.length >= 4) ? [num(p.hs[0], 0, 1e9, 0), num(p.hs[1], 0, 30, 0), num(p.hs[2], 0, 1, 0), num(p.hs[3], 0, 2, 0)] : null,
 
     ch: (Array.isArray(p.ch) && p.ch.length >= 3) ? [Math.round(num(p.ch[0], 0, 3, 0)), num(p.ch[1], 0, 3, 0), Math.round(num(p.ch[2], 0, 3, 0))] : null,
   };
@@ -1470,7 +1470,7 @@ const me = { x: 640, y: 600, hp: 100, mh: 100, dn: 0, downT: 0, ifr: 0, dashT: 0
   wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, poisonAcc: 0, regenT: 0, undyingUsed: false, poolT: 0,
   cast: null, move: null, multi: null, ch: null, chFlash: 0, sw: 0, cx: 0, fx: null, fxN: 0, wd: null, hl: null, evId: 0,
   rv: null, rvT: null, rvP: 0, hitT: 0, ag: [], pk: -1, offer: null, offerKey: -1, st: null, shots: [], shotN: 0, pushCd: 0, kb: null, pu: null,
-  tp: null, tl: null, tm: null, hs: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, hasteSpd: 0, hasteCdr: 0 };
+  tp: null, tl: null, tm: null, hs: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, hasteSpd: 0, hasteAmp: 0 };
 let resolved = new Set(), fxList = [], floats = [], markers = [], disp = new Map(), addDisp = new Map();
 const seenSw = new Map(), seenFx = new Map(), seenWd = new Map(), seenHl = new Map(), seenCx = new Map(), seenPu = new Map(), seenTm = new Map(), seenHs = new Map();
 let shake = 0, bossFlash = 0;
@@ -1551,6 +1551,7 @@ function deal(e, base, opts) {
   if (me.counterT > 0 && !opts.noBuff) { mult *= me.counterMul; me.counterT = 0; tag = "반격 "; col = "#ffd166"; }
   if (me.dashBuffT > 0 && !opts.noBuff) { mult *= 1 + st.dashBuff; me.dashBuffT = 0; tag += "돌격 "; col = "#ffd166"; }
   if (st.closeBonus && edgeDist(e) <= CONFIG.combat.closeRange) mult *= 1 + st.closeBonus;
+  if (me.hasteT > 0 && me.hasteAmp) { mult *= 1 + me.hasteAmp; tag += "찬가 "; if (col === "#f3e6c8") col = "#ffd166"; }
   if (me.linkBuff) { mult *= 1 + me.linkBuff; tag += "맥동 "; if (col === "#f3e6c8") col = "#ffd166"; }   // 성녀 맥동
   if (practice) { float(fx, fy, tag + Math.max(1, Math.round(base * mult)), tag ? col : "#8f97b3"); SFX.play("hit", .6); return 0; }
   if (e.boss) {
@@ -1622,10 +1623,10 @@ function updateTether(dt) {
   if (t.k === 2) { t.acc += dt; while (t.acc >= 1) { t.acc -= 1; deal(q.e, A.enemyDps * st.tlMul, { noBuff: true }); } }
 }
 /* 찬가: everyone who hears it moves faster and recovers cooldowns faster */
-function applyHaste(dur, spd, cdr) {
+function applyHaste(dur, spd, amp) {
   if (me.dn || !(dur > 0)) return;
   if (!(me.hasteT > 0)) float(me.x, me.y - 46, "찬가 · 이속 +" + pc(spd), "#ffd166", true);
-  me.hasteT = Math.max(me.hasteT, dur); me.hasteSpd = spd; me.hasteCdr = cdr;
+  me.hasteT = Math.max(me.hasteT, dur); me.hasteSpd = spd; me.hasteAmp = amp;
 }
 /* the main skill replaces the basic attack: short cooldown, aimed at the cursor */
 function castMain() {
@@ -1843,9 +1844,9 @@ function useSkill(i) {
       emitFx(18, 70);
       if (me.hp < me.mh) { me.hp = Math.min(me.mh, me.hp + sk.heal); float(me.x, me.y - 44, "+" + sk.heal, "#7fd3a3"); }
     } else {   // 찬가: the whole team
-      const dur = sk.dur + st.hsTime, spd = sk.spd + st.hsAdd, cdr = sk.cdr + st.hsAdd;
-      me.hs = [++me.evId, dur, r3(spd), r3(cdr)];
-      emitFx(18, 220); applyHaste(dur, spd, cdr);
+      const dur = sk.dur + st.hsTime, spd = sk.spd + st.hsAdd, amp = sk.amp + st.hsAdd;
+      me.hs = [++me.evId, dur, r3(spd), r3(amp)];
+      emitFx(18, 220); applyHaste(dur, spd, amp);
     }
   } else if (myClass === "gunner") {
     if (i === 1) {
@@ -2072,7 +2073,7 @@ function updateMe(dt, T, S) {
   const C = CLASSES[myClass], st = me.st, fighting = S && S.st === "fight";
   me.aim = Math.atan2(mouse.y - me.y, mouse.x - me.x);
   me.hasteT = Math.max(0, me.hasteT - dt);
-  const cdRate = me.hasteT > 0 ? 1 / (1 - me.hasteCdr) : 1;   // 20% shorter cooldowns = 25% faster recovery
+  const cdRate = 1;
   me.atkCd = Math.max(0, me.atkCd - dt * cdRate);
   for (const k of ["ifr", "dashCd", "pushCd", "guardT", "guardCd", "counterT", "hitT", "dashBuffT", "shadowT", "chFlash"]) me[k] = Math.max(0, me[k] - dt);
   for (let i = 0; i < 3; i++) me.cd[i] = Math.max(0, me.cd[i] - dt * cdRate);
@@ -2736,7 +2737,7 @@ function drawHUD(T, S) {
   if (me.shadowT > 0) line("그림자 · 모든 공격 백어택", "#b9a0ff");
   if (me.linkBuff > 0) line("맥동 · 공격력 +" + pc(me.linkBuff), "#ffd166");
   if (me.linkHps > 0) line("빛의 끈 · 초당 체력 " + Math.round(me.linkHps * 10) / 10 + " 회복", "#7fd3a3");
-  if (me.hasteT > 0) line("찬가 · 이동 속도 +" + pc(me.hasteSpd) + ", 재사용 대기시간 -" + pc(me.hasteCdr) + " · " + me.hasteT.toFixed(1) + "초", "#ffd166");
+  if (me.hasteT > 0) line("찬가 · 이동 속도 +" + pc(me.hasteSpd) + ", 피해 +" + pc(me.hasteAmp) + " · " + me.hasteT.toFixed(1) + "초", "#ffd166");
 
   if (me.tl) { const t = me.tl, who = t.k === 1 ? ((others.find(o => o.peer === t.id) || { presence: { n: "아군" } }).presence.n) : (t.id === "b" ? "보스" : "소환물"); line("빛의 끈 · " + who + " · " + t.left.toFixed(1) + "초", t.k === 1 ? "#7fd3a3" : "#ffb347"); }
   const o = me.order;
