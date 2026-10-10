@@ -146,6 +146,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media (max-width:760px){.augInner{grid-template-columns:1fr}}
 .augInner h2{margin:2px 0 0;font-family:var(--f-ko);font-size:24px}
 .augMain{display:flex;flex-direction:column;gap:12px;min-width:0}
+.augReroll{display:flex;align-items:center;gap:10px;margin-top:10px}
+.augReroll button{font:600 13px var(--f-body);padding:8px 14px}
 .augCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 @media (max-width:620px){.augCards{grid-template-columns:1fr}}
 .acard{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid var(--line);border-top:3px solid var(--r0);border-radius:5px;background:var(--night);min-width:0}
@@ -285,6 +287,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <h2 id="augTitle">증강 선택</h2>
         <div class="status" id="augSub"></div>
         <div class="augCards" id="augCards"></div>
+        <div class="augReroll"><button class="btn" type="button" id="augRerollBtn">다시 뽑기</button><span class="status" id="augRerollNote"></span></div>
       </div>
       <div class="augSide">
         <h3>파티 현황</h3>
@@ -370,19 +373,20 @@ const CONFIG = {
   stageFlow: { transition: 2.0, phaseAt: [.7, .4], comboChance: .4, clearDelay: 3.5, augmentTimeout: 40, augmentStartDelay: 1.2, phase3TempoMul: .92 },
   scaling: { perPlayerHp: .8, perPlayerAddHp: .35 },
   /* stages 7-12 bring the wardens back awakened: more HP, harder hits, faster tempo */
+  /* each stage picks one of its two bosses at random */
   stages: [
-    { boss: "hora",   hp: 9000,  dmgMul: 1.00, tempo: 1.00, rarity: [80, 18, 2] },
-    { boss: "seka",   hp: 10500, dmgMul: 1.10, tempo: .96,  rarity: [70, 25, 5] },
-    { boss: "klepsy", hp: 12000, dmgMul: 1.20, tempo: .92,  rarity: [60, 32, 8] },
-    { boss: "mekan",  hp: 13500, dmgMul: 1.30, tempo: .89,  rarity: [50, 38, 12] },
-    { boss: "dualis", hp: 15000, dmgMul: 1.40, tempo: .86,  rarity: [42, 42, 16] },
-    { boss: "tollia", hp: 16500, dmgMul: 1.50, tempo: .84,  rarity: [35, 45, 20] },
-    { boss: "hora",   hp: 18500, dmgMul: 1.60, tempo: .82,  rarity: [30, 46, 24], tag: "각성" },
-    { boss: "seka",   hp: 20500, dmgMul: 1.70, tempo: .80,  rarity: [25, 47, 28], tag: "각성" },
-    { boss: "klepsy", hp: 22500, dmgMul: 1.80, tempo: .78,  rarity: [20, 48, 32], tag: "각성" },
-    { boss: "mekan",  hp: 24500, dmgMul: 1.90, tempo: .76,  rarity: [16, 48, 36], tag: "각성" },
-    { boss: "dualis", hp: 27000, dmgMul: 2.00, tempo: .74,  rarity: [12, 48, 40], tag: "각성" },
-    { boss: "tollia", hp: 30000, dmgMul: 2.10, tempo: .72,  rarity: [8, 47, 45],  tag: "각성" },
+    { boss: ["hora", "lumen"],   hp: 9000,  dmgMul: 1.00, tempo: 1.00, rarity: [80, 18, 2] },
+    { boss: ["seka", "vesper"],   hp: 10500, dmgMul: 1.10, tempo: .96,  rarity: [70, 25, 5] },
+    { boss: ["klepsy", "astra"], hp: 12000, dmgMul: 1.20, tempo: .92,  rarity: [60, 32, 8] },
+    { boss: ["mekan", "ferrum"],  hp: 13500, dmgMul: 1.30, tempo: .89,  rarity: [50, 38, 12] },
+    { boss: ["dualis", "umbra"], hp: 15000, dmgMul: 1.40, tempo: .86,  rarity: [42, 42, 16] },
+    { boss: ["tollia", "aeon"], hp: 16500, dmgMul: 1.50, tempo: .84,  rarity: [35, 45, 20] },
+    { boss: ["hora", "lumen"],   hp: 18500, dmgMul: 1.60, tempo: .82,  rarity: [30, 46, 24], tag: "각성" },
+    { boss: ["seka", "vesper"],   hp: 20500, dmgMul: 1.70, tempo: .80,  rarity: [25, 47, 28], tag: "각성" },
+    { boss: ["klepsy", "astra"], hp: 22500, dmgMul: 1.80, tempo: .78,  rarity: [20, 48, 32], tag: "각성" },
+    { boss: ["mekan", "ferrum"],  hp: 24500, dmgMul: 1.90, tempo: .76,  rarity: [16, 48, 36], tag: "각성" },
+    { boss: ["dualis", "umbra"], hp: 27000, dmgMul: 2.00, tempo: .74,  rarity: [12, 48, 40], tag: "각성" },
+    { boss: ["tollia", "aeon"], hp: 30000, dmgMul: 2.10, tempo: .72,  rarity: [8, 47, 45],  tag: "각성" },
   ],
   /* 7. hard: shorter warnings and openings, harder hits, combos from phase II, one more of everything */
   difficulty: {
@@ -563,6 +567,48 @@ const CONFIG = {
                       [["ring", 2], ["haven", 2], ["heavy", 2], ["charge", 1], ["clock", 1], ["stack", 1]]],
               force: ["ring", "haven", "ring"], gimmicks: ["ripple"],
               move: { style: "pendulum", freq: 3, amp: 140 } },
+    lumen:  { name: "루멘", title: "새벽의 등불지기", look: "lantern", r: 56, speed: [90, 105, 120],
+              pal: ["#fff3c4", "#f2b84b", "#8a4a12", "#1d1710", "#ffd166"], floor: "255,209,102",
+              pools: [[["mark", 3], ["spin", 2], ["donut", 1], ["cleave", 2]],
+                      [["mark", 2], ["ring", 2], ["donut", 1], ["spin", 1], ["heavy", 1], ["warp", 1]],
+                      [["mark", 2], ["ring", 2], ["haven", 2], ["donut", 1], ["heavy", 2], ["clock", 1]]],
+              force: [null, "ring", "haven"], gimmicks: ["ripple"],
+              move: { style: "orbit", radius: 160, orbit: 1.2, speedMul: 1.2 } },
+    vesper: { name: "베스퍼", title: "황혼의 추적자", look: "crescent", r: 48, speed: [135, 155, 175],
+              pal: ["#ffd9c2", "#e0785a", "#4a1630", "#170f1c", "#ff8f6b"], floor: "255,143,107",
+              pools: [[["pounce", 3], ["cleave", 2], ["whirl", 1]],
+                      [["pounce", 2], ["rush", 2], ["whirl", 2], ["spread", 1], ["hop", 1]],
+                      [["pounce", 2], ["rush", 2], ["whirl", 2], ["flurry", 2], ["hop", 1], ["warp", 1]]],
+              force: ["pounce", "rush", "flurry"], gimmicks: ["sweep"],
+              move: { style: "dart", dash: .15, pause: [.35, .7], near: [100, 200], spread: 2.2, feint: [1, 2], maxMoves: 3 } },
+    astra:  { name: "아스트라", title: "별자리 점성가", look: "orb", r: 58, speed: [105, 120, 135],
+              pal: ["#e4ecff", "#8ea6e8", "#2c2f6e", "#10122a", "#a9c1ff"], floor: "169,193,255",
+              pools: [[["spread", 2], ["mark", 2], ["spin", 1], ["pull", 2]],
+                      [["spread", 2], ["stack", 2], ["pull", 2], ["mark", 1], ["warp", 1]],
+                      [["spread", 2], ["stack", 2], ["pull", 2], ["donut", 1], ["clock", 1], ["haven", 1]]],
+              force: ["spread", "stack", "clock"], gimmicks: ["eclipse"],
+              move: { style: "blink", pause: [.5, .8], near: [120, 230], spread: 2.8, feint: [1, 2] } },
+    ferrum: { name: "페룸", title: "강철 진자", look: "anvil", r: 62, speed: [85, 95, 105],
+              pal: ["#e2e6ec", "#8c96a6", "#3a414e", "#15181e", "#ffb347"], floor: "255,179,71",
+              pools: [[["heavy", 2], ["crank", 2], ["gear", 2], ["cleave", 1]],
+                      [["heavy", 2], ["crank", 2], ["gear", 2], ["spring", 2], ["charge", 1]],
+                      [["heavy", 2], ["gear", 2], ["spring", 2], ["charge", 2], ["hop", 1], ["warp", 1]]],
+              force: ["gear", "spring", "charge"], gimmicks: ["bomb"],
+              move: { style: "pendulum", freq: 2.4, amp: 170 } },
+    umbra:  { name: "움브라", title: "그림자 시계공", look: "shade", r: 58, speed: [100, 112, 124],
+              pal: ["#d8ccff", "#7c6bc4", "#251a4a", "#0c0a18", "#c38bff"], floor: "195,139,255",
+              pools: [[["polarity", 2], ["flurry", 2], ["mark", 2], ["cleave", 1]],
+                      [["polarity", 2], ["flurry", 2], ["warp", 2], ["ring", 1], ["hop", 1]],
+                      [["polarity", 2], ["flurry", 2], ["warp", 2], ["ring", 2], ["stack", 1], ["heavy", 1]]],
+              force: ["polarity", "warp", "ring"], gimmicks: ["backstab"],
+              move: { style: "blink", pause: [.35, .6], near: [100, 200], spread: 3.4, feint: [2, 3] } },
+    aeon:   { name: "에온", title: "영겁의 종언", look: "aeon", r: 64, speed: [95, 108, 120],
+              pal: ["#fff6dc", "#d7b46a", "#5b3a1a", "#120e08", "#ff6f7d"], floor: "255,111,125",
+              pools: [[["clock", 2], ["ring", 2], ["charge", 2], ["spin", 1]],
+                      [["clock", 2], ["ring", 2], ["charge", 2], ["haven", 1], ["sandpool", 1], ["warp", 1]],
+                      [["clock", 2], ["ring", 1], ["charge", 2], ["haven", 1], ["sandwall", 1], ["stack", 1], ["spread", 1], ["hop", 1]]],
+              force: ["clock", "haven", "sandwall"], gimmicks: ["sandwave", "ripple"],
+              move: { style: "orbit", radius: 140, orbit: 1.6, speedMul: 1.4 } },
   },
   /* invulnerable gimmick phases: boss walks to the centre, can't be hurt, runs a must-dodge sequence, then collapses (groggy) */
   gimmick: { every: 38, hardEveryMul: .8, moveTime: .9, groggy: 5.0, groggyBonus: .5 },
@@ -584,6 +630,8 @@ const CONFIG = {
     saint:     { fit: ["medic", "regen", "move", "ecd", "rcd", "haste", "hp", "lg_phoenix"], no: ["close", "focus", "overcharge", "leech", "atk", "dashbuff", "gap", "aspd", "lg_thunder", "lg_berserk"] },
     wizard:    { fit: ["rcd", "qcd", "gap", "atk", "haste", "dash", "lg_thunder"], no: ["close", "focus", "overcharge"] },
   } },
+  /* 증강 다시 뽑기: 기본 base회 + 보스 every명 처치마다 1회 */
+  augReroll: { base: 1, every: 3 },
   /* 전설 증강: 카드 한 장마다 이 확률로 전설이 나옴 (한 번에 최대 1장) */
   legend: { chance: .02 },
   /* rarity: 0 common · 1 rare · 2 epic · 3 legendary. cls limits an augment to one class. v holds its numbers. */
@@ -1069,7 +1117,7 @@ function playersList() {
 function hideInfo() { const S = curS; return !!(S && (CONFIG.difficulty[S.diff] || {}).hideInfo); }
 function diffCfg() { return CONFIG.difficulty[(HS && HS.diff) || "normal"] || CONFIG.difficulty.normal; }
 function lobbyState(prev) {
-  return { diff: prev && prev.diff || "normal", st: "lobby", game: prev ? prev.game : 0, stage: 0, run: prev ? prev.run : 0, akey: -1, adl: 0, boss: CONFIG.stages[0].boss,
+  return { diff: prev && prev.diff || "normal", st: "lobby", game: prev ? prev.game : 0, stage: 0, run: prev ? prev.run : 0, akey: -1, adl: 0, boss: [].concat(CONFIG.stages[0].boss)[0],
     ft: 0, ph: 0, ps: 0, mhp: 1, hp: 1, dm: {}, names: prev ? prev.names : {}, n: 1, end: 0, tt: 0, gdm: {},
     bx: 640, by: 260, bf: Math.PI / 2, bs: "idle", bt: 0, cur: "", atk: [], aid: 0, pools: [], pid: 0, adds: [] };
 }
@@ -1082,18 +1130,20 @@ function startGame(now) {
   HS = lobbyState(HS); HS.game = g; HS.names = {};
   enterAugment(now);
 }
+function pickBoss(stage) { const c = CONFIG.stages[stage].boss; return Array.isArray(c) ? c[Math.floor(Math.random() * c.length)] : c; }
 function enterAugment(now) {
   const H = HS;
-  H.st = "augment"; H.akey = H.game * 100 + H.stage; H.boss = CONFIG.stages[H.stage].boss;
+  H.st = "augment"; H.akey = H.game * 100 + H.stage; H.boss = pickBoss(H.stage);
   H.atk = []; H.pools = []; H.adds = []; H.bx = 640; H.by = 260; H.bs = "idle"; H.cur = "";
   hostL.augStart = now; hostL.readySince = 0;
 }
 function startFight(now) {
   const H = HS, sc = CONFIG.stages[H.stage], n = Math.max(1, playersList().length);
-  Object.assign(H, { st: "fight", run: H.run + 1, boss: sc.boss, mhp: Math.round(sc.hp * diffCfg().hpMul * (1 + CONFIG.scaling.perPlayerHp * (n - 1))), n,
+  const boss = BOSSES[H.boss] && [].concat(sc.boss).includes(H.boss) ? H.boss : pickBoss(H.stage);
+  Object.assign(H, { st: "fight", run: H.run + 1, boss, mhp: Math.round(sc.hp * diffCfg().hpMul * (1 + CONFIG.scaling.perPlayerHp * (n - 1))), n,
     ft: 0, ph: 0, ps: 0, dm: {}, end: 0, bx: 640, by: 240, bf: Math.PI / 2, bs: "shield", bt: TRANS, cur: "", atk: [], aid: 0, pools: [], pid: 0, adds: [] });
   H.hp = H.mhp;
-  Object.assign(hostL, { target: null, lastKind: "", force: BOSSES[sc.boss].force[0] || "", combo: false, chain: null, anim: null, pending: [], addDm: {}, last: now, nextSummon: 0, nextDecoy: 0, bossKb: null, gimmickDue: false, nextGimmick: 1e9, feints: null, nextMove: 0, orb: Math.random() * TAU, orbDir: Math.random() < .5 ? 1 : -1 });
+  Object.assign(hostL, { target: null, lastKind: "", force: BOSSES[boss].force[0] || "", combo: false, chain: null, anim: null, pending: [], addDm: {}, last: now, nextSummon: 0, nextDecoy: 0, bossKb: null, gimmickDue: false, nextGimmick: 1e9, feints: null, nextMove: 0, orb: Math.random() * TAU, orbDir: Math.random() < .5 ? 1 : -1 });
   fsLocal = now;
 }
 function hostTick(now) {
@@ -1565,7 +1615,7 @@ const me = { x: 640, y: 600, hp: 100, mh: 100, dn: 0, downT: 0, ifr: 0, dashT: 0
   wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, poisonAcc: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0, waveN: 0, hsRegenAcc: 0, hasteRegen: 0, poolT: 0,
   cast: null, move: null, multi: null, ch: null, chFlash: 0, sw: 0, cx: 0, fx: null, fxN: 0, wd: null, hl: null, evId: 0,
   rv: null, rvT: null, rvP: 0, hitT: 0, ag: [], pk: -1, offer: null, offerKey: -1, st: null, shots: [], shotN: 0, pushCd: 0, kb: null, pu: null,
-  tp: null, tl: null, tm: null, hs: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, hasteSpd: 0, hasteAmp: 0, pend: [], rs: null, sp: null, spN: 0 };
+  tp: null, tl: null, tm: null, hs: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, hasteSpd: 0, hasteAmp: 0, pend: [], rs: null, sp: null, spN: 0, rrUsed: 0 };
 let resolved = new Set(), fxList = [], floats = [], markers = [], disp = new Map(), addDisp = new Map();
 const bubbles = new Map(), seenSp = new Map(), seenLeg = new Map();   // peer -> { txt, t }
 const seenSw = new Map(), seenFx = new Map(), seenWd = new Map(), seenHl = new Map(), seenCx = new Map(), seenPu = new Map(), seenTm = new Map(), seenHs = new Map();
@@ -2260,7 +2310,7 @@ function processOrder(dt) {
 }
 function updateMe(dt, T, S) {
   if (S) {
-    if (S.game !== me.game) { me.game = S.game; me.ag = []; me.pk = -1; me.offer = null; me.offerKey = -1; recalcStats(); }
+    if (S.game !== me.game) { me.game = S.game; me.ag = []; me.pk = -1; me.offer = null; me.offerKey = -1; me.rrUsed = 0; recalcStats(); }
     if (S.run !== me.run) { me.run = S.run; resetMe(); }
   }
   const C = CLASSES[myClass], st = me.st, fighting = S && S.st === "fight";
@@ -2577,6 +2627,29 @@ function drawBossBody(look, pal, r, f, T, ph, rec, flash) {
   ctx.fillStyle = pal[1]; ctx.beginPath(); ctx.moveTo(r + 26, 0); ctx.lineTo(r - 6, -16); ctx.lineTo(r - 6, 16); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = "#1a1208"; ctx.lineWidth = 2; ctx.stroke();
   ctx.restore();
+  if (look === "lantern") {   // flickering flame above, warm halo
+    const fl = 1 + Math.sin(T * 9) * .08 + Math.sin(T * 23) * .04;
+    ctx.fillStyle = "rgba(255,209,102,.12)"; ctx.beginPath(); ctx.arc(0, 0, r + 22 * fl, 0, TAU); ctx.fill();
+    ctx.fillStyle = pal[4]; ctx.beginPath(); ctx.moveTo(-12, -r + 4); ctx.quadraticCurveTo(0, -r - 34 * fl, 12, -r + 4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#fff3c4"; ctx.beginPath(); ctx.moveTo(-6, -r + 2); ctx.quadraticCurveTo(0, -r - 18 * fl, 6, -r + 2); ctx.closePath(); ctx.fill();
+  }
+  if (look === "orb") {   // orbiting stars
+    for (let i = 0; i < 5; i++) { const an = T * .9 + i * TAU / 5, rr = r + 14 + Math.sin(T * 2 + i) * 4; ctx.fillStyle = pal[4]; ctx.beginPath(); ctx.arc(Math.cos(an) * rr, Math.sin(an) * rr, 4, 0, TAU); ctx.fill(); }
+    ctx.strokeStyle = "rgba(169,193,255,.35)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(0, 0, r + 14, 0, TAU); ctx.stroke();
+  }
+  if (look === "anvil") {   // heavy plates
+    ctx.save(); ctx.rotate(Math.sin(T * 1.2) * .25); ctx.fillStyle = pal[2];
+    for (let i = 0; i < 4; i++) { ctx.save(); ctx.rotate(i * TAU / 4 + Math.PI / 4); ctx.fillRect(r - 10, -16, 20, 32); ctx.strokeStyle = "#0d0f14"; ctx.lineWidth = 2; ctx.strokeRect(r - 10, -16, 20, 32); ctx.restore(); }
+    ctx.restore();
+  }
+  if (look === "shade") {   // smoky tendrils
+    for (let i = 0; i < 7; i++) { const an = i * TAU / 7 + T * .4, w = Math.sin(T * 2.5 + i * 1.7); ctx.fillStyle = "rgba(124,107,196," + (.18 + w * .08) + ")"; ctx.beginPath(); ctx.arc(Math.cos(an) * (r + 6 + w * 8), Math.sin(an) * (r + 6 + w * 8), 14 + w * 4, 0, TAU); ctx.fill(); }
+  }
+  if (look === "aeon") {   // counter-rotating outer rings
+    ctx.lineWidth = 3;
+    ctx.save(); ctx.rotate(T * .5); ctx.strokeStyle = pal[1]; for (let i = 0; i < 12; i++) { ctx.beginPath(); ctx.arc(0, 0, r + 12, i * TAU / 12, i * TAU / 12 + .35); ctx.stroke(); } ctx.restore();
+    ctx.save(); ctx.rotate(-T * .8); ctx.strokeStyle = pal[4]; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(0, 0, r + 22, i * TAU / 4, i * TAU / 4 + .7); ctx.stroke(); } ctx.restore();
+  }
   if (look === "bell") {
     for (let k = 0; k < 2; k++) { const u = ((T * .6 + k * .5) % 1); ctx.strokeStyle = "rgba(159,216,255," + (1 - u) * .6 + ")"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, r + 6 + u * 40, 0, TAU); ctx.stroke(); }
   }
@@ -2610,6 +2683,10 @@ function drawBossBody(look, pal, r, f, T, ph, rec, flash) {
     ctx.strokeStyle = "#f3e6c8"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(T * .5 - 1.57) * ir * .5, Math.sin(T * .5 - 1.57) * ir * .5); ctx.stroke();
     ctx.strokeStyle = ph === 2 ? "#ff6f7d" : pal[4]; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(T * 3 - 1.57) * ir * .8, Math.sin(T * 3 - 1.57) * ir * .8); ctx.stroke();
     if (look === "dual") { ctx.strokeStyle = pal[0]; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-Math.cos(T * 3 - 1.57) * ir * .8, -Math.sin(T * 3 - 1.57) * ir * .8); ctx.stroke(); }
+  }
+  if (look === "crescent") {   // a dark bite out of the face makes the moon
+    ctx.fillStyle = pal[3]; ctx.globalAlpha = .85; ctx.beginPath(); ctx.arc(r * .38, -r * .2, r * .62, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = pal[4]; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, r - 5, Math.PI * .55, Math.PI * 1.45); ctx.stroke();
   }
   ctx.fillStyle = pal[4]; ctx.beginPath(); ctx.arc(0, 0, 4, 0, TAU); ctx.fill();
   if (flash > 0) { ctx.fillStyle = "rgba(255,255,255," + flash + ")"; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill(); }
@@ -3098,9 +3175,10 @@ function pickWeighted(list) {
   let r = Math.random() * tot; for (const a of list) { r -= augWeight(a); if (r <= 0) return a; }
   return list[list.length - 1];
 }
-function rollOffer(stage) {
+function rerollsLeft(S) { const R = CONFIG.augReroll; return Math.max(0, R.base + Math.floor(((S && S.stage) || 0) / R.every) - me.rrUsed); }
+function rollOffer(stage, avoid) {
   const w = CONFIG.stages[Math.min(stage, CONFIG.stages.length - 1)].rarity, tot = w[0] + w[1] + w[2];
-  const ok = a => augWeight(a) > 0 && !me.ag.includes(a.id);
+  const ok = a => augWeight(a) > 0 && !me.ag.includes(a.id) && !(avoid || []).includes(a.id);
   const out = [];
   for (let k = 0; k < 3; k++) {
     let rar = 0;
@@ -3136,6 +3214,9 @@ function updateAugPick(S, players) {
       '<span class="gl" style="color:' + RARITY[a.rar].col + '">' + a.g + "</span><b>" + esc(a.name) + '</b><span class="rar" style="color:' + RARITY[a.rar].col + '">' + RARITY[a.rar].name + (a.cls ? " · " + CLASSES[a.cls].name + " 전용" : "") + "</span><p>" + esc(augDesc(a)) + "</p></button>";
   }).join("");
   setHTML($("#augCards"), cardsHtml);
+  const rl = rerollsLeft(S), rb = $("#augRerollBtn");
+  rb.disabled = picked || rl <= 0; rb.textContent = "다시 뽑기 (" + rl + "회)";
+  $("#augRerollNote").textContent = "기본 " + CONFIG.augReroll.base + "회 · 보스 " + CONFIG.augReroll.every + "명을 쓰러뜨릴 때마다 1회 추가";
   setHTML($("#augParty"), players.map(p => {
     const pr = p.pr, done = pr.pk === S.akey, last = done ? pr.ag[pr.ag.length - 1] : null;
     return '<div class="aprow"><div class="top"><i style="background:' + safeCol(pr.c) + '"></i><b>' + esc(pr.n) + '</b><small style="color:var(--muted)">' + CLASSES[pr.k].name + "</small>" +
@@ -3168,6 +3249,12 @@ document.addEventListener("mouseover", e => {
 document.addEventListener("mousemove", e => { if (!tip.hidden) moveTip(e); });
 document.addEventListener("mouseout", e => { const el = e.target.closest && e.target.closest("[data-aug]"); if (el && !(e.relatedTarget && el.contains(e.relatedTarget))) tip.hidden = true; });
 function moveTip(e) { const w = tip.offsetWidth, h = tip.offsetHeight; tip.style.left = clamp(e.clientX + 14, 8, innerWidth - w - 8) + "px"; tip.style.top = clamp(e.clientY + 14, 8, innerHeight - h - 8) + "px"; }
+$("#augRerollBtn").addEventListener("click", () => {
+  const S = curS; if (!S || S.st !== "augment" || me.pk === S.akey || rerollsLeft(S) <= 0) return;
+  me.rrUsed++; me.offer = rollOffer(S.stage, me.offer); SFX.play("augPick", .6);
+  if (me.offer.some(id => AUG[id].rar === 3)) { SFX.play("revive"); SFX.play("chReady"); }
+  lastUi = 0;
+});
 $("#augCards").addEventListener("click", e => { const b = e.target.closest("[data-pick]"); if (!b || !curS || curS.st !== "augment") return; pickAugment(b.dataset.pick, curS.akey); });
 
 let lastUi = 0;
