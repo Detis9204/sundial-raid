@@ -522,6 +522,32 @@ const CONFIG = {
     ripple:   { name: "대종 공명",      gm: true, warn: 1.0, minWarn: .9, rec: 0, dmg: 35, w: 110, bands: 5, step: .45, minStep: .72, bells: 3, bellGap: 1.1, hint: "무적 · 세 종에서 퍼지는 파문 사이로" },
     crank:    { name: "태엽 팔 회전",   g: false, warn: .9,  rec: 1.1, dmg: 22, r: 220, half: 55, count: 3, step: .5, minStep: .45, hint: "팔이 도는 방향 뒤쪽으로" },
     spring:   { name: "용수철 도약",    g: false, warn: 1.1, minWarn: .9, rec: 1.3, dmg: 28, r: 125, w: 34, len: 520, lineDelay: .55, hint: "착지 후 십자로 톱니가 튐" },
+    /* ---- 신규 보스 전용 ---- */
+    /* 루멘 */
+    dawnbeam: { name: "새벽 광선",      g: false, warn: 1.2, rec: 1.2, dmg: 24, w: 34, len: 900, count: 5, turn: .3, step: .22, hint: "부채꼴로 쓸고 지나갑니다 · 옆이나 보스 뒤로" },
+    flare:    { name: "섬광탄",         g: false, warn: 1.1, rec: 1.0, dmg: 20, r: 75, r1: 170, gap: .7, hint: "안쪽이 먼저, 바깥 고리가 나중에 터짐" },
+    lanterns: { name: "새벽의 등불",    gm: true, warn: 1.0, rec: 0, dmg: 24, r: 160, steps: 6, hop: [200, 290], chase: .52, minStep: 1.4, grace: 1.2, hint: "무적 · 켜진 등불 빛 안에만 머무르고, 다음 등불로 옮겨 가세요" },
+    /* 베스퍼 */
+    crescent: { name: "초승달 베기",    g: false, warn: 1.0, minWarn: 1.0, rec: 1.1, dmg: 24, r0: 100, r1: 230, half: 78, step: .7, hint: "앞, 뒤 순서로 베어 옴 · 보스 옆구리나 바로 곁, 멀리가 안전" },
+    afterimg: { name: "잔상 습격",      g: false, warn: .9, minWarn: .8, rec: 1.2, dmg: 22, w: 30, dist: 330, count: 3, step: .3, hint: "세 잔상이 한 점으로 모입니다 · 그 자리를 비우세요" },
+    hunt:     { name: "황혼 사냥",      gm: true, warn: 1.6, lockWarn: .9, minLockWarn: .8, rec: 0, dmg: 38, r: 110, w: 26, len: 900, count: 5, gap: 2.0, hint: "무적 · 사냥감으로 찍힌 사람은 동료에게서 멀어지세요" },
+    /* 아스트라 */
+    constel:  { name: "별자리 잇기",    g: false, warn: 1.4, rec: 1.1, dmg: 24, w: 22, stars: 5, hint: "별을 잇는 선 위에 서 있지 마세요" },
+    meteor:   { name: "추적 유성",      g: false, warn: .95, minWarn: .85, rec: 1.0, dmg: 18, r: 68, count: 4, step: .55, hint: "멈추면 맞습니다 · 계속 움직이세요" },
+    grid:     { name: "성좌 심판",      gm: true, warn: 2.2, minWarn: 2.1, rec: 0, dmg: 34, rounds: 5, gapAfter: .3, safe: 2, hint: "무적 · 초록으로 남은 칸으로" },
+    /* 페룸 */
+    pend:     { name: "거대 진자",      g: false, warn: 1.3, rec: 1.3, dmg: 30, r: 90, px: 640, py: -260, L: 620, swing: 1.0, steps: 12, step: .09, hint: "진자가 지나가는 호를 피하기 · 아래쪽이 안전" },
+    anvil:    { name: "모루 투하",      g: false, warn: 1.0, minWarn: .95, rec: 1.1, dmg: 28, h: 64, r0: 150, r1: 250, gap: .7, hint: "모루를 살짝만 피하세요 · 멀리 도망치면 충격파에 맞음" },
+    press:    { name: "강철 압착",      gm: true, warn: 1.5, minWarn: 1.3, rec: 0, dmg: 36, rounds: 6, w0: 460, w1: 240, shift: 170, hint: "무적 · 양쪽 벽이 좁혀 옵니다. 열린 통로 안으로" },
+    /* 움브라 */
+    shadecone:{ name: "그림자 삼중참",  g: true,  warn: 1.0, minWarn: .95, rec: 1.1, dmg: 24, r: 270, half: 22, side: 230, hint: "세 방향에서 한 점을 노림 · 표적 자리에서 벗어나기" },
+    echo:     { name: "과거의 그림자",  g: false, warn: 1.0, rec: 1.1, dmg: 22, r: 80, back: 1.2, count: 3, step: .55, hint: "1초 전 내가 있던 자리가 터집니다" },
+    blackout: { name: "암전",           gm: true, warn: 1.1, minWarn: 1.0, rec: 0, dmg: 0, count: 8, gap: .75, vision: 230, hint: "무적 · 주변만 보입니다. 다가오는 창을 피하세요" },
+    lance:    { name: "그림자 창",      gm: true, warn: 1.1, minWarn: 1.0, rec: 0, dmg: 36, w: 30, hint: "" },
+    /* 에온 */
+    hands:    { name: "시침과 분침",    g: false, warn: 1.1, rec: 1.2, dmg: 26, steps: 6, step: .32, hour: [44, 430, .22], minute: [22, 760, -.5], hint: "두 바늘이 반대로 돕니다" },
+    rewind:   { name: "시간 되감기",    g: false, warn: 1.0, rec: 1.2, dmg: 22, r: 105, count: 4, step: .4, back: .9, hint: "터진 순서의 반대로 다시 터집니다" },
+    doom:     { name: "종언의 초읽기",  gm: true, warn: 1.2, rec: 0, dmg: 30, steps: 14, step: .85, minStep: .75, n: 4, hint: "무적 · 붉은 시각이 시계 방향으로 돕니다. 보스 곁에 붙어 앞질러 도세요" },
     mhit:     { name: "병정 베기",      g: true,  warn: .85, rec: 0,   dmg: 7,  r: 42, hint: "" },
   },
   bosses: {
@@ -569,45 +595,45 @@ const CONFIG = {
               move: { style: "pendulum", freq: 3, amp: 140 } },
     lumen:  { name: "루멘", title: "새벽의 등불지기", look: "lantern", r: 56, speed: [90, 105, 120],
               pal: ["#fff3c4", "#f2b84b", "#8a4a12", "#1d1710", "#ffd166"], floor: "255,209,102",
-              pools: [[["mark", 3], ["spin", 2], ["donut", 1], ["cleave", 2]],
-                      [["mark", 2], ["ring", 2], ["donut", 1], ["spin", 1], ["heavy", 1], ["warp", 1]],
-                      [["mark", 2], ["ring", 2], ["haven", 2], ["donut", 1], ["heavy", 2], ["clock", 1]]],
-              force: [null, "ring", "haven"], gimmicks: ["ripple"],
+              pools: [[["dawnbeam", 3], ["flare", 3], ["mark", 1], ["spin", 1]],
+                      [["dawnbeam", 3], ["flare", 3], ["ring", 1], ["heavy", 1], ["warp", 1]],
+                      [["dawnbeam", 3], ["flare", 2], ["ring", 1], ["haven", 1], ["heavy", 1], ["warp", 1]]],
+              force: [null, "flare", "dawnbeam"], gimmicks: ["lanterns"],
               move: { style: "orbit", radius: 160, orbit: 1.2, speedMul: 1.2 } },
     vesper: { name: "베스퍼", title: "황혼의 추적자", look: "crescent", r: 48, speed: [135, 155, 175],
               pal: ["#ffd9c2", "#e0785a", "#4a1630", "#170f1c", "#ff8f6b"], floor: "255,143,107",
-              pools: [[["pounce", 3], ["cleave", 2], ["whirl", 1]],
-                      [["pounce", 2], ["rush", 2], ["whirl", 2], ["spread", 1], ["hop", 1]],
-                      [["pounce", 2], ["rush", 2], ["whirl", 2], ["flurry", 2], ["hop", 1], ["warp", 1]]],
-              force: ["pounce", "rush", "flurry"], gimmicks: ["sweep"],
+              pools: [[["crescent", 3], ["afterimg", 3], ["pounce", 1]],
+                      [["crescent", 3], ["afterimg", 3], ["pounce", 1], ["rush", 1], ["hop", 1]],
+                      [["crescent", 2], ["afterimg", 3], ["rush", 1], ["flurry", 1], ["hop", 1], ["warp", 1]]],
+              force: ["crescent", "afterimg", "rush"], gimmicks: ["hunt"],
               move: { style: "dart", dash: .15, pause: [.35, .7], near: [100, 200], spread: 2.2, feint: [1, 2], maxMoves: 3 } },
     astra:  { name: "아스트라", title: "별자리 점성가", look: "orb", r: 58, speed: [105, 120, 135],
               pal: ["#e4ecff", "#8ea6e8", "#2c2f6e", "#10122a", "#a9c1ff"], floor: "169,193,255",
-              pools: [[["spread", 2], ["mark", 2], ["spin", 1], ["pull", 2]],
-                      [["spread", 2], ["stack", 2], ["pull", 2], ["mark", 1], ["warp", 1]],
-                      [["spread", 2], ["stack", 2], ["pull", 2], ["donut", 1], ["clock", 1], ["haven", 1]]],
-              force: ["spread", "stack", "clock"], gimmicks: ["eclipse"],
+              pools: [[["constel", 3], ["meteor", 3], ["spread", 1], ["pull", 1]],
+                      [["constel", 3], ["meteor", 3], ["stack", 1], ["spread", 1], ["warp", 1]],
+                      [["constel", 3], ["meteor", 2], ["stack", 1], ["pull", 1], ["clock", 1], ["haven", 1]]],
+              force: ["constel", "meteor", "stack"], gimmicks: ["grid"],
               move: { style: "blink", pause: [.5, .8], near: [120, 230], spread: 2.8, feint: [1, 2] } },
     ferrum: { name: "페룸", title: "강철 진자", look: "anvil", r: 62, speed: [85, 95, 105],
               pal: ["#e2e6ec", "#8c96a6", "#3a414e", "#15181e", "#ffb347"], floor: "255,179,71",
-              pools: [[["heavy", 2], ["crank", 2], ["gear", 2], ["cleave", 1]],
-                      [["heavy", 2], ["crank", 2], ["gear", 2], ["spring", 2], ["charge", 1]],
-                      [["heavy", 2], ["gear", 2], ["spring", 2], ["charge", 2], ["hop", 1], ["warp", 1]]],
-              force: ["gear", "spring", "charge"], gimmicks: ["bomb"],
+              pools: [[["pend", 3], ["anvil", 3], ["heavy", 1], ["gear", 1]],
+                      [["pend", 3], ["anvil", 3], ["gear", 1], ["spring", 1], ["charge", 1]],
+                      [["pend", 3], ["anvil", 2], ["spring", 1], ["charge", 1], ["hop", 1], ["warp", 1]]],
+              force: ["anvil", "pend", "charge"], gimmicks: ["press"],
               move: { style: "pendulum", freq: 2.4, amp: 170 } },
     umbra:  { name: "움브라", title: "그림자 시계공", look: "shade", r: 58, speed: [100, 112, 124],
               pal: ["#d8ccff", "#7c6bc4", "#251a4a", "#0c0a18", "#c38bff"], floor: "195,139,255",
-              pools: [[["polarity", 2], ["flurry", 2], ["mark", 2], ["cleave", 1]],
-                      [["polarity", 2], ["flurry", 2], ["warp", 2], ["ring", 1], ["hop", 1]],
-                      [["polarity", 2], ["flurry", 2], ["warp", 2], ["ring", 2], ["stack", 1], ["heavy", 1]]],
-              force: ["polarity", "warp", "ring"], gimmicks: ["backstab"],
+              pools: [[["shadecone", 3], ["echo", 3], ["mark", 1], ["cleave", 1]],
+                      [["shadecone", 3], ["echo", 3], ["polarity", 1], ["warp", 1], ["hop", 1]],
+                      [["shadecone", 3], ["echo", 2], ["polarity", 1], ["flurry", 1], ["warp", 1], ["ring", 1]]],
+              force: ["shadecone", "echo", "polarity"], gimmicks: ["blackout"],
               move: { style: "blink", pause: [.35, .6], near: [100, 200], spread: 3.4, feint: [2, 3] } },
     aeon:   { name: "에온", title: "영겁의 종언", look: "aeon", r: 64, speed: [95, 108, 120],
               pal: ["#fff6dc", "#d7b46a", "#5b3a1a", "#120e08", "#ff6f7d"], floor: "255,111,125",
-              pools: [[["clock", 2], ["ring", 2], ["charge", 2], ["spin", 1]],
-                      [["clock", 2], ["ring", 2], ["charge", 2], ["haven", 1], ["sandpool", 1], ["warp", 1]],
-                      [["clock", 2], ["ring", 1], ["charge", 2], ["haven", 1], ["sandwall", 1], ["stack", 1], ["spread", 1], ["hop", 1]]],
-              force: ["clock", "haven", "sandwall"], gimmicks: ["sandwave", "ripple"],
+              pools: [[["hands", 3], ["rewind", 3], ["ring", 1], ["charge", 1]],
+                      [["hands", 3], ["rewind", 3], ["clock", 1], ["ring", 1], ["warp", 1]],
+                      [["hands", 3], ["rewind", 2], ["clock", 1], ["haven", 1], ["stack", 1], ["hop", 1]]],
+              force: ["hands", "rewind", "clock"], gimmicks: ["doom"],
               move: { style: "orbit", radius: 140, orbit: 1.6, speedMul: 1.4 } },
   },
   /* invulnerable gimmick phases: boss walks to the centre, can't be hurt, runs a must-dodge sequence, then collapses (groggy) */
@@ -1187,6 +1213,10 @@ function hostTick(now) {
     hostL.clearAt = now; return;
   }
   if (T > 2 && pl.length && pl.every(p => p.pr.dn >= 1)) { H.st = "wipe"; H.end = H.ft; return; }
+  if (!hostL.trailAt || T - hostL.trailAt >= .1) {   // where everyone stood, for 과거의 그림자
+    hostL.trailAt = T; const tr = hostL.trail || (hostL.trail = {});
+    for (const p of pl) { const a = tr[p.peer] || (tr[p.peer] = []); a.push([T, p.pr.x, p.pr.y]); while (a.length > 40) a.shift(); }
+  }
   H.atk = H.atk.filter(a => a.th > T - .7);
   H.pools = H.pools.filter(p => p.t1 > T);
   for (const a of H.atk) if (a.k === "sandpool" && a.lk && T < a.lk) {   // tracking phase: follow everyone still standing
@@ -1429,6 +1459,73 @@ function startGimmick(T) {
       }
     }
   }
+  else if (kind === "lanterns") {   // the safe light jumps from lantern to lantern
+    const ps0 = alivePts(), r = def.r - X * 25;
+    let x = ps0.length ? ps0.reduce((a, q) => a + q.x, 0) / ps0.length : 640, y = ps0.length ? ps0.reduce((a, q) => a + q.y, 0) / ps0.length : 360;
+    x = clamp(x, r + 30, AW - r - 30); y = clamp(y, r + 50, AH - r - 30);
+    let prev = start + warn + def.grace;
+    for (let k = 0; k < def.steps + X; k++) {
+      let th = prev;
+      if (k) {
+        let nx, ny, tries = 0;
+        do { const an = Math.random() * TAU, dd = def.hop[0] + Math.random() * (def.hop[1] - def.hop[0]); nx = clamp(x + Math.cos(an) * dd, r + 30, AW - r - 30); ny = clamp(y + Math.sin(an) * dd, r + 50, AH - r - 30); tries++; } while (tries < 20 && dist(nx, ny, x, y) < def.hop[0] * .8);
+        th = prev + Math.max(def.minStep, dist(nx, ny, x, y) / (CONFIG.player.moveSpeed * def.chase)); x = nx; y = ny;
+      }
+      push({ t0: r3(k ? prev - .4 : T), th: r3(th), x: Math.round(x), y: Math.round(y), r });
+      prev = th; end = th;
+    }
+  } else if (kind === "hunt") {   // one player at a time is marked; a cross of blades lands where they stop
+    const n = def.count + X, lw = Math.max(def.minLockWarn, def.lockWarn * tempo * D.warnMul);
+    for (let k = 0; k < n; k++) {
+      const at = start + k * def.gap * tempo;
+      hostL.pending.push({ at, fn: t => {
+        const ps = playersList().filter(p => p.pr.r === H.run && !p.pr.dn); if (!ps.length) return;
+        const q = ps[Math.floor(Math.random() * ps.length)], lk = r3(t + def.warn), e = { i: ++H.aid, k: "hunt", d, t0: r3(t), lk, th: r3(lk + lw), tg: q.peer, x: Math.round(q.pr.x), y: Math.round(q.pr.y), a: 0, fx: 0 };
+        H.atk.push(e);
+        hostL.pending.push({ at: lk, fn: () => { const c = playersList().find(p => p.peer === e.tg); if (c && !c.pr.dn) { e.x = Math.round(c.pr.x); e.y = Math.round(c.pr.y); } e.a = r3(Math.random() * Math.PI); e.fx = 1; } });
+      } });
+      end = at + def.warn + lw;
+    }
+  } else if (kind === "grid") {   // 3x2 star chart: only the green cells are spared, and the next safe cell is always next door
+    const nb = c => { const col = c % 3, row = Math.floor(c / 3), o = []; if (col > 0) o.push(c - 1); if (col < 2) o.push(c + 1); o.push(row ? c - 3 : c + 3); return o; };
+    const cellOf = (x, y) => Math.min(2, Math.max(0, Math.floor(x / (AW / 3)))) + 3 * Math.min(1, Math.max(0, Math.floor(y / (AH / 2))));
+    const ps0 = alivePts(), gw = Math.max(def.minWarn, warn), nSafe = Math.max(1, def.safe - X);
+    let safe = [ps0.length ? cellOf(ps0[0].x, ps0[0].y) : 4];
+    for (let r = 0; r < def.rounds + X; r++) {
+      const cand = [...new Set(safe.flatMap(nb))].filter(c => !safe.includes(c)), next = [cand[Math.floor(Math.random() * cand.length)]];
+      while (next.length < nSafe) { const c = Math.floor(Math.random() * 6); if (!next.includes(c)) next.push(c); }
+      const th = start + gw + r * (gw + def.gapAfter);
+      push({ t0: r3(th - gw), th: r3(th), s: r ? next : safe.concat(next.slice(1)).slice(0, nSafe) });
+      if (r) safe = next; else safe = safe.concat(next.slice(1)).slice(0, nSafe);
+      end = th;
+    }
+  } else if (kind === "press") {   // two walls close in, leaving a corridor that drifts but always overlaps the last one
+    const o = Math.random() < .5 ? 0 : 1, span = o ? AH : AW, ps0 = alivePts(), pw = Math.max(def.minWarn, warn);
+    let c = ps0.length ? ps0.reduce((a, q) => a + (o ? q.y : q.x), 0) / ps0.length : span / 2;
+    for (let r = 0; r < def.rounds + X; r++) {
+      const w = def.w0 + (def.w1 - X * 30 - def.w0) * r / Math.max(1, def.rounds + X - 1);
+      c = clamp(c + (r ? (Math.random() * 2 - 1) * def.shift : 0), w / 2 + 20, span - w / 2 - 20);
+      const th = start + pw + r * (pw + .2);
+      push({ t0: r3(th - pw), th: r3(th), o, g0: Math.round(c - w / 2), g1: Math.round(c + w / 2) });
+      end = th;
+    }
+  } else if (kind === "blackout") {   // lights out: only the area around you is visible while shadow lances fly
+    const n = def.count + X * 2, bw = Math.max(def.minWarn, warn), dl = Math.round(ATK.lance.dmg * sc.dmgMul * D.dmgMul);
+    const shade = { i: ++H.aid, k: "blackout", d: 0, t0: r3(T), th: 0, x: 640, y: 360, a: 0 }; H.atk.push(shade);
+    for (let k = 0; k < n; k++) {
+      const at = start + k * def.gap * tempo;
+      hostL.pending.push({ at, fn: t => {
+        const ps = alivePts(); if (!ps.length) return;
+        const q = ps[Math.floor(Math.random() * ps.length)], an = Math.random() * TAU, ox = q.x - Math.cos(an) * 900, oy = q.y - Math.sin(an) * 900;
+        H.atk.push({ i: ++H.aid, k: "lance", d: dl, t0: r3(t), th: r3(t + bw), x: Math.round(ox), y: Math.round(oy), a: r3(an), l: 1800 });
+      } });
+      end = at + bw;
+    }
+    shade.th = r3(end + .2);
+  } else if (kind === "doom") {   // twelve hours around the centre: a red block of hours turns clockwise
+    const s0 = Math.floor(Math.random() * 12), n = def.n, stp = Math.max(def.minStep, def.step * tempo);
+    for (let k = 0; k < def.steps + X * 3; k++) { const th = start + warn + k * stp; push({ t0: r3(th - warn), th: r3(th), s0: (s0 + k) % 12, n }); end = th; }
+  }
   H.bt = r3(end + .4);
   hostL.nextGimmick = H.bt + G.groggy + G.every * tempo * (X ? G.hardEveryMul : 1);
 }
@@ -1455,6 +1552,11 @@ function lineLen(x, y, a, max, m) {
   const ux = Math.cos(a), uy = Math.sin(a);
   for (let s = 0; s < max; s += 10) { const px = x + ux * s, py = y + uy * s; if (px < m[0] || px > AW - m[0] || py < m[1] || py > AH - m[2]) return Math.max(60, s); }
   return max;
+}
+function trailAt(peer, t, fb) {   // a player's position at time t (from the host's 0.1s trail)
+  const a = (hostL.trail || {})[peer]; if (!a || !a.length) return fb;
+  let best = a[0]; for (const q of a) if (Math.abs(q[0] - t) < Math.abs(best[0] - t)) best = q;
+  return { x: best[1], y: best[2] };
 }
 function castAttack(kind, T, alive) {
   hostL.moves = 0;
@@ -1597,6 +1699,87 @@ function castAttack(kind, T, alive) {
       break;
     }
     case "spread": E({ r: def.r }); break;
+    /* ----- 신규 보스 전용 ----- */
+    case "dawnbeam": {   // a fan of light swept across, one segment after another
+      const dir = Math.random() < .5 ? 1 : -1, n = def.count + X, stp = def.step * tempo * D.warnMul, a0 = face - dir * def.turn * (n - 1) / 2;
+      for (let k = 0; k < n; k++) { const tk = r3(th + k * stp); E({ th: tk, a: r3(a0 + dir * k * def.turn), l: def.len }); end = tk; }
+      break;
+    }
+    case "flare": {   // inner burst, then the ring around it
+      const t2 = r3(th + Math.max(.55, def.gap * tempo * D.warnMul));
+      for (const p of alive) { const x = Math.round(p.pr.x), y = Math.round(p.pr.y); E({ x, y, r0: 0, r1: def.r }); E({ x, y, r0: def.r, r1: def.r1, th: t2 }); }
+      end = t2; break;
+    }
+    case "crescent": {
+      const t2 = r3(th + Math.max(.6, def.step * tempo * D.warnMul));
+      E({}); E({ a: r3(face + Math.PI), th: t2 }); end = t2; break;
+    }
+    case "afterimg": {   // three afterimages converge on where the target stands
+      const P = tgt.pr, n = def.count + X, a0 = face + Math.random() * .6, stp = def.step * tempo * D.warnMul;
+      for (let k = 0; k < n; k++) {
+        const an = a0 + k * TAU / n, ox = P.x - Math.cos(an) * def.dist, oy = P.y - Math.sin(an) * def.dist, tk = r3(th + k * stp);
+        E({ x: Math.round(ox), y: Math.round(oy), a: r3(an), l: def.dist * 2, th: tk }); end = tk;
+      }
+      break;
+    }
+    case "constel": {   // stars near the players, joined by lines
+      const pts = [], n = def.stars + X;
+      for (let k = 0; k < n; k++) {
+        const base = k % 2 === 0 && alive.length ? alive[(k / 2) % alive.length].pr : null;
+        let q = base ? [base.x + (Math.random() - .5) * 160, base.y + (Math.random() - .5) * 160] : randPt(110);
+        q = [Math.round(clamp(q[0], 60, AW - 60)), Math.round(clamp(q[1], 70, AH - 50))]; pts.push(q);
+      }
+      E({ p: pts }); break;
+    }
+    case "meteor": {   // falls where each player is right now, several times
+      const n = def.count + X, stp = def.step * tempo * D.warnMul;
+      const drop = t => { for (const p of playersList().filter(q => q.pr.r === H.run && !q.pr.dn)) H.atk.push({ i: ++H.aid, k: "meteor", t0: r3(t), th: r3(t + warn), x: Math.round(p.pr.x), y: Math.round(p.pr.y), a: 0, d }); };
+      drop(T); for (let k = 1; k < n; k++) hostL.pending.push({ at: T + k * stp, fn: drop });
+      end = T + (n - 1) * stp + warn; break;
+    }
+    case "pend": {   // a giant pendulum hung above the arena swings across and back
+      const n = def.steps, stp = def.step * tempo, dir = Math.random() < .5 ? 1 : -1;
+      for (let pass = 0; pass < 2; pass++) for (let k = 0; k < n; k++) {
+        const u = k / (n - 1), ang = (pass ? 1 - u : u) * 2 - 1, th2 = (dir * ang) * def.swing;
+        const x = def.px + Math.sin(th2) * def.L, y = def.py + Math.cos(th2) * def.L, tk = r3(th + (pass * n + k) * stp + pass * .35);
+        E({ x: Math.round(x), y: Math.round(y), th: tk }); end = tk;
+      }
+      break;
+    }
+    case "anvil": {   // anvils drop on everyone, then a shockwave spreads
+      const t2 = r3(th + Math.max(.6, def.gap * tempo * D.warnMul));
+      for (const p of alive) { const x = Math.round(clamp(p.pr.x, 40, AW - 40)), y = Math.round(clamp(p.pr.y, 40, AH - 40)); E({ x, y, sq: 1 }); E({ x, y, r0: def.r0, r1: def.r1, th: t2 }); }
+      end = t2; break;
+    }
+    case "shadecone": {   // the boss and two shadow copies all slash at one spot
+      const P = tgt.pr;
+      E({ a: face });
+      for (const off of [2.0, -2.0]) { const an = face + Math.PI + off, ox = clamp(P.x + Math.cos(an) * def.side, 30, AW - 30), oy = clamp(P.y + Math.sin(an) * def.side, 30, AH - 30); E({ x: Math.round(ox), y: Math.round(oy), a: r3(Math.atan2(P.y - oy, P.x - ox)), cl: 1 }); }
+      break;
+    }
+    case "echo": {   // strikes where each player stood a moment ago
+      const n = def.count + X, stp = def.step * tempo;
+      const strike = t => { for (const p of playersList().filter(q => q.pr.r === H.run && !q.pr.dn)) { const q = trailAt(p.peer, t - def.back, p.pr); H.atk.push({ i: ++H.aid, k: "echo", t0: r3(t), th: r3(t + warn), x: Math.round(q.x), y: Math.round(q.y), a: 0, d }); } };
+      strike(T); for (let k = 1; k < n; k++) hostL.pending.push({ at: T + k * stp, fn: strike });
+      end = T + (n - 1) * stp + warn; break;
+    }
+    case "hands": {   // hour and minute hands sweep in opposite directions
+      const n = def.steps, stp = def.step * tempo * D.warnMul, H1 = def.hour, M1 = def.minute;
+      for (let k = 0; k < n; k++) {
+        const tk = r3(th + k * stp);
+        E({ th: tk, a: r3(face + H1[2] * k), l: H1[1], w: H1[0] });
+        E({ th: tk, a: r3(face + Math.PI + M1[2] * k), l: M1[1], w: M1[0] });
+        end = tk;
+      }
+      break;
+    }
+    case "rewind": {   // circles go off one by one, then again in reverse
+      const pts = alive.map(p => [p.pr.x, p.pr.y]); while (pts.length < def.count + X) pts.push(randPt(120));
+      pts.sort(() => Math.random() - .5);
+      const stp = def.step * tempo * D.warnMul, n = pts.length, back0 = th + (n - 1) * stp + def.back;
+      pts.forEach((q, k) => { E({ x: Math.round(q[0]), y: Math.round(q[1]), th: r3(th + k * stp), r: def.r }); E({ x: Math.round(q[0]), y: Math.round(q[1]), th: r3(back0 + (n - 1 - k) * stp), r: def.r, rw: 1 }); });
+      end = back0 + (n - 1) * stp; break;
+    }
     case "polarity": {
       const arr = alive.map(p => p.peer).sort(() => Math.random() - .5), pol = {};
       arr.forEach((pp, ix) => { pol[pp] = ix % 2; });
@@ -1951,10 +2134,26 @@ function inAtk(a, px, py) {
     case "donut": return d >= def.r - pad;
     case "charge": case "rush": case "gear": case "slash": { const ux = Math.cos(a.a), uy = Math.sin(a.a), pr = dx * ux + dy * uy, back = a.k === "gear" || a.k === "slash" ? 0 : bossDef(curS).r; return pr >= -back && pr <= a.l + back && Math.abs(dx * uy - dy * ux) <= def.w + pad; }
     case "clock": return quadOf(dx, dy) !== a.s;
+    /* 신규 보스 */
+    case "dawnbeam": case "afterimg": case "lance": case "hands": { const ux = Math.cos(a.a), uy = Math.sin(a.a), pr = dx * ux + dy * uy; return pr >= -pad && pr <= a.l + pad && Math.abs(dx * uy - dy * ux) <= (a.w || def.w) + pad; }
+    case "flare": return d >= a.r0 - pad && d <= a.r1 + pad;
+    case "anvil": return a.sq ? Math.abs(dx) <= def.h + pad && Math.abs(dy) <= def.h + pad : d >= a.r0 - pad && d <= a.r1 + pad;
+    case "meteor": case "pend": case "echo": return d <= def.r + pad;
+    case "rewind": return d <= (a.r || def.r) + pad;
+    case "crescent": return d >= def.r0 - pad && d <= def.r1 + pad && angDiff(Math.atan2(dy, dx), a.a) <= def.half * DEG;
+    case "shadecone": return d <= def.r + pad && angDiff(Math.atan2(dy, dx), a.a) <= def.half * DEG + Math.atan2(pad, Math.max(d, 1));
+    case "constel": { const p = a.p || []; for (let k = 0; k + 1 < p.length; k++) if (segDist(px, py, p[k][0], p[k][1], p[k + 1][0], p[k + 1][1]) <= def.w + pad) return true; return false; }
+    case "hunt": { if (!a.fx) return false; if (d <= def.r + pad) return true; for (const an of [a.a, a.a + Math.PI / 2]) { const ux = Math.cos(an), uy = Math.sin(an), pr = dx * ux + dy * uy; if (Math.abs(pr) <= def.len / 2 && Math.abs(dx * uy - dy * ux) <= def.w + pad) return true; } return false; }
+    case "lanterns": return d > a.r;
+    case "grid": return !(a.s || []).includes(Math.min(2, Math.max(0, Math.floor(px / (AW / 3)))) + 3 * Math.min(1, Math.max(0, Math.floor(py / (AH / 2)))));
+    case "press": return a.o ? (py < a.g0 || py > a.g1) : (px < a.g0 || px > a.g1);
+    case "doom": { const sec = Math.floor(((Math.atan2(dy, dx) + Math.PI / 2 + TAU) % TAU) / (TAU / 12)) % 12; return (sec - a.s0 + 12) % 12 < a.n; }
+    case "blackout": return false;
   }
   return false;
 }
 /* charges sweep along their line: each spot is hit when the boss passes it */
+function segDist(px, py, x0, y0, x1, y1) { const vx = x1 - x0, vy = y1 - y0, L2 = vx * vx + vy * vy || 1, u = clamp(((px - x0) * vx + (py - y0) * vy) / L2, 0, 1); return Math.hypot(px - x0 - vx * u, py - y0 - vy * u); }
 function hitTime(a) {
   if (a.k !== "charge" && a.k !== "rush") return a.th;
   const along = (me.x - a.x) * Math.cos(a.a) + (me.y - a.y) * Math.sin(a.a);
@@ -2523,6 +2722,59 @@ function drawTele(a, T, S) {
     if (!hideInfo()) label("추적 " + left.toFixed(1), me.x, me.y - r - 14, "#f2c46b");
     ctx.restore(); return;
   }
+  if (a.k === "blackout") { ctx.restore(); return; }   // drawn over everything in drawBlackout
+  if (a.k === "lanterns") {
+    if (flash > 0) { ctx.restore(); return; }
+    const cur = (S.atk || []).filter(x => x.k === "lanterns" && x.th > T).sort((u, v) => u.th - v.th)[0];
+    if (cur && cur.i === a.i) {   // the lit lantern: darkness everywhere else
+      ctx.beginPath(); ctx.rect(-50, -50, AW + 100, AH + 100); ctx.moveTo(a.x + a.r, a.y); ctx.arc(a.x, a.y, a.r, 0, TAU, true);
+      ctx.fillStyle = "rgba(30,14,4," + (.25 + .3 * p) + ")"; ctx.fill("evenodd");
+      const g = ctx.createRadialGradient(a.x, a.y, 8, a.x, a.y, a.r); g.addColorStop(0, "rgba(255,226,140,.45)"); g.addColorStop(1, "rgba(255,209,102,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, TAU); ctx.fill();
+      ctx.strokeStyle = "rgba(255,209,102,.95)"; ctx.lineWidth = 3; ctx.stroke();
+      label((a.th - T).toFixed(1), a.x, a.y - a.r - 12, "#ffd166", true);
+    } else {   // the next one, already visible
+      ctx.strokeStyle = "rgba(255,209,102,.6)"; ctx.lineWidth = 2; ctx.setLineDash([8, 8]); ctx.lineDashOffset = -T * 30; ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+      label("다음 등불", a.x, a.y, "#ffd166", true);
+    }
+    ctx.fillStyle = "#ffd166"; ctx.beginPath(); ctx.moveTo(a.x - 7, a.y + 4); ctx.quadraticCurveTo(a.x, a.y - 22, a.x + 7, a.y + 4); ctx.closePath(); ctx.fill();
+    ctx.restore(); return;
+  }
+  if (a.k === "grid") {
+    const cw = AW / 3, chh = AH / 2, al = flash > 0 ? .5 * flash : .1 + .3 * p;
+    for (let c = 0; c < 6; c++) {
+      const x0 = (c % 3) * cw, y0 = Math.floor(c / 3) * chh, safe = (a.s || []).includes(c);
+      if (!safe) { ctx.fillStyle = "rgba(255,72,48," + al + ")"; ctx.fillRect(x0, y0, cw, chh); }
+      else if (flash < 0) { ctx.strokeStyle = "rgba(127,211,163,.95)"; ctx.lineWidth = 3; ctx.setLineDash([12, 8]); ctx.lineDashOffset = -T * 30; ctx.strokeRect(x0 + 6, y0 + 6, cw - 12, chh - 12); ctx.setLineDash([]); label("안전", x0 + cw / 2, y0 + chh / 2, "#7fd3a3", true); }
+    }
+    if (flash < 0) { ctx.strokeStyle = "rgba(169,193,255,.5)"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(cw, 0); ctx.lineTo(cw, AH); ctx.moveTo(cw * 2, 0); ctx.lineTo(cw * 2, AH); ctx.moveTo(0, chh); ctx.lineTo(AW, chh); ctx.stroke(); }
+    ctx.restore(); return;
+  }
+  if (a.k === "press") {
+    const al = flash > 0 ? .5 * flash : .1 + .3 * p;
+    ctx.fillStyle = "rgba(255,72,48," + al + ")";
+    if (a.o) { ctx.fillRect(0, 0, AW, a.g0); ctx.fillRect(0, a.g1, AW, AH - a.g1); } else { ctx.fillRect(0, 0, a.g0, AH); ctx.fillRect(a.g1, 0, AW - a.g1, AH); }
+    if (flash < 0) {
+      ctx.strokeStyle = "rgba(127,211,163,.9)"; ctx.lineWidth = 3; ctx.setLineDash([12, 8]); ctx.lineDashOffset = -T * 30;
+      if (a.o) ctx.strokeRect(-4, a.g0, AW + 8, a.g1 - a.g0); else ctx.strokeRect(a.g0, -4, a.g1 - a.g0, AH + 8);
+      ctx.setLineDash([]); label("통로", a.o ? AW / 2 : (a.g0 + a.g1) / 2, a.o ? (a.g0 + a.g1) / 2 : 110, "#7fd3a3", true);
+    }
+    ctx.restore(); return;
+  }
+  if (a.k === "doom") {
+    const al = flash > 0 ? .5 * flash : (a.th - T < .5 ? .18 + .3 * p : .06 + .12 * p);
+    ctx.fillStyle = "rgba(255,72,48," + al + ")";
+    for (let j = 0; j < a.n; j++) { const s0 = -Math.PI / 2 + ((a.s0 + j) % 12) * TAU / 12; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.arc(a.x, a.y, 1500, s0, s0 + TAU / 12); ctx.closePath(); ctx.fill(); }
+    if (flash < 0 && a.th - T < .5) { ctx.strokeStyle = "rgba(255,111,125,.8)"; ctx.lineWidth = 2; for (let j = 0; j <= 12; j++) { const an = -Math.PI / 2 + j * TAU / 12; ctx.beginPath(); ctx.moveTo(a.x + Math.cos(an) * 70, a.y + Math.sin(an) * 70); ctx.lineTo(a.x + Math.cos(an) * 1500, a.y + Math.sin(an) * 1500); ctx.stroke(); } }
+    ctx.restore(); return;
+  }
+  if (a.k === "hunt" && !a.fx) {   // still following the marked player
+    const c = posOf(a.tg); if (!c) { ctx.restore(); return; }
+    ctx.strokeStyle = "rgba(255,72,48,.9)"; ctx.lineWidth = 2.5; ctx.setLineDash([10, 6]); ctx.lineDashOffset = -T * 50; ctx.beginPath(); ctx.arc(c.x, c.y, def.r, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(255,72,48,.1)"; ctx.fill();
+    label(a.tg === myPeer ? "사냥감 · 동료에게서 멀어지세요" : "사냥감", c.x, c.y - def.r - 14, "#ff8f6b", true);
+    ctx.restore(); return;
+  }
   if (a.k === "eclipse") {
     if (flash > 0) { ctx.restore(); return; }
     ctx.beginPath(); ctx.rect(-50, -50, AW + 100, AH + 100); ctx.moveTo(a.x + a.r, a.y); ctx.arc(a.x, a.y, a.r, 0, TAU, true);
@@ -2585,20 +2837,37 @@ function drawTele(a, T, S) {
       case "donut": ctx.beginPath(); ctx.rect(-50, -50, AW + 100, AH + 100); ctx.moveTo(a.x + def.r, a.y); ctx.arc(a.x, a.y, def.r, 0, TAU, true); return 2;
       case "charge": case "rush": case "gear": case "slash": { const back = a.k === "gear" || a.k === "slash" ? 0 : bossDef(S).r; ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.a); ctx.beginPath(); ctx.rect(-back, -def.w, a.l + back * 2, def.w * 2); ctx.restore(); return 1; }
       case "clock": { ctx.beginPath(); for (let q = 0; q < 4; q++) { if (q === a.s) continue; const s0 = -Math.PI / 2 + q * Math.PI / 2; ctx.moveTo(a.x, a.y); ctx.arc(a.x, a.y, 1500, s0, s0 + Math.PI / 2); ctx.closePath(); } return 1; }
+      case "dawnbeam": case "afterimg": case "lance": case "hands": { ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.a); ctx.beginPath(); ctx.rect(0, -(a.w || def.w), a.l, (a.w || def.w) * 2); ctx.restore(); return 1; }
+      case "flare": ctx.beginPath(); ctx.arc(a.x, a.y, a.r1, 0, TAU); if (a.r0 > 0) { ctx.moveTo(a.x + a.r0, a.y); ctx.arc(a.x, a.y, a.r0, 0, TAU, true); return 2; } return 1;
+      case "anvil": if (a.sq) { ctx.beginPath(); ctx.rect(a.x - def.h, a.y - def.h, def.h * 2, def.h * 2); return 1; } ctx.beginPath(); ctx.arc(a.x, a.y, a.r1, 0, TAU); ctx.moveTo(a.x + a.r0, a.y); ctx.arc(a.x, a.y, a.r0, 0, TAU, true); return 2;
+      case "meteor": case "pend": case "echo": ctx.beginPath(); ctx.arc(a.x, a.y, def.r, 0, TAU); return 1;
+      case "rewind": ctx.beginPath(); ctx.arc(a.x, a.y, a.r || def.r, 0, TAU); return 1;
+      case "crescent": ctx.beginPath(); ctx.arc(a.x, a.y, def.r1, a.a - def.half * DEG, a.a + def.half * DEG); ctx.arc(a.x, a.y, def.r0, a.a + def.half * DEG, a.a - def.half * DEG, true); ctx.closePath(); return 1;
+      case "shadecone": pathCone(a.x, a.y, def.r, a.a, def.half * DEG); return 1;
+      case "constel": { ctx.beginPath(); const p = a.p || []; for (let k = 0; k + 1 < p.length; k++) { const x0 = p[k][0], y0 = p[k][1], x1 = p[k + 1][0], y1 = p[k + 1][1], an = Math.atan2(y1 - y0, x1 - x0), L = Math.hypot(x1 - x0, y1 - y0), w = def.w, c = Math.cos(an), sn = Math.sin(an); ctx.moveTo(x0 - sn * w, y0 + c * w); ctx.lineTo(x1 - sn * w, y1 + c * w); ctx.lineTo(x1 + sn * w, y1 - c * w); ctx.lineTo(x0 + sn * w, y0 - c * w); ctx.closePath(); void L; } return 1; }
+      case "hunt": { ctx.beginPath(); ctx.arc(a.x, a.y, def.r, 0, TAU); for (const an of [a.a, a.a + Math.PI / 2]) { const c = Math.cos(an), sn = Math.sin(an), h = def.len / 2, w = def.w; ctx.moveTo(a.x - c * h - sn * w, a.y - sn * h + c * w); ctx.lineTo(a.x + c * h - sn * w, a.y + sn * h + c * w); ctx.lineTo(a.x + c * h + sn * w, a.y + sn * h - c * w); ctx.lineTo(a.x - c * h + sn * w, a.y - sn * h - c * w); ctx.closePath(); } return 1; }
       case "sandpool": case "sandwall": case "summon": { ctx.beginPath(); const r = a.k === "summon" ? 40 : def.r; for (const q of a.p || []) { ctx.moveTo(q[0] + r, q[1]); ctx.arc(q[0], q[1], r, 0, TAU); } return 1; }
     }
     return 0;
   };
   const fill = al => { const r = shape(); if (!r) return; ctx.fillStyle = a.k === "summon" ? "rgba(255,174,92," + al + ")" : teleCol(a, al); if (r === 2) ctx.fill("evenodd"); else ctx.fill(); };
   if (flash > 0) { fill(.55 * flash); ctx.restore(); return; }
+  if (a.k === "rewind" && a.rw && a.th - T > .6) { if (shape()) { ctx.strokeStyle = "rgba(201,184,255,.45)"; ctx.lineWidth = 1.5; ctx.setLineDash([6, 6]); ctx.stroke(); ctx.setLineDash([]); } label("되감기", a.x, a.y, "#c9b8ff"); ctx.restore(); return; }
   fill(.1);
   if (shape()) { ctx.strokeStyle = a.k === "summon" ? "rgba(255,174,92,.9)" : teleCol(a, .85); ctx.lineWidth = 2; ctx.stroke(); }
   // filling progress: scale toward the hit time
   ctx.save();
-  if (["cleave", "flurry", "spin", "whirl", "mark", "heavy", "pounce", "pull", "mhit", "warp", "hop", "sweep", "bomb", "backstab", "crank", "spring"].includes(a.k)) {
+  if (["cleave", "flurry", "spin", "whirl", "mark", "heavy", "pounce", "pull", "mhit", "warp", "hop", "sweep", "bomb", "backstab", "crank", "spring", "meteor", "pend", "echo", "rewind", "shadecone"].includes(a.k)) {
     const cx = a.x, cy = a.y; ctx.translate(cx, cy); ctx.scale(p, p); ctx.translate(-cx, -cy); fill(.3);
   } else fill(.08 + .28 * p);
   ctx.restore();
+  if (a.k === "constel") for (const q of a.p || []) { ctx.fillStyle = "#e4ecff"; ctx.beginPath(); for (let k = 0; k < 10; k++) { const rr = k % 2 ? 4 : 10, an = -Math.PI / 2 + k * Math.PI / 5; ctx.lineTo(q[0] + Math.cos(an) * rr, q[1] + Math.sin(an) * rr); } ctx.closePath(); ctx.fill(); }
+  if (a.k === "rewind" && a.rw && T < a.th) label("되감기", a.x, a.y, "#c9b8ff");
+  if (a.k === "shadecone" && a.cl) { ctx.fillStyle = "rgba(124,107,196,.75)"; ctx.beginPath(); ctx.arc(a.x, a.y, 22, 0, TAU); ctx.fill(); ctx.strokeStyle = "#c38bff"; ctx.lineWidth = 2; ctx.stroke(); }
+  if (a.k === "pend" && T < a.th && a === (S.atk || []).find(x => x.k === "pend" && x.th > T)) {   // the bob and its chain
+    const P = def; ctx.strokeStyle = "rgba(200,206,216,.8)"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(P.px, 0); ctx.lineTo(a.x, a.y); ctx.stroke();
+    ctx.fillStyle = "#8c96a6"; ctx.beginPath(); ctx.arc(a.x, a.y, 26, 0, TAU); ctx.fill(); ctx.strokeStyle = "#15181e"; ctx.lineWidth = 3; ctx.stroke();
+  }
   if (a.k === "bomb") { const left = Math.max(0, a.th - T); label(String(a.n), a.x, a.y - 4, left < .9 ? "#ffd166" : "#f3e6c8", true); if (!hideInfo()) { ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.fillStyle = "#f3e6c8"; ctx.fillText(left.toFixed(1), a.x, a.y + 14); } }
   if (a.k === "sandwave" && a.a0 % (CONFIG.bossAttacks.sandwave.bw * 4) === 0) label("틈", a.a0 + (a.a1 - a.a0) / 2, (a.g0 + a.g1) / 2, "#7fd3a3");
   if (a.k === "clock") { const s0 = -Math.PI / 2 + a.s * Math.PI / 2 + Math.PI / 4; label("안전", a.x + Math.cos(s0) * 170, a.y + Math.sin(s0) * 170, "#7fd3a3"); }
@@ -2606,6 +2875,17 @@ function drawTele(a, T, S) {
     ctx.strokeStyle = "rgba(242,196,107,.6)"; ctx.lineWidth = 2;
     for (let i = 0; i < 12; i++) { const ang = i * TAU / 12 + T, r0 = 300 - ((T * 120) % 160); ctx.beginPath(); ctx.moveTo(a.x + Math.cos(ang) * (r0 + 40), a.y + Math.sin(ang) * (r0 + 40)); ctx.lineTo(a.x + Math.cos(ang) * r0, a.y + Math.sin(ang) * r0); ctx.stroke(); }
   }
+  ctx.restore();
+}
+function drawBlackout(T, S) {   // 암전: everything but a circle around me goes dark
+  const b = (S.atk || []).find(a => a.k === "blackout" && T >= a.t0 && T < a.th); if (!b) return;
+  const R = ATK.blackout.vision, fade = clamp(Math.min((T - b.t0) / .6, (b.th - T) / .4), 0, 1), cx = me.dn ? 640 : me.x, cy = me.dn ? 360 : me.y;
+  ctx.save();
+  const g = ctx.createRadialGradient(cx, cy, R * .55, cx, cy, R);
+  g.addColorStop(0, "rgba(6,4,14,0)"); g.addColorStop(1, "rgba(6,4,14," + .97 * fade + ")");
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.rect(-50, -50, AW + 100, AH + 100); ctx.moveTo(cx + R, cy); ctx.arc(cx, cy, R, 0, TAU, true);
+  ctx.fillStyle = "rgba(6,4,14," + .97 * fade + ")"; ctx.fill("evenodd");
   ctx.restore();
 }
 function drawPools(T, S) {
@@ -3295,7 +3575,7 @@ function updateUi(now, S, players, T) {
 /* ---------- audio cues from shared state ---------- */
 let stChangeAt = performance.now();
 const aud = { bs: "", seenCast: new Set(), seenImpact: new Set(), st: "", ph: -1, run: -1, adds: 0, beep: -1 };
-const IMPACT = { cleave: "imp_slam", flurry: "imp_slam", mark: "imp_slam", pounce: "imp_slam", heavy: "imp_heavy", spin: "imp_sweep", whirl: "imp_sweep",
+const IMPACT = { dawnbeam: "imp_sweep", flare: "imp_blast", crescent: "imp_sweep", afterimg: "imp_charge", constel: "imp_small", meteor: "imp_small", pend: "imp_heavy", anvil: "imp_heavy", shadecone: "imp_slam", echo: "imp_small", hands: "imp_sweep", rewind: "imp_blast", lanterns: "imp_small", hunt: "imp_charge", grid: "imp_blast", press: "imp_heavy", lance: "imp_charge", doom: "imp_slam", cleave: "imp_slam", flurry: "imp_slam", mark: "imp_slam", pounce: "imp_slam", heavy: "imp_heavy", spin: "imp_sweep", whirl: "imp_sweep",
   donut: "imp_blast", clock: "imp_blast", pull: "imp_blast", stack: "imp_blast", spread: "imp_blast", polarity: "imp_blast",
   charge: "imp_charge", rush: "imp_charge", crank: "imp_sweep", spring: "imp_heavy", warp: "imp_blast", hop: "imp_slam", sweep: "imp_small", backstab: "imp_slam", slash: "imp_charge", sandwave: "imp_sand", bomb: "imp_heavy", eclipse: "imp_small", ripple: "imp_slam", ring: "imp_slam", haven: "imp_blast", sandpool: "imp_sand", sandwall: "imp_sand", gear: "imp_gear", decoy: "imp_decoy", mhit: "imp_small", summon: "summon" };
 function audioEvents(S, T) {
@@ -3323,7 +3603,7 @@ function audioEvents(S, T) {
       continue;
     }
     if (def.gm) {   // gimmick pieces: one gong at the start, light impacts after
-      if (T >= a.th && T - a.th < .3 && !aud.seenImpact.has(a.i)) { aud.seenImpact.add(a.i); const GV = { sweep: .5, backstab: .9, slash: .9, sandwave: .35, bomb: .45, eclipse: .25, ripple: .45 }; if (!["sweep", "sandwave"].includes(a.k) || a.i % 2 === 0) SFX.play(IMPACT[a.k] || "imp_slam", GV[a.k] || .8); }
+      if (T >= a.th && T - a.th < .3 && !aud.seenImpact.has(a.i)) { aud.seenImpact.add(a.i); const GV = { sweep: .5, backstab: .9, slash: .9, sandwave: .35, bomb: .45, eclipse: .25, ripple: .45, lanterns: .3, hunt: .9, grid: .6, press: .7, lance: .7, doom: .35, blackout: 0 }; if (a.k !== "blackout" && (!["sweep", "sandwave", "doom"].includes(a.k) || a.i % 2 === 0)) SFX.play(IMPACT[a.k] || "imp_slam", GV[a.k] || .8); }
       continue;
     }
     if (!aud.seenCast.has(ck) && T < a.th && T >= a.t0) {
@@ -3367,7 +3647,7 @@ function frame(now) {
   ctx.setTransform(v.dpr * v.s, 0, 0, v.dpr * v.s, v.dpr * (v.ox + sx), v.dpr * (v.oy + sy));
   ctx.save(); ctx.beginPath(); ctx.rect(0, 0, AW, AH); ctx.clip();
   drawFloor(S && S.st === "fight" ? T : idleT * .3, S);
-  if (S && S.st === "fight") { drawPools(T, S); for (const a of S.atk || []) drawTele(a, T, S); drawAdds(T, S); }
+  if (S && S.st === "fight") { drawPools(T, S); for (const a of S.atk || []) drawTele(a, T, S); drawBlackout(T, S); drawAdds(T, S); }
   drawBoss(T, S, idleT);
   const players = on ? playersList() : [];
   if (on) {
