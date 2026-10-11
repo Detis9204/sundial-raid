@@ -439,8 +439,17 @@ const CONFIG = {
       ] },
     /* fast and fragile: shorter range than the gunner, quicker shots and feet, lowest HP */
     acrobat: {
-      name: "곡예사", role: "원거리 · 고속 · 저체력", desc: "사수보다 사거리는 짧지만 빠르게 움직이고 빠르게 던진다. 체력이 가장 낮다. 모든 공격이 7.77% 확률로 행운의 일격(피해 1.3배).",
-      hp: 65, speedMul: 1.25, lucky: [.0777, 1.3],
+      name: "곡예사", role: "원거리 · 고속 · 저체력", desc: "사수보다 사거리는 짧지만 빠르게 움직이고 빠르게 던진다. 체력이 가장 낮다. Q·W가 적중할 때마다 무작위 버프를 얻지만, 아주 드물게 체력이 1이 된다.",
+      hp: 65, speedMul: 1.25,
+      /* 카드 운: chance of the curse per hit, then one random buff (seconds) */
+      fortune: { curse: .01, time: 3, buffs: [
+        { id: "move", name: "질풍", note: "이동 속도 +30%", v: .3 },
+        { id: "atk",  name: "예리함", note: "공격력 +25%", v: .25 },
+        { id: "qcd",  name: "손놀림", note: "Q 재사용 대기시간 2배 빨리 회복", v: 2 },
+        { id: "luck", name: "행운", note: "다음 적중 피해 2배", v: 2 },
+        { id: "heal", name: "회복", note: "체력 4 회복", v: 4 },
+        { id: "ghost", name: "잔상", note: "0.5초 무적", v: .5 },
+      ] },
       atk: { name: "카드 투척", dmg: 30, cd: .75, range: 310, arc: 0, ranged: true, speed: 1000, note: "커서 방향 직선탄, 처음 맞은 적에게 피해" },
       skills: [
         { name: "난사", tier: "공격", cd: 7, dmg: 30, shots: 5, every: .09, note: "카드 투척을 빠르게 5연발" },
@@ -649,13 +658,13 @@ const CONFIG = {
   /* 증강 궁합: fit = 이 직업 컨셉에 맞아 fitMul배 더 자주 나옴, no = 쓸모가 없어 아예 안 나옴. 직업 전용 증강은 classMul배. */
   affinity: { fitMul: 3, classMul: 3, classes: {
     knight:    { fit: ["atk", "close", "dashbuff", "gap", "ecd", "leech", "lg_berserk"], no: [] },
-    rogue:     { fit: ["aspd", "atk", "move", "close", "leech", "dashbuff", "gap", "lg_thunder"], no: [] },
+    rogue:     { fit: ["aspd", "atk", "move", "close", "leech", "dashbuff", "gap"], no: [] },
     paladin:   { fit: ["hp", "regen", "arm", "recoil", "medic", "undying", "shock", "lg_phoenix"], no: [] },
-    gunner:    { fit: ["atk", "aspd", "gap", "gale", "dash", "focus", "overcharge", "lg_thunder"], no: ["close"] },
+    gunner:    { fit: ["atk", "aspd", "gap", "gale", "dash", "focus", "overcharge"], no: ["close"] },
     gladiator: { fit: ["focus", "overcharge", "hp", "undying", "gap", "atk", "lg_berserk"], no: [] },
     acrobat:   { fit: ["move", "aspd", "dash", "gale", "dashbuff", "rcd", "haste", "lg_chrono"], no: ["close", "focus", "overcharge"] },
-    saint:     { fit: ["medic", "regen", "move", "ecd", "rcd", "haste", "hp", "lg_phoenix"], no: ["close", "focus", "overcharge", "leech", "atk", "dashbuff", "gap", "aspd", "lg_thunder", "lg_berserk"] },
-    wizard:    { fit: ["rcd", "qcd", "gap", "atk", "haste", "dash", "lg_thunder"], no: ["close", "focus", "overcharge"] },
+    saint:     { fit: ["medic", "regen", "move", "ecd", "rcd", "haste", "hp", "lg_phoenix"], no: ["close", "focus", "overcharge", "leech", "atk", "dashbuff", "gap", "aspd", "lg_berserk"] },
+    wizard:    { fit: ["rcd", "qcd", "gap", "atk", "haste", "dash"], no: ["close", "focus", "overcharge"] },
   } },
   /* 증강 다시 뽑기: 기본 base회 + 보스 every명 처치마다 1회 */
   augReroll: { base: 1, every: 3 },
@@ -708,14 +717,19 @@ const CONFIG = {
     { id: "wz_focus", g: "智", name: "숙련된 영창", rar: 0, cls: "wizard", v: [.25, .25], desc: v => `마력탄 폭발 범위 +${pc(v[0])}, 모든 마법의 시전 뒤 경직 시간 -${pc(v[1])}`, fx: (s, v) => { s.wzQRad *= 1 + v[0]; s.wzRec *= 1 - v[1]; } },
     { id: "wz_meteor",g: "隕", name: "거대 운석",    rar: 1, cls: "wizard", v: [.5, .25], desc: v => `운석 낙하 피해 +${pc(v[0])}, 범위 +${pc(v[1])}`, fx: (s, v) => { s.wzMetMul *= 1 + v[0]; s.wzMetRad *= 1 + v[1]; } },
     { id: "wz_final", g: "終", name: "종장의 서",    rar: 2, cls: "wizard", v: [.5, .3], desc: v => `종장 피해 +${pc(v[0])}, 1~3단 폭발 범위 +${pc(v[1])}`, fx: (s, v) => { s.wzFinMul *= 1 + v[0]; s.wzNovaRad *= 1 + v[1]; } },
-    { id: "lg_thunder", g: "雷", name: "뇌신의 낙인",   rar: 3, v: [.25, 2.5], desc: v => `Q(주력기)로 적을 맞힐 때마다 ${pc(v[0])} 확률로 낙뢰가 떨어져 그 피해의 ${v[1]}배를 추가로 줌`, fx: (s, v) => { s.thunderP = v[0]; s.thunderMul = v[1]; } },
+    { id: "lg_blink",   g: "步", name: "그림자 걸음",   rar: 3, v: 1, desc: v => `회피가 커서 방향으로 즉시 순간이동하는 방식으로 바뀜 (거리는 그대로)`, fx: (s, v) => { s.dashBlink = true; } },
+    { id: "lg_feather", g: "羽", name: "깃털 걸음",     rar: 3, v: [.2, .3], desc: v => `이동 속도 +${pc(v[0])}, 회피 거리 +${pc(v[1])}`, fx: (s, v) => { s.moveMul *= 1 + v[0]; s.dashDistMul *= 1 + v[1]; } },
+    { id: "lg_anchor",  g: "錨", name: "무거운 닻",     rar: 3, v: 30, desc: v => `밀치기에 밀려나지 않고 끌어당기는 공격에도 끌려가지 않음, 최대 체력 +${v}`, fx: (s, v) => { s.noKnock = true; s.hpAdd += v; } },
+    { id: "lg_second",  g: "再", name: "두 번째 숨",    rar: 3, v: 2, desc: v => `회피를 연속 ${v}번까지 쓸 수 있음 (재사용 대기시간은 한 번 돌 때 모두 충전)`, fx: (s, v) => { s.dashMax = Math.max(s.dashMax, v); } },
+    { id: "lg_ghost",   g: "霊", name: "유령의 잔상",   rar: 3, v: 2, desc: v => `피해를 받은 뒤 무적 시간 0.8초 → ${v}초`, fx: (s, v) => { s.hurtIfr = Math.max(s.hurtIfr, v); } },
+    { id: "lg_sight",   g: "視", name: "예지의 눈",     rar: 3, v: 1, desc: v => `지금 서 있는 곳이 공격 범위면 발밑이 붉게 경고하고, 맞기까지 남은 시간을 보여 줌`, fx: (s, v) => { s.foresight = true; } },
     { id: "lg_phoenix", g: "鳳", name: "불사조의 심장", rar: 3, v: [2, .6, 500], desc: v => `스테이지마다 1회, 쓰러지면 ${v[0]}초 뒤 체력 ${pc(v[1])}로 되살아나며 주변에 피해 ${v[2]}의 화염 폭발`, fx: (s, v) => { s.phoenix = v; } },
     { id: "lg_berserk", g: "狂", name: "광전사의 피",   rar: 3, v: 1.0, desc: v => `잃은 체력만큼 공격력이 올라 체력 30% 이하에서 최대 +${pc(v)}`, fx: (s, v) => { s.berserk = v; } },
     { id: "lg_chrono",  g: "刻", name: "시간을 베는 자", rar: 3, v: [.5, .35], desc: v => `회피 재사용 대기시간 -${pc(v[0])}, 회피하는 동안 ${v[1]}초 무적`, fx: (s, v) => { s.dashCdMul *= 1 - v[0]; s.dashIfr = Math.max(s.dashIfr, v[1]); } },
     { id: "kn_legend", g: "劍", name: "검성의 경지",    rar: 3, cls: "knight",    v: [3, 2, 450], desc: v => `베기(Q) ${v[0]}번째마다 앞으로 검기가 날아가 일직선(${v[2]})의 적 모두에게 베기 피해의 ${v[1]}배`, fx: (s, v) => { s.knWave = v; } },
     { id: "ro_legend", g: "影", name: "그림자 군주",    rar: 3, cls: "rogue",     v: .4, desc: v => `모든 공격이 언제나 백어택, 백어택 피해 배율 +${v} (1.4배 → ${(1.4 + v).toFixed(1)}배)`, fx: (s, v) => { s.roAlwaysBack = true; s.backAdd += v; } },
     { id: "pa_legend", g: "盾", name: "불멸의 성벽",    rar: 3, cls: "paladin",   v: 1, desc: v => `밀치기(D)를 쓰면 범위 안 동료 모두와 나에게 결계(피해 1회 무효)`, fx: (s, v) => { s.pushWard = v; } },
-    { id: "gn_legend", g: "彈", name: "탄환 폭풍",      rar: 3, cls: "gunner",    v: [3, 12], desc: v => `관통탄(W)이 ${v[0]}발로 갈라져 부채꼴(${v[1]}° 간격)로 발사`, fx: (s, v) => { s.gnFan = v; } },
+    { id: "gn_legend", g: "彈", name: "탄환 폭풍",      rar: 3, cls: "gunner",    v: [3, .16], desc: v => `관통탄(W)이 ${v[1]}초 간격 ${v[0]}연발로 나감 (매 발 커서 방향)`, fx: (s, v) => { s.gnBurst = v; } },
     { id: "gl_legend", g: "鬪", name: "투신 강림",      rar: 3, cls: "gladiator", v: [1.5, .5], desc: v => `차지 기술을 끝까지 모아 쓰면 ${v[0]}초 무적, 그 기술 재사용 대기시간 ${pc(v[1])} 즉시 감소`, fx: (s, v) => { s.glGod = v; } },
     { id: "ac_legend", g: "札", name: "죽음의 패",      rar: 3, cls: "acrobat",   v: [3, 10], desc: v => `카드 투척과 난사가 한 번에 ${v[0]}장씩 부채꼴(${v[1]}° 간격)로 날아감`, fx: (s, v) => { s.acFan = v; } },
     { id: "sa_legend", g: "唱", name: "천상의 합창",    rar: 3, cls: "saint",     v: [5, 4], desc: v => `찬가 지속 +${v[0]}초, 찬가를 받은 아군은 매초 체력 ${v[1]} 회복`, fx: (s, v) => { s.hsTime += v[0]; s.hsRegen += v[1]; } },
@@ -1799,7 +1813,7 @@ const me = { x: 640, y: 600, hp: 100, mh: 100, dn: 0, downT: 0, ifr: 0, dashT: 0
   wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, poisonAcc: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0, waveN: 0, hsRegenAcc: 0, hasteRegen: 0, poolT: 0,
   cast: null, move: null, multi: null, ch: null, chFlash: 0, sw: 0, cx: 0, fx: null, fxN: 0, wd: null, hl: null, evId: 0,
   rv: null, rvT: null, rvP: 0, hitT: 0, ag: [], pk: -1, offer: null, offerKey: -1, st: null, shots: [], shotN: 0, pushCd: 0, kb: null, pu: null,
-  tp: null, tl: null, tm: null, hs: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, hasteSpd: 0, hasteAmp: 0, pend: [], rs: null, sp: null, spN: 0, rrUsed: 0 };
+  tp: null, tl: null, tm: null, hs: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, hasteSpd: 0, hasteAmp: 0, pend: [], rs: null, sp: null, spN: 0, rrUsed: 0, fb: null, gnQ: null, dashSpare: 0, danger: 0 };
 let resolved = new Set(), fxList = [], floats = [], markers = [], disp = new Map(), addDisp = new Map();
 const bubbles = new Map(), seenSp = new Map(), seenLeg = new Map();   // peer -> { txt, t }
 const seenSw = new Map(), seenFx = new Map(), seenWd = new Map(), seenHl = new Map(), seenCx = new Map(), seenPu = new Map(), seenTm = new Map(), seenHs = new Map();
@@ -1811,7 +1825,7 @@ function baseStats() {
     counterAdd: 0, counterTimeAdd: 0, dashBuff: 0, dashBuffTime: 0, lifesteal: 0, closeBonus: 0, reviveSpd: 1, reviveHp: 0,
     parryIframe: 0, parryReset: false, perfectCounter: 0, undying: 0, maxChargeBonus: 0,
     arcAdd: 0, spinRange: 1, spinMul: 1, quakeEcho: 0, poisonTime: 0, poisonDps: 0, shadowBack: 0, execLow: 0, execMul: 0,
-    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0, glMinAdd: 0, glMaxAdd: 0, glStance: 0, acVolley: 0, acGambleMul: 1, acGambleIfr: 0, pushHealMul: 1, pushCdMul: 1, pushRadiusMul: 1, pushDmgMul: 1, pushForceMul: 1, dashDistMul: 1, tlDur: 0, tlRange: 0, tlMul: 1, hsTime: 0, hsAdd: 0, wzQRad: 1, wzRec: 1, wzMetMul: 1, wzMetRad: 1, wzFinMul: 1, wzNovaRad: 1, thunderP: 0, thunderMul: 0, phoenix: null, berserk: 0, dashIfr: 0, knWave: null, roAlwaysBack: false, backAdd: 0, pushWard: 0, gnFan: null, glGod: null, acFan: null, hsRegen: 0, wzGapMul: 1 };
+    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0, glMinAdd: 0, glMaxAdd: 0, glStance: 0, acVolley: 0, acGambleMul: 1, acGambleIfr: 0, pushHealMul: 1, pushCdMul: 1, pushRadiusMul: 1, pushDmgMul: 1, pushForceMul: 1, dashDistMul: 1, tlDur: 0, tlRange: 0, tlMul: 1, hsTime: 0, hsAdd: 0, wzQRad: 1, wzRec: 1, wzMetMul: 1, wzMetRad: 1, wzFinMul: 1, wzNovaRad: 1, dashBlink: false, noKnock: false, dashMax: 1, hurtIfr: 0, foresight: false, phoenix: null, berserk: 0, dashIfr: 0, knWave: null, roAlwaysBack: false, backAdd: 0, pushWard: 0, gnBurst: null, glGod: null, acFan: null, hsRegen: 0, wzGapMul: 1 };
 }
 function recalcStats() {
   const s = baseStats();
@@ -1827,7 +1841,7 @@ function resetMe() {
   me.x = 460 + Math.random() * 360; me.y = 610; me.order = null; me.eng = null;
   Object.assign(me, { cd: [0, 0, 0], atkCd: 0, dashCd: 0, dashT: 0, guardT: 0, guardCd: 0, counterT: 0, wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0,
     cast: null, move: null, multi: null, burst: null, ch: null, rv: null, rvT: null, rvP: 0, poolT: 0, shots: [], shotN: 0, pushCd: 0, kb: null,
-    tp: null, tl: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, pend: [], rs: null });
+    tp: null, tl: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, pend: [], rs: null, fb: null, gnQ: null, dashSpare: 0 });
   resolved = new Set();
 }
 function nowS() { return performance.now() / 1000; }
@@ -1869,14 +1883,21 @@ function inArc(e, range, half, dir) {
   return angDiff(Math.atan2(e.y - me.y, e.x - me.x), dir) <= half + Math.asin(Math.min(1, e.r / Math.max(d, 1)));
 }
 
-/* Q hits may call down lightning (뇌신의 낙인) */
+/* every Q/W card that lands draws a card of fortune (곡예사) */
 function deal(e, base, opts) {
-  const d = dealCore(e, base, opts), st = me.st;
-  if (e && opts && opts.basic && st.thunderP && Math.random() < st.thunderP) {
-    emitFxAt(23, e.x, e.y, e.r); shake = Math.max(shake, .15);
-    dealCore(e, base * st.thunderMul, { noBuff: true, tag: "낙뢰 " });
-  }
+  const d = dealCore(e, base, opts);
+  if (e && opts && opts.basic && CLASSES[myClass].fortune && (d > 0 || !curS || curS.st !== "fight")) drawFortune();   // lobby practice counts too
   return d;
+}
+function drawFortune() {
+  const F = CLASSES.acrobat.fortune, fb = me.fb || (me.fb = { move: 0, atk: 0, qcd: 0, luck: false });
+  if (Math.random() < F.curse) { me.hp = 1; float(me.x, me.y - 56, "불운 · 체력 1", "#ff6f7d", true); SFX.play("hurt"); shake = .3; return; }
+  const b = F.buffs[Math.floor(Math.random() * F.buffs.length)];
+  if (b.id === "move" || b.id === "atk" || b.id === "qcd") fb[b.id] = F.time;
+  else if (b.id === "luck") fb.luck = true;
+  else if (b.id === "heal") { if (me.hp < me.mh) me.hp = Math.min(me.mh, me.hp + b.v); }
+  else if (b.id === "ghost") me.ifr = Math.max(me.ifr, b.v);
+  float(me.x + (Math.random() - .5) * 20, me.y - 50, b.name, "#7dffa0");
 }
 function dealCore(e, base, opts) {
   const S = curS, T = curT; opts = opts || {};
@@ -1888,7 +1909,10 @@ function dealCore(e, base, opts) {
   if (!practice && e.boss && (S.bs === "shield" || T < S.ps + TRANS)) { float(fx, fy, "보호막", "#f3e6c8"); SFX.play("clank"); return 0; }
   if (!practice && e.boss && S.hp <= 0) return 0;
   let mult = st.atkMul, tag = opts.tag || "", col = opts.tag ? "#ffe066" : "#f3e6c8";
-  const LK = CLASSES[myClass].lucky; if (LK && Math.random() < LK[0]) { mult *= LK[1]; tag += "행운 "; col = "#7dffa0"; }   // 곡예사: 행운의 일격
+  if (me.fb && !opts.noBuff) {   // 곡예사 카드 운
+    if (me.fb.atk > 0) mult *= 1 + CLASSES.acrobat.fortune.buffs[1].v;
+    if (me.fb.luck) { mult *= CLASSES.acrobat.fortune.buffs[3].v; me.fb.luck = false; tag += "행운 "; col = "#7dffa0"; }
+  }
   const bz = berserkFrac(); if (bz > 0) { mult *= 1 + st.berserk * bz; if (bz >= 1) { tag += "광폭 "; col = "#ff6f7d"; } }
   if (me.counterT > 0 && !opts.noBuff) { mult *= me.counterMul; me.counterT = 0; tag = "반격 "; col = "#ffd166"; }
   if (me.dashBuffT > 0 && !opts.noBuff) { mult *= 1 + st.dashBuff; me.dashBuffT = 0; tag += "돌격 "; col = "#ffd166"; }
@@ -2049,6 +2073,7 @@ function doPush() {
   }
 }
 function knockMe(fromX, fromY, speed) {
+  if (me.st.noKnock) return;   // 무거운 닻
   const dx = me.x - fromX, dy = me.y - fromY, d = Math.hypot(dx, dy);
   const ux = d > .5 ? dx / d : Math.cos(Math.random() * TAU), uy = d > .5 ? dy / d : Math.sin(Math.random() * TAU);
   me.kb = { vx: ux * speed, vy: uy * speed };
@@ -2096,7 +2121,7 @@ function hurt(n, why) {
   if (me.ch && me.st.glStance) n = Math.max(1, Math.round(n * (1 - me.st.glStance)));   // 불굴의 자세
   else if (me.ch) interruptChannel("피격");
   if (me.rvP > 0) { me.rvP = 0; me.rv = null; float(me.x, me.y - 56, "부활 취소", "#ff6f7d"); }
-  me.hp -= n; me.ifr = Math.max(me.ifr, .8); me.hitT = .35; shake = .25;
+  me.hp -= n; me.ifr = Math.max(me.ifr, me.st.hurtIfr || .8); me.hitT = .35; shake = .25;
   float(me.x, me.y - 30, "-" + n, "#ff6f7d"); SFX.play("hurt");
   if (me.hp <= 0) {
     if (me.st.undying && !me.undyingUsed) { me.undyingUsed = true; me.hp = Math.max(1, Math.round(me.mh * me.st.undying)); me.ifr = 1.5; float(me.x, me.y - 50, "불굴!", "#c38bff", true); }
@@ -2291,11 +2316,8 @@ function useSkill(i) {
       startMove(.18, me.x - ux * sk.back, me.y - uy * sk.back);
     } else if (i === 0) {
       emitFx(12, sk.len); shake = .1;
-      if (st.gnFan) {   // 탄환 폭풍
-        const n = st.gnFan[0], step = st.gnFan[1] * DEG;
-        for (let k = 0; k < n; k++) { const an = a + (k - (n - 1) / 2) * step; if (k !== (n - 1) / 2) spawnFx(12, me.x, me.y, an, myColor, myClass, sk.len); hitAll(e => onLine(e, me.x, me.y, an, sk.len, sk.w), sk.dmg); }
-        shake = .2;
-      } else hitAll(e => onLine(e, me.x, me.y, a, sk.len, sk.w), sk.dmg);
+      hitAll(e => onLine(e, me.x, me.y, a, sk.len, sk.w), sk.dmg);
+      if (st.gnBurst) me.gnQ = { left: st.gnBurst[0] - 1, t: st.gnBurst[1], every: st.gnBurst[1], dmg: sk.dmg, len: sk.len, w: sk.w };   // 탄환 폭풍
     }
   }
 }
@@ -2490,7 +2512,7 @@ function updateBoss(dt, S, idleT) {
   for (const key of addDisp.keys()) if (!seen.has(key)) addDisp.delete(key);
 }
 function moveToward(tx, ty, dt, stopAt) {
-  const C = me.st, sp = CONFIG.player.moveSpeed * C.moveMul * (CLASSES[myClass].speedMul || 1) * (me.hasteT > 0 ? 1 + me.hasteSpd : 1);
+  const C = me.st, sp = CONFIG.player.moveSpeed * C.moveMul * (CLASSES[myClass].speedMul || 1) * (me.hasteT > 0 ? 1 + me.hasteSpd : 1) * (me.fb && me.fb.move > 0 ? 1 + CLASSES.acrobat.fortune.buffs[0].v : 1);
   const dx = tx - me.x, dy = ty - me.y, d = Math.hypot(dx, dy);
   if (d <= (stopAt || 0) + .5) return true;
   const step = Math.min(d - (stopAt || 0), sp * dt);
@@ -2517,8 +2539,9 @@ function updateMe(dt, T, S) {
   const C = CLASSES[myClass], st = me.st, fighting = S && S.st === "fight";
   me.aim = Math.atan2(mouse.y - me.y, mouse.x - me.x);
   me.hasteT = Math.max(0, me.hasteT - dt);
+  if (me.fb) for (const k of ["move", "atk", "qcd"]) me.fb[k] = Math.max(0, me.fb[k] - dt);
   const cdRate = 1;
-  me.atkCd = Math.max(0, me.atkCd - dt * cdRate);
+  me.atkCd = Math.max(0, me.atkCd - dt * cdRate * (me.fb && me.fb.qcd > 0 ? CLASSES.acrobat.fortune.buffs[2].v : 1));
   for (const k of ["ifr", "dashCd", "pushCd", "guardT", "guardCd", "counterT", "hitT", "dashBuffT", "shadowT", "chFlash"]) me[k] = Math.max(0, me[k] - dt);
   for (let i = 0; i < 3; i++) me.cd[i] = Math.max(0, me.cd[i] - dt * cdRate);
   updateShots(dt); updateTether(dt); updatePend(dt);
@@ -2537,15 +2560,22 @@ function updateMe(dt, T, S) {
     for (const p of others) { const rv = p.presence.rv; if (Array.isArray(rv) && rv[0] === myPeer) { beingRevived = rv[1] > 0; if (rv[1] >= 1) { me.dn = 0; me.downT = 0; me.hp = Math.max(1, Math.round(me.mh * rv[2])); me.ifr = 2; SFX.play("revive"); float(me.x, me.y - 40, "부활!", "#7fd3a3", true); break; } } }
     if (me.dn === 1 && fighting && !beingRevived) { me.downT -= dt; if (me.downT <= 0) { me.downT = 0; me.dn = 2; SFX.play("death"); float(me.x, me.y - 40, "사망", "#8f97b3", true); } }
   }
-  if (me.dn) { queued.clear(); released.clear(); me.rv = null; me.linkBuff = 0; me.linkHps = 0; return; }
+  if (me.dn) { queued.clear(); released.clear(); me.rv = null; me.linkBuff = 0; me.linkHps = 0; me.danger = 0; return; }
+  me.danger = 0;
+  if (st.foresight && fighting) for (const a of S.atk || []) { const ht = hitTime(a); if (T >= a.t0 && T < ht && !resolved.has(a.i)) { let dd = 0; try { dd = damageFor(a, S); } catch (e) {} if (dd > 0 && (!me.danger || ht - T < me.danger)) me.danger = ht - T; } }   // 예지의 눈
 
   // instant inputs
   if (queued.has("KeyS")) { me.order = null; me.eng = null; if (me.ch) interruptChannel("정지"); }
   if (queued.has("KeyH")) { me.order = { t: "hold" }; me.eng = null; }
   if (queued.has("KeyD")) doPush();
-  if (queued.has("Space") && me.dashCd <= 0 && !me.move && !me.cast) {
+  if (queued.has("Space") && (me.dashCd <= 0 || me.dashSpare > 0) && !me.move && !me.cast) {
     if (me.ch) interruptChannel("회피");
-    me.dashT = CONFIG.dash.time; me.ddx = Math.cos(me.aim); me.ddy = Math.sin(me.aim); me.dashCd = CONFIG.dash.cd * st.dashCdMul; me.order = null;
+    if (me.dashCd <= 0) { me.dashCd = CONFIG.dash.cd * st.dashCdMul; me.dashSpare = (st.dashMax || 1) - 1; } else me.dashSpare--;   // 두 번째 숨
+    me.ddx = Math.cos(me.aim); me.ddy = Math.sin(me.aim); me.order = null;
+    if (st.dashBlink) {   // 그림자 걸음: no travel time
+      const L = CONFIG.dash.speed * CONFIG.dash.time * st.dashDistMul;
+      spawnFx(6, me.x, me.y, 0, myColor, myClass); me.x = clamp(me.x + me.ddx * L, 14, AW - 14); me.y = clamp(me.y + me.ddy * L, 14, AH - 14); emitFx(6, 0, .5);
+    } else me.dashT = CONFIG.dash.time;
     if (st.dashBuff) me.dashBuffT = st.dashBuffTime;
     if (st.dashIfr) me.ifr = Math.max(me.ifr, st.dashIfr);
     SFX.play("dash");
@@ -2582,6 +2612,10 @@ function updateMe(dt, T, S) {
     const f = Math.exp(-P.friction * dt); k.vx *= f; k.vy *= f;
     if (Math.hypot(k.vx, k.vy) < 30) me.kb = null;
   }
+  if (me.gnQ) {   // 탄환 폭풍: the remaining shots, each aimed where the cursor is now
+    const q = me.gnQ; q.t -= dt;
+    if (q.t <= 0) { q.t = q.every; q.left--; me.a = me.aim; emitFx(12, q.len); shake = .12; hitAll(e => onLine(e, me.x, me.y, me.aim, q.len, q.w), q.dmg); if (q.left <= 0) me.gnQ = null; }
+  }
   if (me.burst) {
     me.burst.t -= dt;
     if (me.burst.t <= 0) { me.burst.t = me.burst.every; me.burst.left--; me.a = me.aim; me.sw++; spawnFx(0, me.x, me.y, me.aim, myColor, myClass, -1); SFX.play("swing", .8, myClass); fireShot(me.burst.dmg); if (me.burst.left <= 0) me.burst = null; }
@@ -2607,7 +2641,7 @@ function updateMe(dt, T, S) {
   if (!moveBusy() && !reviving && S && S.st !== "augment") processOrder(dt);
 
   // pull & body separation
-  if (fighting) for (const a of S.atk || []) if (a.k === "pull" && T >= a.t0 && T < a.th) { const dx = a.x - me.x, dy = a.y - me.y, d = Math.hypot(dx, dy); if (d > 30) { me.x += dx / d * ATK.pull.pull * dt; me.y += dy / d * ATK.pull.pull * dt; } }
+  if (fighting && !st.noKnock) for (const a of S.atk || []) if (a.k === "pull" && T >= a.t0 && T < a.th) { const dx = a.x - me.x, dy = a.y - me.y, d = Math.hypot(dx, dy); if (d > 30) { me.x += dx / d * ATK.pull.pull * dt; me.y += dy / d * ATK.pull.pull * dt; } }
   for (const e of enemies()) { const d = dist(me.x, me.y, e.x, e.y), minD = e.r + CONFIG.player.radius + 2; if (d < minD && d > .01 && !me.move) { me.x = e.x + (me.x - e.x) / d * minD; me.y = e.y + (me.y - e.y) / d * minD; } }
   me.x = clamp(me.x, 14, AW - 14); me.y = clamp(me.y, 14, AH - 14);
 
@@ -3099,6 +3133,12 @@ function drawPlayer(x, y, pr, isMe, peer, T) {
     if (pr.gd) { ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, 21, -1.1, 1.1); ctx.stroke(); }
     ctx.restore();
     }
+    if (isMe && me.danger > 0) {   // 예지의 눈: you are standing in something
+      const pul = .55 + .45 * Math.sin(performance.now() / 70);
+      ctx.fillStyle = "rgba(255,72,48," + .28 * pul + ")"; ctx.beginPath(); ctx.ellipse(0, 10, 26, 11, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = "rgba(255,72,48," + pul + ")"; ctx.lineWidth = 3; ctx.stroke();
+      ctx.font = '700 12px "IBM Plex Mono", monospace'; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = "#ff8f6b"; ctx.fillText(me.danger.toFixed(1), 0, 34);
+    }
     if (isMe && me.cast && me.cast.max) {   // 후딜레이: can't move until the ring empties
       const f = clamp(me.cast.t / me.cast.max, 0, 1);
       ctx.strokeStyle = "rgba(201,184,255,.9)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 10, 19, 8, 0, -Math.PI / 2, -Math.PI / 2 + TAU * f); ctx.stroke();
@@ -3373,6 +3413,7 @@ function drawHUD(T, S) {
   if (me.shadowT > 0) line("그림자 · 모든 공격 백어택", "#b9a0ff");
   if (me.linkBuff > 0) line("맥동 · 공격력 +" + pc(me.linkBuff), "#ffd166");
   if (me.linkHps > 0) line("빛의 끈 · 초당 체력 " + Math.round(me.linkHps * 10) / 10 + " 회복", "#7fd3a3");
+  if (me.fb) { const F = CLASSES.acrobat.fortune.buffs, on = []; if (me.fb.move > 0) on.push(F[0].name); if (me.fb.atk > 0) on.push(F[1].name); if (me.fb.qcd > 0) on.push(F[2].name); if (me.fb.luck) on.push(F[3].name); if (on.length) line("카드 운 · " + on.join(" · "), "#7dffa0"); }
   if (me.rs) line("사중 영창 · " + (me.rs.step + 1) + "단계 준비 · " + me.rs.left.toFixed(1) + "초", "#c9b8ff");
   if (me.cast && me.cast.max) line("시전 경직", "#c9b8ff");
   if (berserkFrac() > 0) line("광전사의 피 · 공격력 +" + pc(me.st.berserk * berserkFrac()), "#ff6f7d");
@@ -3391,7 +3432,7 @@ function drawHUD(T, S) {
     const chain = myClass === "wizard" && i === 2 && me.rs;
     drawSlot(sx + 84 + i * 84, sY, "WER"[i] + (sk.channel ? " ⟳" : ""), chain ? (me.rs.step === 3 ? "종장" : "영창 " + (me.rs.step + 1)) : sk.name, chain ? (me.rs.step + 1) + "/4" : sk.tier, me.cd[i], chain ? sk.gap[me.rs.step - 1] * me.st.wzGapMul : skillCd(i), chain && me.cd[i] <= 0 ? { active: true } : state);
   }
-  drawSlot(sx + 350, sY, "SPC", "회피", "", me.dashCd, CONFIG.dash.cd * me.st.dashCdMul, null);
+  drawSlot(sx + 350, sY, "SPC", "회피", me.dashCd > 0 && me.dashSpare > 0 ? "+" + me.dashSpare : "", me.dashCd, CONFIG.dash.cd * me.st.dashCdMul, null);
   drawSlot(sx + 434, sY, "D", "밀치기", "", me.pushCd, CONFIG.push.cd * me.st.pushCdMul, null);
   if (S && S.st === "fight") {
     ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillStyle = "#8f97b3"; ctx.font = '500 12px "IBM Plex Mono", monospace';
