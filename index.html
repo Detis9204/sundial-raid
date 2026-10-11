@@ -722,7 +722,7 @@ const CONFIG = {
     { id: "lg_anchor",  g: "錨", name: "무거운 닻",     rar: 3, v: 30, desc: v => `밀치기에 밀려나지 않고 끌어당기는 공격에도 끌려가지 않음, 최대 체력 +${v}`, fx: (s, v) => { s.noKnock = true; s.hpAdd += v; } },
     { id: "lg_second",  g: "再", name: "두 번째 숨",    rar: 3, v: 2, desc: v => `회피를 연속 ${v}번까지 쓸 수 있음 (재사용 대기시간은 한 번 돌 때 모두 충전)`, fx: (s, v) => { s.dashMax = Math.max(s.dashMax, v); } },
     { id: "lg_ghost",   g: "霊", name: "유령의 잔상",   rar: 3, v: 2, desc: v => `피해를 받은 뒤 무적 시간 0.8초 → ${v}초`, fx: (s, v) => { s.hurtIfr = Math.max(s.hurtIfr, v); } },
-    { id: "lg_sight",   g: "視", name: "예지의 눈",     rar: 3, v: 1, desc: v => `지금 서 있는 곳이 공격 범위면 발밑이 붉게 경고하고, 맞기까지 남은 시간을 보여 줌`, fx: (s, v) => { s.foresight = true; } },
+    { id: "lg_sight",   g: "本", name: "생존 본능",     rar: 3, v: [.4, 2], desc: v => `공격 범위 안에 서 있는 동안 이동 속도 +${pc(v[0])}, 회피 재사용 대기시간이 ${v[1]}배 빨리 회복`, fx: (s, v) => { s.foresight = v; } },
     { id: "lg_phoenix", g: "鳳", name: "불사조의 심장", rar: 3, v: [2, .6, 500], desc: v => `스테이지마다 1회, 쓰러지면 ${v[0]}초 뒤 체력 ${pc(v[1])}로 되살아나며 주변에 피해 ${v[2]}의 화염 폭발`, fx: (s, v) => { s.phoenix = v; } },
     { id: "lg_berserk", g: "狂", name: "광전사의 피",   rar: 3, v: 1.0, desc: v => `잃은 체력만큼 공격력이 올라 체력 30% 이하에서 최대 +${pc(v)}`, fx: (s, v) => { s.berserk = v; } },
     { id: "lg_chrono",  g: "刻", name: "시간을 베는 자", rar: 3, v: [.5, .35], desc: v => `회피 재사용 대기시간 -${pc(v[0])}, 회피하는 동안 ${v[1]}초 무적`, fx: (s, v) => { s.dashCdMul *= 1 - v[0]; s.dashIfr = Math.max(s.dashIfr, v[1]); } },
@@ -1825,7 +1825,7 @@ function baseStats() {
     counterAdd: 0, counterTimeAdd: 0, dashBuff: 0, dashBuffTime: 0, lifesteal: 0, closeBonus: 0, reviveSpd: 1, reviveHp: 0,
     parryIframe: 0, parryReset: false, perfectCounter: 0, undying: 0, maxChargeBonus: 0,
     arcAdd: 0, spinRange: 1, spinMul: 1, quakeEcho: 0, poisonTime: 0, poisonDps: 0, shadowBack: 0, execLow: 0, execMul: 0,
-    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0, glMinAdd: 0, glMaxAdd: 0, glStance: 0, acVolley: 0, acGambleMul: 1, acGambleIfr: 0, pushHealMul: 1, pushCdMul: 1, pushRadiusMul: 1, pushDmgMul: 1, pushForceMul: 1, dashDistMul: 1, tlDur: 0, tlRange: 0, tlMul: 1, hsTime: 0, hsAdd: 0, wzQRad: 1, wzRec: 1, wzMetMul: 1, wzMetRad: 1, wzFinMul: 1, wzNovaRad: 1, dashBlink: false, noKnock: false, dashMax: 1, hurtIfr: 0, foresight: false, phoenix: null, berserk: 0, dashIfr: 0, knWave: null, roAlwaysBack: false, backAdd: 0, pushWard: 0, gnBurst: null, glGod: null, acFan: null, hsRegen: 0, wzGapMul: 1 };
+    bashMul: 1, wardRangeMul: 1, wardHeal: 0, hammerHealMul: 1, hammerRadiusMul: 1, rangeAdd: 0, headEvery: 0, headMul: 0, snipeMax: 0, snipeRefund: 0, glMinAdd: 0, glMaxAdd: 0, glStance: 0, acVolley: 0, acGambleMul: 1, acGambleIfr: 0, pushHealMul: 1, pushCdMul: 1, pushRadiusMul: 1, pushDmgMul: 1, pushForceMul: 1, dashDistMul: 1, tlDur: 0, tlRange: 0, tlMul: 1, hsTime: 0, hsAdd: 0, wzQRad: 1, wzRec: 1, wzMetMul: 1, wzMetRad: 1, wzFinMul: 1, wzNovaRad: 1, dashBlink: false, noKnock: false, dashMax: 1, hurtIfr: 0, foresight: null, phoenix: null, berserk: 0, dashIfr: 0, knWave: null, roAlwaysBack: false, backAdd: 0, pushWard: 0, gnBurst: null, glGod: null, acFan: null, hsRegen: 0, wzGapMul: 1 };
 }
 function recalcStats() {
   const s = baseStats();
@@ -2512,7 +2512,7 @@ function updateBoss(dt, S, idleT) {
   for (const key of addDisp.keys()) if (!seen.has(key)) addDisp.delete(key);
 }
 function moveToward(tx, ty, dt, stopAt) {
-  const C = me.st, sp = CONFIG.player.moveSpeed * C.moveMul * (CLASSES[myClass].speedMul || 1) * (me.hasteT > 0 ? 1 + me.hasteSpd : 1) * (me.fb && me.fb.move > 0 ? 1 + CLASSES.acrobat.fortune.buffs[0].v : 1);
+  const C = me.st, sp = CONFIG.player.moveSpeed * C.moveMul * (CLASSES[myClass].speedMul || 1) * (me.hasteT > 0 ? 1 + me.hasteSpd : 1) * (me.fb && me.fb.move > 0 ? 1 + CLASSES.acrobat.fortune.buffs[0].v : 1) * (me.danger > 0 && me.st.foresight ? 1 + me.st.foresight[0] : 1);
   const dx = tx - me.x, dy = ty - me.y, d = Math.hypot(dx, dy);
   if (d <= (stopAt || 0) + .5) return true;
   const step = Math.min(d - (stopAt || 0), sp * dt);
@@ -2540,6 +2540,7 @@ function updateMe(dt, T, S) {
   me.aim = Math.atan2(mouse.y - me.y, mouse.x - me.x);
   me.hasteT = Math.max(0, me.hasteT - dt);
   if (me.fb) for (const k of ["move", "atk", "qcd"]) me.fb[k] = Math.max(0, me.fb[k] - dt);
+  if (me.danger > 0 && me.st.foresight) me.dashCd = Math.max(0, me.dashCd - dt * (me.st.foresight[1] - 1));   // 생존 본능
   const cdRate = 1;
   me.atkCd = Math.max(0, me.atkCd - dt * cdRate * (me.fb && me.fb.qcd > 0 ? CLASSES.acrobat.fortune.buffs[2].v : 1));
   for (const k of ["ifr", "dashCd", "pushCd", "guardT", "guardCd", "counterT", "hitT", "dashBuffT", "shadowT", "chFlash"]) me[k] = Math.max(0, me[k] - dt);
@@ -2562,7 +2563,7 @@ function updateMe(dt, T, S) {
   }
   if (me.dn) { queued.clear(); released.clear(); me.rv = null; me.linkBuff = 0; me.linkHps = 0; me.danger = 0; return; }
   me.danger = 0;
-  if (st.foresight && fighting) for (const a of S.atk || []) { const ht = hitTime(a); if (T >= a.t0 && T < ht && !resolved.has(a.i)) { let dd = 0; try { dd = damageFor(a, S); } catch (e) {} if (dd > 0 && (!me.danger || ht - T < me.danger)) me.danger = ht - T; } }   // 예지의 눈
+  if (st.foresight && fighting) for (const a of S.atk || []) { const ht = hitTime(a); if (T >= a.t0 && T < ht && !resolved.has(a.i)) { let dd = 0; try { dd = damageFor(a, S); } catch (e) {} if (dd > 0 && (!me.danger || ht - T < me.danger)) me.danger = ht - T; } }   // 생존 본능: danger detection
 
   // instant inputs
   if (queued.has("KeyS")) { me.order = null; me.eng = null; if (me.ch) interruptChannel("정지"); }
@@ -3133,11 +3134,9 @@ function drawPlayer(x, y, pr, isMe, peer, T) {
     if (pr.gd) { ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, 21, -1.1, 1.1); ctx.stroke(); }
     ctx.restore();
     }
-    if (isMe && me.danger > 0) {   // 예지의 눈: you are standing in something
-      const pul = .55 + .45 * Math.sin(performance.now() / 70);
-      ctx.fillStyle = "rgba(255,72,48," + .28 * pul + ")"; ctx.beginPath(); ctx.ellipse(0, 10, 26, 11, 0, 0, TAU); ctx.fill();
-      ctx.strokeStyle = "rgba(255,72,48," + pul + ")"; ctx.lineWidth = 3; ctx.stroke();
-      ctx.font = '700 12px "IBM Plex Mono", monospace'; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = "#ff8f6b"; ctx.fillText(me.danger.toFixed(1), 0, 34);
+    if (isMe && me.danger > 0) {   // 생존 본능 active: a quick red pulse at the feet
+      const pul = .5 + .5 * Math.sin(performance.now() / 60);
+      ctx.strokeStyle = "rgba(255,143,107," + (.4 + .5 * pul) + ")"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(0, 10, 22 + pul * 4, 9 + pul * 2, 0, 0, TAU); ctx.stroke();
     }
     if (isMe && me.cast && me.cast.max) {   // 후딜레이: can't move until the ring empties
       const f = clamp(me.cast.t / me.cast.max, 0, 1);
@@ -3413,6 +3412,7 @@ function drawHUD(T, S) {
   if (me.shadowT > 0) line("그림자 · 모든 공격 백어택", "#b9a0ff");
   if (me.linkBuff > 0) line("맥동 · 공격력 +" + pc(me.linkBuff), "#ffd166");
   if (me.linkHps > 0) line("빛의 끈 · 초당 체력 " + Math.round(me.linkHps * 10) / 10 + " 회복", "#7fd3a3");
+  if (me.danger > 0 && me.st.foresight) line("생존 본능 · 이동 속도 +" + pc(me.st.foresight[0]), "#ff8f6b");
   if (me.fb) { const F = CLASSES.acrobat.fortune.buffs, on = []; if (me.fb.move > 0) on.push(F[0].name); if (me.fb.atk > 0) on.push(F[1].name); if (me.fb.qcd > 0) on.push(F[2].name); if (me.fb.luck) on.push(F[3].name); if (on.length) line("카드 운 · " + on.join(" · "), "#7dffa0"); }
   if (me.rs) line("사중 영창 · " + (me.rs.step + 1) + "단계 준비 · " + me.rs.left.toFixed(1) + "초", "#c9b8ff");
   if (me.cast && me.cast.max) line("시전 경직", "#c9b8ff");
