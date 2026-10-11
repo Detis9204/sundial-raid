@@ -1059,7 +1059,7 @@ function sanitize(p) {
     pk: Math.round(num(p.pk, -1, 1e9, -1)), ad,
     tl: (Array.isArray(p.tl) && p.tl.length >= 2 && typeof p.tl[1] === "string") ? [Math.round(num(p.tl[0], 1, 2, 1)), p.tl[1].slice(0, 64), num(p.tl[2], 0, 60, 0), num(p.tl[3], 0, 3, 0), num(p.tl[4], 0, 50, 0)] : null,
     tm: (Array.isArray(p.tm) && p.tm.length >= 4 && typeof p.tm[1] === "string") ? [num(p.tm[0], 0, 1e9, 0), p.tm[1].slice(0, 64), num(p.tm[2], 0, AW, 0), num(p.tm[3], 0, AH, 0), num(p.tm[4], 0, 200, 0)] : null,
-    ha: p.ha ? 1 : 0,
+    ha: p.ha ? 1 : 0, pp: p.pp ? 1 : 0,
     sp: (Array.isArray(p.sp) && p.sp.length >= 3) ? [num(p.sp[0], 0, 1e9, 0), Math.round(num(p.sp[1], 0, 3, 0)), Math.round(num(p.sp[2], 0, 9, 0))] : null,
     hs: (Array.isArray(p.hs) && p.hs.length >= 4) ? [num(p.hs[0], 0, 1e9, 0), num(p.hs[1], 0, 30, 0), num(p.hs[2], 0, 1, 0), num(p.hs[3], 0, 2, 0), num(p.hs[4], 0, 50, 0)] : null,
 
@@ -1285,7 +1285,7 @@ function hostTick(now) {
     for (const k in H.dm) H.gdm[k] = (H.gdm[k] || 0) + H.dm[k];
     hostL.clearAt = now; return;
   }
-  if (T > 2 && pl.length && pl.every(p => p.pr.dn >= 1)) { H.st = "wipe"; H.end = H.ft; return; }
+  if (T > 2 && pl.length && pl.every(p => p.pr.dn >= 1 && !p.pr.pp)) { H.st = "wipe"; H.end = H.ft; return; }
   if (!hostL.trailAt || T - hostL.trailAt >= .1) {   // where everyone stood, for 과거의 그림자
     hostL.trailAt = T; const tr = hostL.trail || (hostL.trail = {});
     for (const p of pl) { const a = tr[p.peer] || (tr[p.peer] = []); a.push([T, p.pr.x, p.pr.y]); while (a.length > 40) a.shift(); }
@@ -1941,7 +1941,7 @@ function myPresence() {
     hp: Math.round(me.hp), mh: me.mh, dn: me.dn, bo: Math.round(me.downT * 10) / 10, dm: me.dm, r: me.run, game: me.game, rv: me.rv,
     gd: me.guardT > 0 ? 1 : 0, bk: me.wardUntil > nowS() ? 1 : 0, ct: me.counterT > 0 ? 1 : 0,
     sw: me.sw, cx: me.cx, fx: me.fx, wd: me.wd, hl: me.hl, pu: me.pu, ag: me.ag, pk: me.pk, ad: me.ad,
-    tl: me.tl ? [me.tl.k, me.tl.id, r3(me.tl.buffT), me.tl.buffMul, r3(CLASSES.saint.atk.allyHps * me.st.tlMul)] : null, tm: me.tm, hs: me.hs, sp: me.sp, ha: me.hasteT > 0 && !me.dn ? 1 : 0,
+    tl: me.tl ? [me.tl.k, me.tl.id, r3(me.tl.buffT), me.tl.buffMul, r3(CLASSES.saint.atk.allyHps * me.st.tlMul)] : null, tm: me.tm, hs: me.hs, sp: me.sp, ha: me.hasteT > 0 && !me.dn ? 1 : 0, pp: me.dn === 1 && me.phoenixT > 0 ? 1 : 0,
     ch: me.ch ? [me.ch.i, r3(Math.min(me.ch.t, chSk(myClass, me.ch.i).channel[2] + .01)), me.ch.stage] : null };
 }
 function float(x, y, txt, col, big) { floats.push({ x: x + (Math.random() - .5) * 30, y, txt: String(txt), col, t: 0, big: !!big }); }
@@ -2216,7 +2216,7 @@ function hurt(n, why) {
   if (me.rvP > 0) { me.rvP = 0; me.rv = null; float(me.x, me.y - 56, "부활 취소", "#ff6f7d"); }
   me.hp -= n; me.ifr = Math.max(me.ifr, me.st.hurtIfr || .8); me.hitT = .35; shake = .25;
   float(me.x, me.y - 30, "-" + n, "#ff6f7d"); SFX.play("hurt");
-  if (me.hp <= 0) {
+  if (me.hp <= 0) {   // priority: 불굴 keeps you standing; only if it is spent does 불사조 bring you back
     if (me.st.undying && !me.undyingUsed) { me.undyingUsed = true; me.hp = Math.max(1, Math.round(me.mh * me.st.undying)); me.ifr = 1.5; float(me.x, me.y - 50, "불굴!", "#c38bff", true); }
     else if (me.st.phoenix && !me.phoenixUsed) { me.phoenixUsed = true; goDown(); me.phoenixT = me.st.phoenix[0]; float(me.x, me.y - 64, "불꽃이 타오른다…", "#ffb347", true); }
     else goDown();
