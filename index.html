@@ -511,77 +511,77 @@ const CONFIG = {
       ] },
   },
   /* g: guardable (yellow). c: co-op gimmick colour. dmg is before the stage multiplier. */
-  /* 경고 시간 하한(minWarn·minLockWarn)은 "반응 0.25초로 피할 수 있는가" 기준으로 맞춤 */
-  /* hard: 어려움에서만 쓰는 패턴별 속도 배율 (경고·연속 간격·하한에 곱함). 반응 0.25초 봇이 어려움 12스테이지 III페이즈에서 10번 중 2~3번 맞도록 맞춘 값 */
+  /* 경고 시간 하한(minWarn·minLockWarn)은 "반응 0.35초로 피할 수 있는가" 기준으로 맞춤 */
+  /* hard: 어려움에서만 쓰는 패턴별 속도 배율 (경고·연속 간격·하한에 곱함). 반응 0.35초 봇이 어려움 12스테이지 III페이즈에서 10번 중 2~3번 맞도록 맞춘 값 */
   bossAttacks: {
-    cleave:   { name: "내려찍기", hard: 0.76,       g: true,  warn: 1.1, rec: 1.0, dmg: 22, r: 270, half: 50, hint: "옆으로 피하기" },
-    spin:     { name: "휩쓸기", hard: 0.61,         g: false, warn: 1.4, rec: 1.3, dmg: 22, r: 200, hint: "멀리 벗어나기" },
-    donut:    { name: "정오의 빛", hard: 0.43,      g: false, warn: 2.0, rec: 1.4, dmg: 20, r: 150, hint: "보스 곁으로" },
-    mark:     { name: "그림자 표식", hard: 0.585,    g: true,  warn: 1.6, rec: .7,  dmg: 18, r: 90,  hint: "흩어지기" },
-    charge:   { name: "돌진", hard: 0.475,           g: false, warn: 1.2, rec: 1.7, dmg: 25, w: 55, len: 720, move: .3, hint: "옆으로 피하기" },
-    heavy:    { name: "철퇴", hard: 0.95,           g: true,  warn: .9,  rec: .9,  dmg: 40, r: 75,  hint: "강한 피해 · 벗어나기" },
-    clock:    { name: "사분면 심판", hard: 1.0,    g: false, warn: 2.4, rec: 2.6, dmg: 35, hint: "빈 사분면으로", fixed: true },
-    rush:     { name: "연속 돌진", hard: 0.585,      g: false, warn: .65, minWarn: .6, rec: 1.6, dmg: 22, w: 50, len: 520, move: .22, count: 3, hint: "세 번 연속 · 옆으로" },
-    flurry:   { name: "삼연참", hard: 0.74,         g: true,  warn: .85, minWarn: .6, rec: 1.1, dmg: 16, r: 230, half: 45, step: .4, count: 3, hint: "세 번 연속 · 타이밍 맞춰 회피" },
-    pounce:   { name: "도약 강습", hard: 0.95,      g: false, warn: 1.1, rec: 1.4, dmg: 30, r: 130, hint: "가장 먼 사람 주의" },
-    whirl:    { name: "회전 칼날", hard: 0.65,      g: false, warn: 1.0, minWarn: .8, rec: 1.0, dmg: 20, r: 230, hint: "멀리 벗어나기" },
+    cleave:   { name: "내려찍기", hard: 0.93,       g: true,  warn: 1.1, rec: 1.0, dmg: 22, r: 270, half: 50, hint: "옆으로 피하기" },
+    spin:     { name: "휩쓸기", hard: 0.73,         g: false, warn: 1.4, rec: 1.3, dmg: 22, r: 200, hint: "멀리 벗어나기" },
+    donut:    { name: "정오의 빛", hard: 0.49,      g: false, warn: 2.0, rec: 1.4, dmg: 20, r: 150, hint: "보스 곁으로" },
+    mark:     { name: "그림자 표식", hard: 0.66,    g: true,  warn: 1.6, rec: .7,  dmg: 18, r: 90,  hint: "흩어지기" },
+    charge:   { name: "돌진", hard: 0.62,           g: false, warn: 1.2, rec: 1.7, dmg: 25, w: 55, len: 720, move: .3, hint: "옆으로 피하기" },
+    heavy:    { name: "철퇴", hard: 1.16,           g: true,  warn: .9,  rec: .9,  dmg: 40, r: 75,  hint: "강한 피해 · 벗어나기" },
+    clock:    { name: "사분면 심판", hard: 0.58,    g: false, warn: 2.4, rec: 2.6, dmg: 35, hint: "빈 사분면으로", fixed: true },
+    rush:     { name: "연속 돌진", hard: 0.52,      g: false, warn: .65, minWarn: .7, rec: 1.6, dmg: 22, w: 50, len: 520, move: .22, count: 3, hint: "세 번 연속 · 옆으로" },
+    flurry:   { name: "삼연참", hard: 0.7,         g: true,  warn: .85, minWarn: .7, rec: 1.1, dmg: 16, r: 230, half: 45, step: .4, count: 3, hint: "세 번 연속 · 타이밍 맞춰 회피" },
+    pounce:   { name: "도약 강습", hard: 0.97,      g: false, warn: 1.1, rec: 1.4, dmg: 30, r: 130, hint: "가장 먼 사람 주의" },
+    whirl:    { name: "회전 칼날", hard: 0.65,      g: false, warn: 1.0, minWarn: .9, rec: 1.0, dmg: 20, r: 230, hint: "멀리 벗어나기" },
     /* sandpool: follows each player for `track` seconds, then locks in place and lands `lockWarn` later */
-    sandpool: { name: "모래 늪", hard: 0.45,        g: false, warn: 1.4, track: 2.0, lockWarn: .75, minLockWarn: .55, rec: .9, dmg: 12, r: 85, life: 14, tick: 8, extra: 2, hint: "늪이 따라옵니다. 멈추는 순간 벗어나세요" },
-    sandwall: { name: "모래 장벽", hard: 0.4,      g: false, warn: 1.6, rec: 1.1, dmg: 15, r: 70, life: 12, tick: 8, hint: "틈으로 지나가기" },
-    pull:     { name: "모래 소용돌이", hard: 0.67,  g: false, warn: 2.2, rec: 1.6, dmg: 32, r: 230, pull: 70, hint: "바깥으로 버티기" },
+    sandpool: { name: "모래 늪", hard: 0.38,        g: false, warn: 1.4, track: 2.0, lockWarn: .75, minLockWarn: .65, rec: .9, dmg: 12, r: 85, life: 14, tick: 8, extra: 1, every: 16, hint: "늪이 따라옵니다. 멈추는 순간 벗어나세요" },
+    sandwall: { name: "모래 장벽", hard: 0.25,      g: false, warn: 1.6, rec: 1.1, dmg: 15, r: 70, life: 12, tick: 8, hint: "틈으로 지나가기" },
+    pull:     { name: "모래 소용돌이", hard: 0.63,  g: false, warn: 2.2, rec: 1.6, dmg: 32, r: 230, pull: 70, hint: "바깥으로 버티기" },
     summon:   { name: "태엽 병정 소환", g: false, warn: 1.4, rec: 1.8, dmg: 0, count: 2, hint: "병정을 먼저 처치" },
     decoy:    { name: "태엽 분신",      g: false, warn: 9.0, rec: 1.2, dmg: 12, count: 2, bigParty: 3, hint: "분신을 부숴야 함", fixed: true },
-    gear:     { name: "톱니 투척", hard: 0.65,      g: false, warn: 1.0, minWarn: .7, rec: .9,  dmg: 20, w: 40, len: 900, hint: "선 사이로" },
+    gear:     { name: "톱니 투척", hard: 0.62,      g: false, warn: 1.0, minWarn: .8, rec: .9,  dmg: 20, w: 40, len: 900, hint: "선 사이로" },
     stack:    { name: "공명",           g: false, warn: 2.6, rec: 1.3, dmg: 36, r: 110, need: 2, c: "stack", hint: "표시된 인원만큼 모이면 피해 없음" },
     spread:   { name: "반발",           g: false, warn: 2.2, rec: 1.0, dmg: 24, r: 100, c: "spread", hint: "서로 흩어지기" },
     polarity: { name: "명암 반전",      g: false, warn: 3.0, rec: 1.6, dmg: 34, c: "pol", hint: "내 색깔 쪽으로" },
-    haven:    { name: "피난처", hard: 0.45,         g: false, warn: 2.4, minWarn: 1.75, rec: 1.4, dmg: 30, r: 85, count: 2, near: [110, 230], c: "haven", hint: "초록 원 안으로 들어가기" },
-    ring:     { name: "종소리 파문", hard: 0.78,    g: false, warn: 1.3, minWarn: .85, rec: 1.3, dmg: 22, w: 110, count: 3, step: .55, minStep: .72, hint: "파문이 지나간 자리로" },
+    haven:    { name: "피난처", hard: 0.29,         g: false, warn: 2.4, minWarn: 1.85, rec: 1.4, dmg: 30, r: 85, count: 2, near: [110, 230], c: "haven", hint: "초록 원 안으로 들어가기" },
+    ring:     { name: "종소리 파문", hard: 0.7,    g: false, warn: 1.3, minWarn: .95, rec: 1.3, dmg: 22, w: 110, count: 3, step: .55, minStep: .72, hint: "파문이 지나간 자리로" },
     /* boss movement skills */
-    warp:     { name: "시간 도약", hard: 0.89,      g: false, warn: 1.2, rec: 1.2, dmg: 30, r: 120, hint: "보스가 나타날 자리에서 벗어나기" },
-    hop:      { name: "연속 도약", hard: 0.74,      g: false, warn: .9,  minWarn: .65, rec: 1.4, dmg: 24, r: 100, count: 3, step: .7, minStep: .5, hint: "착지 지점 피하기" },
+    warp:     { name: "시간 도약", hard: 0.98,      g: false, warn: 1.2, rec: 1.2, dmg: 30, r: 120, hint: "보스가 나타날 자리에서 벗어나기" },
+    hop:      { name: "연속 도약", hard: 0.74,      g: false, warn: .9,  minWarn: .75, rec: 1.4, dmg: 24, r: 100, count: 3, step: .7, minStep: .5, hint: "착지 지점 피하기" },
     /* must-dodge gimmicks (gm): ignore 결계, boss is invulnerable while they run */
     /* hora: the sundial's hands sweep the floor */
-    sweep:    { name: "시침 회전", hard: 0.97,      gm: true, warn: .7,  rec: 0, dmg: 40, r: 900, half: 8, steps: 28, step: .18, minStep: .17, beams: 2, hint: "무적 · 회전하는 시침을 따라 돌며 피하세요" },
+    sweep:    { name: "시침 회전", hard: .9,      gm: true, warn: .9,  rec: 0, dmg: 40, r: 900, half: 8, steps: 28, step: .18, minStep: .23, beams: 2, hint: "무적 · 회전하는 시침을 따라 돌며 피하세요" },
     /* seka: the second hand slashes across the arena from wall to wall, chasing players */
     /* minWarn: hard mode never shortens the warning below this; recover: free time after each slash before the next appears */
-    backstab: { name: "배후 참격", hard: 1.0,      gm: true, warn: .9,  minWarn: .75, rec: 0, dmg: 38, r: 210, half: 38, behind: 95, count: 6, gap: 1.2, recover: .55, hint: "무적 · 등 뒤에 나타나 베어 옵니다. 돌아서서 피하세요" },
+    backstab: { name: "배후 참격", hard: 0.89,      gm: true, warn: .9,  minWarn: .85, rec: 0, dmg: 38, r: 210, half: 38, behind: 95, count: 6, gap: 1.2, recover: .55, hint: "무적 · 등 뒤에 나타나 베어 옵니다. 돌아서서 피하세요" },
     /* klepsy: walls of sand sweep across the arena; stand in the gap */
-    sandwave: { name: "모래 해일", hard: 0.43,      gm: true, warn: 1.3, minWarn: 1.05, rec: 0, dmg: 40, bw: 80, gh: 170, gapShift: 220, waves: 3, waveGap: 2.6, minWaveGap: 2.0, band: .11, hint: "무적 · 모래벽의 틈에 서서 해일을 넘기세요" },
+    sandwave: { name: "모래 해일", hard: 0.38,      gm: true, warn: 1.3, minWarn: 1.15, rec: 0, dmg: 40, bw: 80, gh: 170, gapShift: 220, waves: 3, waveGap: 2.6, minWaveGap: 2.0, band: .11, hint: "무적 · 모래벽의 틈에 서서 해일을 넘기세요" },
     /* mekan: numbered clockwork bombs go off in order */
-    bomb:     { name: "시한 태엽 폭탄", hard: 0.35, gm: true, warn: 2.0, rec: 0, dmg: 40, r: 110, count: 10, perPlayer: 3, groups: 4, step: .9, hint: "무적 · 숫자 순서대로 터집니다. 이미 터진 자리로" },
+    bomb:     { name: "시한 태엽 폭탄", hard: 0.257, gm: true, warn: 2.0, rec: 0, dmg: 40, r: 110, count: 10, perPlayer: 3, groups: 4, step: .9, hint: "무적 · 숫자 순서대로 터집니다. 이미 터진 자리로" },
     /* dualis: only the moving circle of light is safe */
     eclipse:  { name: "일식", hard: 1.1,           gm: true, warn: .9,  rec: 0, dmg: 20, r: 150, steps: 12, step: .6, move: 100, chase: .65, grace: 1.0, hint: "무적 · 움직이는 빛 안에 머무르세요" },
     /* tollia: three bells ring out overlapping ripples */
-    ripple:   { name: "대종 공명", hard: 0.65,      gm: true, warn: 1.0, minWarn: .85, rec: 0, dmg: 35, w: 110, bands: 5, step: .45, minStep: .72, bells: 3, bellGap: 1.1, hint: "무적 · 세 종에서 퍼지는 파문 사이로" },
-    crank:    { name: "태엽 팔 회전", hard: 0.74,   g: false, warn: .9, minWarn: .7,  rec: 1.1, dmg: 22, r: 220, half: 55, count: 3, step: .5, minStep: .45, hint: "팔이 도는 방향 뒤쪽으로" },
-    spring:   { name: "용수철 도약", hard: 0.63,    g: false, warn: 1.1, minWarn: .85, rec: 1.3, dmg: 28, r: 125, w: 34, len: 520, lineDelay: .55, hint: "착지 후 십자로 톱니가 튐" },
+    ripple:   { name: "대종 공명", hard: 0.76,      gm: true, warn: 1.0, minWarn: .95, rec: 0, dmg: 35, w: 110, bands: 5, step: .45, minStep: .72, bells: 3, bellGap: 1.1, hint: "무적 · 세 종에서 퍼지는 파문 사이로" },
+    crank:    { name: "태엽 팔 회전", hard: 0.74,   g: false, warn: .9, minWarn: .8,  rec: 1.1, dmg: 22, r: 220, half: 55, count: 3, step: .5, minStep: .45, hint: "팔이 도는 방향 뒤쪽으로" },
+    spring:   { name: "용수철 도약", hard: 0.6,    g: false, warn: 1.1, minWarn: .95, rec: 1.3, dmg: 28, r: 125, w: 34, len: 520, lineDelay: .55, hint: "착지 후 십자로 톱니가 튐" },
     /* ---- 신규 보스 전용 ---- */
     /* 루멘 */
-    dawnbeam: { name: "새벽 광선", hard: 0.56,      g: false, warn: 1.2, minWarn: .8, rec: 1.2, dmg: 24, w: 34, len: 900, count: 5, turn: .3, step: .22, hint: "부채꼴로 쓸고 지나갑니다 · 옆이나 보스 뒤로" },
-    flare:    { name: "섬광탄", hard: 0.78,         g: false, warn: 1.1, rec: 1.0, dmg: 20, r: 75, r1: 170, gap: .7, hint: "안쪽이 먼저, 바깥 고리가 나중에 터짐" },
-    lanterns: { name: "새벽의 등불", hard: 0.45,    gm: true, warn: 1.0, rec: 0, dmg: 40, r: 120, steps: 6, hop: [200, 290], chase: .52, minStep: 1.4, grace: 1.2, hint: "무적 · 켜진 등불 빛 안에만 머무르고, 다음 등불로 옮겨 가세요" },
+    dawnbeam: { name: "새벽 광선", hard: 0.62,      g: false, warn: 1.2, minWarn: .9, rec: 1.2, dmg: 24, w: 34, len: 900, count: 5, turn: .3, step: .22, hint: "부채꼴로 쓸고 지나갑니다 · 옆이나 보스 뒤로" },
+    flare:    { name: "섬광탄", hard: 0.86,         g: false, warn: 1.1, rec: 1.0, dmg: 20, r: 75, r1: 170, gap: .7, hint: "안쪽이 먼저, 바깥 고리가 나중에 터짐" },
+    lanterns: { name: "새벽의 등불", hard: 0.35,    gm: true, warn: 1.0, rec: 0, dmg: 40, r: 120, steps: 6, hop: [200, 290], chase: .52, minStep: 1.4, grace: 1.2, hint: "무적 · 켜진 등불 빛 안에만 머무르고, 다음 등불로 옮겨 가세요" },
     /* 베스퍼 */
-    crescent: { name: "초승달 베기", hard: 0.39,    g: false, warn: 1.0, minWarn: .95, rec: 1.1, dmg: 24, r0: 100, r1: 230, half: 78, step: .7, hint: "앞, 뒤 순서로 베어 옴 · 보스 옆구리나 바로 곁, 멀리가 안전" },
-    afterimg: { name: "잔상 습격", hard: 0.55,      g: false, warn: .9, minWarn: .75, rec: 1.2, dmg: 22, w: 30, dist: 330, count: 3, step: .3, hint: "세 잔상이 한 점으로 모입니다 · 그 자리를 비우세요" },
-    hunt:     { name: "황혼 사냥", hard: 0.75,      gm: true, warn: 1.8, lockWarn: 1.15, minLockWarn: 1.05, rec: 0, dmg: 38, r: 170, w: 34, len: 1200, count: 5, gap: 2.2, hint: "무적 · 사냥감으로 찍힌 사람은 동료에게서 멀어지세요" },
+    crescent: { name: "초승달 베기", hard: 0.39,    g: false, warn: 1.0, minWarn: 1.05, rec: 1.1, dmg: 24, r0: 100, r1: 230, half: 78, step: .7, hint: "앞, 뒤 순서로 베어 옴 · 보스 옆구리나 바로 곁, 멀리가 안전" },
+    afterimg: { name: "잔상 습격", hard: 0.535,      g: false, warn: .9, minWarn: .85, rec: 1.2, dmg: 22, w: 30, dist: 330, count: 3, step: .3, hint: "세 잔상이 한 점으로 모입니다 · 그 자리를 비우세요" },
+    hunt:     { name: "황혼 사냥", hard: 0.7,      gm: true, warn: 1.8, lockWarn: 1.15, minLockWarn: 1.15, rec: 0, dmg: 38, r: 170, w: 34, len: 1200, count: 5, gap: 2.2, hint: "무적 · 사냥감으로 찍힌 사람은 동료에게서 멀어지세요" },
     /* 아스트라 */
     constel:  { name: "별자리 잇기", hard: 0.6,    g: false, warn: 1.4, rec: 1.1, dmg: 24, w: 34, stars: 5, hint: "별을 잇는 선 위에 서 있지 마세요" },
-    meteor:   { name: "추적 유성", hard: 0.74,      g: false, warn: .95, minWarn: .8, rec: 1.0, dmg: 18, r: 68, count: 4, step: .55, hint: "멈추면 맞습니다 · 계속 움직이세요" },
-    grid:     { name: "성좌 심판", hard: 0.76,      gm: true, warn: 2.2, minWarn: 2.05, rec: 0, dmg: 34, rounds: 5, gapAfter: .3, safe: 2, inset: 70, hint: "무적 · 초록으로 남은 칸으로" },
+    meteor:   { name: "추적 유성", hard: 0.74,      g: false, warn: .95, minWarn: .9, rec: 1.0, dmg: 18, r: 68, count: 4, step: .55, hint: "멈추면 맞습니다 · 계속 움직이세요" },
+    grid:     { name: "성좌 심판", hard: 0.8,      gm: true, warn: 2.2, minWarn: 2.15, rec: 0, dmg: 34, rounds: 5, gapAfter: .3, safe: 2, inset: 70, hint: "무적 · 초록으로 남은 칸으로" },
     /* 페룸 */
-    pend:     { name: "거대 진자", hard: 0.8,      g: false, warn: 1.3, minWarn: .85, rec: 1.3, dmg: 30, r: 115, px: 640, pxRand: 230, py: -260, L: 620, Ldiff: 150, swing: 1.0, steps: 12, step: .09, gap: .45, hint: "진자가 왕복합니다 · 돌아올 때는 다른 높이를 쓸고 지나갑니다" },
-    anvil:    { name: "모루 투하", hard: 0.5,      g: false, warn: 1.0, minWarn: .9, rec: 1.1, dmg: 28, h: 64, r0: 150, r1: 250, gap: .7, hint: "모루를 살짝만 피하세요 · 멀리 도망치면 충격파에 맞음" },
-    press:    { name: "강철 압착", hard: 1.2,      gm: true, warn: 1.7, minWarn: 1.45, rec: 0, dmg: 36, rounds: 7, w0: 220, w1: 150, jump: [300, 440], hint: "무적 · 통로가 좌우로 크게 옮겨 갑니다. 쉬지 말고 달리세요" },
+    pend:     { name: "거대 진자", hard: 0.8,      g: false, warn: 1.3, minWarn: .95, rec: 1.3, dmg: 30, r: 115, px: 640, pxRand: 230, py: -260, L: 620, Ldiff: 150, swing: 1.0, steps: 12, step: .09, gap: .45, hint: "진자가 왕복합니다 · 돌아올 때는 다른 높이를 쓸고 지나갑니다" },
+    anvil:    { name: "모루 투하", hard: 0.52,      g: false, warn: 1.0, minWarn: 1, rec: 1.1, dmg: 28, h: 64, r0: 150, r1: 250, gap: .7, hint: "모루를 살짝만 피하세요 · 멀리 도망치면 충격파에 맞음" },
+    press:    { name: "강철 압착", hard: .98,      gm: true, warn: 1.9, minWarn: 1.75, rec: 0, dmg: 36, rounds: 7, w0: 220, w1: 150, jump: [250, 370], jumpHard: 60, hint: "무적 · 통로가 좌우로 크게 옮겨 갑니다. 쉬지 말고 달리세요" },
     /* 움브라 */
-    shadecone:{ name: "그림자 삼중참", hard: 0.54,  g: true,  warn: 1.0, minWarn: .9, rec: 1.1, dmg: 24, r: 270, half: 22, side: 230, hint: "세 방향에서 한 점을 노림 · 표적 자리에서 벗어나기" },
-    echo:     { name: "과거의 그림자", hard: 0.5,  g: false, warn: .9, minWarn: .75, rec: 1.1, dmg: 26, r: 110, back: 2.2, hint: "지금 자리를 기억했다가 잠시 뒤 그 자리로 되돌려 놓고 터뜨립니다 · 되돌아가면 바로 빠져나오세요" },
-    blackout: { name: "암전",           gm: true, warn: 1.1, minWarn: .95, rec: 0, dmg: 0, count: 8, gap: .75, vision: 230, hint: "무적 · 주변만 보입니다. 다가오는 창을 피하세요" },
-    lance:    { name: "그림자 창",      gm: true, warn: 1.1, minWarn: .95, rec: 0, dmg: 36, w: 48, hint: "" },
+    shadecone:{ name: "그림자 삼중참", hard: 0.54,  g: true,  warn: 1.0, minWarn: 1, rec: 1.1, dmg: 24, r: 270, half: 22, side: 230, hint: "세 방향에서 한 점을 노림 · 표적 자리에서 벗어나기" },
+    echo:     { name: "과거의 그림자", hard: 0.53,  g: false, warn: .9, minWarn: .85, rec: 1.1, dmg: 26, r: 110, back: 2.2, hint: "지금 자리를 기억했다가 잠시 뒤 그 자리로 되돌려 놓고 터뜨립니다 · 되돌아가면 바로 빠져나오세요" },
+    blackout: { name: "암전",           gm: true, warn: 1.1, minWarn: 1.05, rec: 0, dmg: 0, count: 8, gap: .75, vision: 230, hint: "무적 · 주변만 보입니다. 다가오는 창을 피하세요" },
+    lance:    { name: "그림자 창",      gm: true, warn: 1.1, minWarn: 1.05, rec: 0, dmg: 36, w: 48, hint: "" },
     /* 에온 */
-    hands:    { name: "시침과 분침", hard: 0.74,    g: false, warn: 1.1, rec: 1.2, dmg: 26, steps: 6, step: .32, hour: [44, 430, .22], minute: [22, 760, -.5], hint: "두 바늘이 반대로 돕니다" },
-    rewind:   { name: "시간 되감기", hard: 0.65,    g: false, warn: 1.0, rec: 1.2, dmg: 22, r: 105, count: 4, step: .4, back: .9, hint: "터진 순서의 반대로 다시 터집니다" },
-    shards:   { name: "시간 파편 폭풍",  gm: true, warn: .9, minWarn: .7, rec: 0, dmg: 20, w: 26, len: 360, r: 58, dur: 9, every: .3, per: 3, near: .3, hint: "무적 · 작은 파편이 쉴 새 없이 떨어집니다. 빈자리를 찾아 계속 움직이세요" },
+    hands:    { name: "시침과 분침", hard: 0.83,    g: false, warn: 1.1, rec: 1.2, dmg: 26, steps: 6, step: .32, hour: [44, 430, .22], minute: [22, 760, -.5], hint: "두 바늘이 반대로 돕니다" },
+    rewind:   { name: "시간 되감기", hard: 0.97,    g: false, warn: 1.0, rec: 1.2, dmg: 22, r: 105, count: 4, step: .4, back: .9, hint: "터진 순서의 반대로 다시 터집니다" },
+    shards:   { name: "시간 파편 폭풍",  gm: true, warn: .9, minWarn: .8, rec: 0, dmg: 20, w: 26, len: 360, r: 58, dur: 9, every: .3, per: 3, near: .3, hint: "무적 · 작은 파편이 쉴 새 없이 떨어집니다. 빈자리를 찾아 계속 움직이세요" },
     doom:     { name: "종언의 초읽기",  gm: true, warn: 1.2, rec: 0, dmg: 30, steps: 14, step: .85, minStep: .75, n: 4, hint: "무적 · 붉은 시각이 시계 방향으로 돕니다. 보스 곁에 붙어 앞질러 도세요" },
     mhit:     { name: "병정 베기",      g: true,  warn: .85, rec: 0,   dmg: 7,  r: 42, hint: "" },
   },
@@ -1242,7 +1242,7 @@ function startFight(now) {
   Object.assign(H, { st: "fight", run: H.run + 1, boss, mhp: Math.round(sc.hp * diffCfg().hpMul * (1 + CONFIG.scaling.perPlayerHp * (n - 1))), n,
     ft: 0, ph: 0, ps: 0, dm: {}, end: 0, bx: 640, by: 240, bf: Math.PI / 2, bs: "shield", bt: TRANS, cur: "", atk: [], aid: 0, pools: [], pid: 0, adds: [] });
   H.hp = H.mhp;
-  Object.assign(hostL, { target: null, lastKind: "", force: BOSSES[boss].force[0] || "", combo: false, chain: null, anim: null, pending: [], addDm: {}, last: now, nextSummon: 0, nextDecoy: 0, bossKb: null, gimmickDue: false, nextGimmick: 1e9, feints: null, nextMove: 0, orb: Math.random() * TAU, orbDir: Math.random() < .5 ? 1 : -1 });
+  Object.assign(hostL, { target: null, lastKind: "", force: BOSSES[boss].force[0] || "", combo: false, chain: null, anim: null, pending: [], addDm: {}, last: now, nextSummon: 0, nextDecoy: 0, nextPool: 0, bossKb: null, gimmickDue: false, nextGimmick: 1e9, feints: null, nextMove: 0, orb: Math.random() * TAU, orbDir: Math.random() < .5 ? 1 : -1 });
   fsLocal = now;
 }
 function hostTick(now) {
@@ -1580,7 +1580,7 @@ function startGimmick(T) {
     for (let r = 0; r < def.rounds + X; r++) {
       const w = def.w0 + (def.w1 - X * 20 - def.w0) * r / Math.max(1, def.rounds + X - 1);
       if (r) {   // jump far to the other side when there is room, otherwise come back
-        const j = def.jump[0] + Math.random() * (def.jump[1] - def.jump[0]);
+        const j = def.jump[0] + Math.random() * (def.jump[1] - def.jump[0]) + X * def.jumpHard;
         if (c + side * j < w / 2 + 20 || c + side * j > span - w / 2 - 20) side = -side;
         c = c + side * j; side = Math.random() < .7 ? -side : side;
       }
@@ -1630,7 +1630,7 @@ function pickKind() {
   if (hostL.force) { const k = hostL.force; hostL.force = ""; return k; }
   const minions = H.adds.filter(a => a.k === "minion").length, decoyActive = H.atk.some(a => a.k === "decoy");
   const T = H.ft;
-  let pool = B.pools[H.ph].filter(([k]) => k !== hostL.lastKind && !(k === "decoy" && (decoyActive || T < (hostL.nextDecoy || 0))) && !(k === "summon" && (minions >= CONFIG.minion.summonCap || T < (hostL.nextSummon || 0))));
+  let pool = B.pools[H.ph].filter(([k]) => k !== hostL.lastKind && !(k === "decoy" && (decoyActive || T < (hostL.nextDecoy || 0))) && !(k === "sandpool" && T < (hostL.nextPool || 0)) && !(k === "summon" && (minions >= CONFIG.minion.summonCap || T < (hostL.nextSummon || 0))));
   if (!pool.length) pool = [["cleave", 1]];
   let tot = 0; for (const [, w] of pool) tot += w;
   let r = Math.random() * tot;
@@ -1719,7 +1719,8 @@ function castAttack(kind, T, alive) {
     case "sandpool": case "sandwall": {
       let pts = [];
       const ex = [];
-      if (kind === "sandpool") { for (let k = 0; k < def.extra + X * 2; k++) ex.push(randPt(90)); pts = alive.map(p => [Math.round(p.pr.x), Math.round(p.pr.y)]).concat(ex); }
+      // 모래 늪: one pool per player plus one, and a long gap before the next cast
+      if (kind === "sandpool") { hostL.nextPool = T + def.every * tempo; for (let k = 0; k < def.extra; k++) ex.push(randPt(90)); pts = alive.map(p => [Math.round(p.pr.x), Math.round(p.pr.y)]).concat(ex); }
       else {
         const vertical = Math.random() < .5, step = def.r * 1.6, n = Math.ceil((vertical ? AH : AW) / step) + 1;
         const gap = 1 + Math.floor(Math.random() * (n - 3)), line = vertical ? 200 + Math.random() * 880 : 160 + Math.random() * 400;
