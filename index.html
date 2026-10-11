@@ -251,7 +251,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div class="status" id="status">연결 라이브러리를 불러오는 중…</div>
       <p class="touchnote">이 프로토타입은 키보드와 마우스가 있는 컴퓨터에서 플레이할 수 있어요.</p>
       <dl class="keys">
-        <dt>마우스 오른쪽</dt><dd>땅: 그 지점으로 이동 · 적: 주력기 사거리까지 따라감</dd>
+        <dt>마우스 오른쪽</dt><dd>땅: 그 지점으로 이동 · 적: 그 적 바로 앞까지 따라감</dd>
         <dt>S · H</dt><dd>정지 · 제자리 유지</dd>
         <dt>Q</dt><dd>주력기 (커서 방향). 기본 공격은 없고, 누르고 있으면 재사용 대기시간마다 연속 사용</dd>
         <dt>W · E · R</dt><dd>공격 · 보조 · 결정 스킬 (커서 방향). R은 누르고 있다 놓는 채널링 · 3단 충전</dd>
@@ -2617,10 +2617,10 @@ function moveToward(tx, ty, dt, stopAt) {
 function processOrder(dt) {
   const C = CLASSES[myClass], st = me.st, range = C.atk.range + (C.atk.ranged ? st.rangeAdd : 0);
   const o = me.order;
-  if (o && o.t === "atk") {   // follow an enemy until it is in main-skill range (no auto attack)
-    const e = findEnemy(o.id);
+  if (o && o.t === "atk") {   // right-clicked an enemy: walk right up to it and keep following (no auto attack)
+    const e = findEnemy(o.id), touch = CONFIG.player.radius + 4;
     if (!e) me.order = null;
-    else if (edgeDist(e) > range - 6) moveToward(e.x, e.y, dt, e.r + range - 10);
+    else if (edgeDist(e) > touch + 2) moveToward(e.x, e.y, dt, e.r + touch);
     else me.a = Math.atan2(e.y - me.y, e.x - me.x);
   } else if (o && o.t === "move") {
     if (moveToward(o.x, o.y, dt, CONFIG.controls.arriveDist)) me.order = null;
