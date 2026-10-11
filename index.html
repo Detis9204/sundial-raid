@@ -540,11 +540,11 @@ const CONFIG = {
     /* 베스퍼 */
     crescent: { name: "초승달 베기",    g: false, warn: 1.0, minWarn: .95, rec: 1.1, dmg: 24, r0: 100, r1: 230, half: 78, step: .7, hint: "앞, 뒤 순서로 베어 옴 · 보스 옆구리나 바로 곁, 멀리가 안전" },
     afterimg: { name: "잔상 습격",      g: false, warn: .9, minWarn: .75, rec: 1.2, dmg: 22, w: 30, dist: 330, count: 3, step: .3, hint: "세 잔상이 한 점으로 모입니다 · 그 자리를 비우세요" },
-    hunt:     { name: "황혼 사냥",      gm: true, warn: 1.6, lockWarn: .9, minLockWarn: .75, rec: 0, dmg: 38, r: 110, w: 26, len: 900, count: 5, gap: 2.0, hint: "무적 · 사냥감으로 찍힌 사람은 동료에게서 멀어지세요" },
+    hunt:     { name: "황혼 사냥",      gm: true, warn: 1.8, lockWarn: 1.15, minLockWarn: 1.05, rec: 0, dmg: 38, r: 170, w: 34, len: 1200, count: 5, gap: 2.2, hint: "무적 · 사냥감으로 찍힌 사람은 동료에게서 멀어지세요" },
     /* 아스트라 */
-    constel:  { name: "별자리 잇기",    g: false, warn: 1.4, rec: 1.1, dmg: 24, w: 22, stars: 5, hint: "별을 잇는 선 위에 서 있지 마세요" },
+    constel:  { name: "별자리 잇기",    g: false, warn: 1.4, rec: 1.1, dmg: 24, w: 34, stars: 5, hint: "별을 잇는 선 위에 서 있지 마세요" },
     meteor:   { name: "추적 유성",      g: false, warn: .95, minWarn: .8, rec: 1.0, dmg: 18, r: 68, count: 4, step: .55, hint: "멈추면 맞습니다 · 계속 움직이세요" },
-    grid:     { name: "성좌 심판",      gm: true, warn: 2.2, minWarn: 2.05, rec: 0, dmg: 34, rounds: 5, gapAfter: .3, safe: 2, hint: "무적 · 초록으로 남은 칸으로" },
+    grid:     { name: "성좌 심판",      gm: true, warn: 2.2, minWarn: 2.05, rec: 0, dmg: 34, rounds: 5, gapAfter: .3, safe: 2, inset: 70, hint: "무적 · 초록으로 남은 칸으로" },
     /* 페룸 */
     pend:     { name: "거대 진자",      g: false, warn: 1.3, minWarn: .85, rec: 1.3, dmg: 30, r: 90, px: 640, py: -260, L: 620, swing: 1.0, steps: 12, step: .09, hint: "진자가 지나가는 호를 피하기 · 아래쪽이 안전" },
     anvil:    { name: "모루 투하",      g: false, warn: 1.0, minWarn: .9, rec: 1.1, dmg: 28, h: 64, r0: 150, r1: 250, gap: .7, hint: "모루를 살짝만 피하세요 · 멀리 도망치면 충격파에 맞음" },
@@ -1237,7 +1237,9 @@ function hostTick(now) {
   for (const a of H.atk) if (a.k === "sandpool" && a.lk && T < a.lk) {   // tracking phase: follow everyone still standing
     a.p = pl.filter(p => !p.pr.dn).map(p => [Math.round(p.pr.x), Math.round(p.pr.y)]).concat(a.ex || []);
   }
-  hostL.pending = hostL.pending.filter(ev => { if (T >= ev.at) { ev.fn(T); return false; } return true; });
+  // run what is due; anything a handler schedules lands in the new list instead of being dropped
+  const due = hostL.pending.filter(ev => T >= ev.at); hostL.pending = hostL.pending.filter(ev => T < ev.at);
+  for (const ev of due) ev.fn(T);
   const alive = pl.filter(p => !p.pr.dn);
   if (!alive.length) return;
   const dt = Math.min(.05, (now - (hostL.last || now)) / 1000); hostL.last = now;
@@ -2172,7 +2174,7 @@ function inAtk(a, px, py) {
     case "constel": { const p = a.p || []; for (let k = 0; k + 1 < p.length; k++) if (segDist(px, py, p[k][0], p[k][1], p[k + 1][0], p[k + 1][1]) <= def.w + pad) return true; return false; }
     case "hunt": { if (!a.fx) return false; if (d <= def.r + pad) return true; for (const an of [a.a, a.a + Math.PI / 2]) { const ux = Math.cos(an), uy = Math.sin(an), pr = dx * ux + dy * uy; if (Math.abs(pr) <= def.len / 2 && Math.abs(dx * uy - dy * ux) <= def.w + pad) return true; } return false; }
     case "lanterns": return d > a.r;
-    case "grid": return !(a.s || []).includes(Math.min(2, Math.max(0, Math.floor(px / (AW / 3)))) + 3 * Math.min(1, Math.max(0, Math.floor(py / (AH / 2)))));
+    case "grid": { const cw = AW / 3, chh = AH / 2, m = def.inset; for (const c of a.s || []) { const x0 = (c % 3) * cw, y0 = Math.floor(c / 3) * chh; if (px >= x0 + m && px <= x0 + cw - m && py >= y0 + m && py <= y0 + chh - m) return false; } return true; }
     case "press": return a.o ? (py < a.g0 || py > a.g1) : (px < a.g0 || px > a.g1);
     case "doom": { const sec = Math.floor(((Math.atan2(dy, dx) + Math.PI / 2 + TAU) % TAU) / (TAU / 12)) % 12; return (sec - a.s0 + 12) % 12 < a.n; }
     case "blackout": return false;
@@ -2779,11 +2781,11 @@ function drawTele(a, T, S) {
   }
   if (a.k === "grid") {
     const cw = AW / 3, chh = AH / 2, al = flash > 0 ? .5 * flash : .1 + .3 * p;
-    for (let c = 0; c < 6; c++) {
-      const x0 = (c % 3) * cw, y0 = Math.floor(c / 3) * chh, safe = (a.s || []).includes(c);
-      if (!safe) { ctx.fillStyle = "rgba(255,72,48," + al + ")"; ctx.fillRect(x0, y0, cw, chh); }
-      else if (flash < 0) { ctx.strokeStyle = "rgba(127,211,163,.95)"; ctx.lineWidth = 3; ctx.setLineDash([12, 8]); ctx.lineDashOffset = -T * 30; ctx.strokeRect(x0 + 6, y0 + 6, cw - 12, chh - 12); ctx.setLineDash([]); label("안전", x0 + cw / 2, y0 + chh / 2, "#7fd3a3", true); }
-    }
+    const m = def.inset;
+    ctx.beginPath(); ctx.rect(-50, -50, AW + 100, AH + 100);
+    for (const c of a.s || []) { const x0 = (c % 3) * cw + m, y0 = Math.floor(c / 3) * chh + m; ctx.moveTo(x0, y0); ctx.lineTo(x0, y0 + chh - m * 2); ctx.lineTo(x0 + cw - m * 2, y0 + chh - m * 2); ctx.lineTo(x0 + cw - m * 2, y0); ctx.closePath(); }
+    ctx.fillStyle = "rgba(255,72,48," + al + ")"; ctx.fill("evenodd");
+    if (flash < 0) for (const c of a.s || []) { const x0 = (c % 3) * cw + m, y0 = Math.floor(c / 3) * chh + m; ctx.strokeStyle = "rgba(127,211,163,.95)"; ctx.lineWidth = 3; ctx.setLineDash([12, 8]); ctx.lineDashOffset = -T * 30; ctx.strokeRect(x0, y0, cw - m * 2, chh - m * 2); ctx.setLineDash([]); label("안전", x0 + cw / 2 - m, y0 + chh / 2 - m, "#7fd3a3", true); }
     if (flash < 0) { ctx.strokeStyle = "rgba(169,193,255,.5)"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(cw, 0); ctx.lineTo(cw, AH); ctx.moveTo(cw * 2, 0); ctx.lineTo(cw * 2, AH); ctx.moveTo(0, chh); ctx.lineTo(AW, chh); ctx.stroke(); }
     ctx.restore(); return;
   }
