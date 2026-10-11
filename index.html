@@ -408,7 +408,7 @@ const CONFIG = {
       ] },
     rogue: {
       name: "쌍검사", role: "고속 딜러 · 백어택", desc: "체력이 낮지만 찌르기가 빠르다. 보스 등 뒤에서 때리면 피해 1.4배.",
-      hp: 80, atk: { name: "찌르기", dmg: 36, cd: .7, range: 80, arc: 70, note: "짧고 빠른 찌르기" },
+      hp: 80, atk: { name: "쌍검 찌르기", dmg: 21, cd: .7, range: 80, arc: 70, hits: 2, gap: .12, note: "양손으로 빠르게 2연타" },
       skills: [
         { name: "연속 찌르기", tier: "공격", cd: 6, dmg: 180, hits: 3, range: 85, note: "0.3초간 3연타" },
         { name: "그림자 습격", tier: "보조", cd: 15, dmg: 120, range: 340, note: "이동 · 보스 등 뒤로 순간이동, 멀면 커서 방향 점멸" },
@@ -864,6 +864,8 @@ const SFX = (() => {
     heal: v => { [523, 659, 784].forEach((f, i) => tone(f, .45, "sine", .1 * v, null, i * .07, .01, { wet: .5 })); },
     revive: v => { [392, 523, 659, 784, 1047].forEach((f, i) => tone(f, .6, "triangle", .12 * v, null, i * .08, .01, { wet: .55 })); },
     downed: v => { tone(330, .7, "sine", .22 * v, 120, 0, .01, { wet: .4 }); sub(.5 * v, 90, 40, .6); },
+    allyDown: v => { [784, 587, 392].forEach((f, i) => tone(f, .32, "square", .07 * v, f * .94, i * .11, .004, { wet: .35 })); sub(.35 * v, 120, 50, .4, .3); },
+    allyDeath: v => { [0, .55].forEach(d => { metal(.16 * v, 196, 2.2, d); tone(98, 2.0, "sine", .2 * v, 92, d, .01, { wet: .6 }); }); noise(1.6, .06 * v, "lowpass", 900, 120, 1, .1, { wet: .6 }); duck(.5, 1.2); },
     death: v => { tone(110, 1.4, "sine", .28 * v, 45, 0, .01, { wet: .5 }); noise(1.0, .12 * v, "lowpass", 600, 60, 1, 0, { wet: .5 }); },
     interrupt: v => { noise(.18, .4 * v, "highpass", 4500, 9000, 1, 0, { wet: .3 }); tone(700, .25, "square", .12 * v, 140, 0, .002, { drive: true }); },
     chStart: v => { tone(220, .3, "sawtooth", .07 * v, 330, 0, .02, { wet: .3 }); },
@@ -1869,9 +1871,9 @@ const me = { x: 640, y: 600, hp: 100, mh: 100, dn: 0, downT: 0, ifr: 0, dashT: 0
   wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, poisonAcc: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0, waveN: 0, hsRegenAcc: 0, hasteRegen: 0, poolT: 0,
   cast: null, move: null, multi: null, ch: null, chFlash: 0, sw: 0, cx: 0, fx: null, fxN: 0, wd: null, hl: null, evId: 0,
   rv: null, rvT: null, rvP: 0, hitT: 0, ag: [], pk: -1, offer: null, offerKey: -1, st: null, shots: [], shotN: 0, pushCd: 0, kb: null, pu: null,
-  tp: null, tl: null, tm: null, hs: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, hasteSpd: 0, hasteAmp: 0, pend: [], rs: null, sp: null, spN: 0, rrUsed: 0, fb: null, gnQ: null, dashSpare: 0, danger: 0 };
+  tp: null, tl: null, tm: null, hs: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, hasteSpd: 0, hasteAmp: 0, pend: [], rs: null, sp: null, spN: 0, rrUsed: 0, fb: null, gnQ: null, dashSpare: 0, danger: 0, combo2: null };
 let resolved = new Set(), fxList = [], floats = [], markers = [], disp = new Map(), addDisp = new Map();
-const bubbles = new Map(), seenSp = new Map(), seenLeg = new Map();   // peer -> { txt, t }
+const bubbles = new Map(), seenSp = new Map(), seenLeg = new Map(), seenDn = new Map();   // peer -> { txt, t }
 const seenSw = new Map(), seenFx = new Map(), seenWd = new Map(), seenHl = new Map(), seenCx = new Map(), seenPu = new Map(), seenTm = new Map(), seenHs = new Map();
 let shake = 0, bossFlash = 0;
 const bossDisp = { x: 640, y: 260, f: Math.PI / 2 };
@@ -2099,6 +2101,7 @@ function castMain() {
   if (A.ranged) { fireShot(); return; }
   const half = (A.arc + st.arcAdd) / 2 * DEG;
   for (const e of enemies()) if (inArc(e, A.range, half, me.aim)) deal(e, A.dmg, { basic: true });
+  if (A.hits > 1) me.combo2 = { left: A.hits - 1, t: A.gap };   // 쌍검사: the follow-up stabs
   if (st.knWave && ++me.waveN % st.knWave[0] === 0) {   // 검성의 경지
     const L = st.knWave[2]; emitFx(12, L); shake = .12;
     hitAll(e => onLine(e, me.x, me.y, me.aim, L, 26), A.dmg * st.knWave[1], { tag: "검기 " });
@@ -2169,7 +2172,7 @@ function interruptChannel(reason) {
 }
 function goDown() {
   me.hp = 0; me.dn = 1; me.downT = CONFIG.revive.downedTime; me.order = null; me.eng = null;
-  interruptChannel(); me.cast = null; me.move = null; me.multi = null; me.burst = null; me.guardT = 0; me.rv = null; me.rvT = null; me.rvP = 0;
+  interruptChannel(); me.cast = null; me.move = null; me.multi = null; me.burst = null; me.combo2 = null; me.guardT = 0; me.rv = null; me.rvT = null; me.rvP = 0;
   me.tp = null; me.tl = null; me.rs = null;
   SFX.play("downed"); float(me.x, me.y - 40, "쓰러짐", "#ff6f7d", true);
 }
@@ -2673,6 +2676,14 @@ function updateMe(dt, T, S) {
     const f = Math.exp(-P.friction * dt); k.vx *= f; k.vy *= f;
     if (Math.hypot(k.vx, k.vy) < 30) me.kb = null;
   }
+  if (me.combo2) {   // follow-up hits of a multi-hit main skill, aimed where the cursor is now
+    const A = C.atk, q = me.combo2; q.t -= dt;
+    if (q.t <= 0) {
+      q.t = A.gap; q.left--; me.a = me.aim; me.sw++; spawnFx(0, me.x, me.y, me.aim, myColor, myClass, st.arcAdd); SFX.play("swing", .9, myClass);
+      const half = (A.arc + st.arcAdd) / 2 * DEG; for (const e of enemies()) if (inArc(e, A.range, half, me.aim)) deal(e, A.dmg, { basic: true });
+      if (q.left <= 0) me.combo2 = null;
+    }
+  }
   if (me.gnQ) {   // 탄환 폭풍: the remaining shots, each aimed where the cursor is now
     const q = me.gnQ; q.t -= dt;
     if (q.t <= 0) { q.t = q.every; q.left--; me.a = me.aim; emitFx(12, q.len); shake = .12; hitAll(e => onLine(e, me.x, me.y, me.aim, q.len, q.w), q.dmg); if (q.left <= 0) me.gnQ = null; }
@@ -2758,6 +2769,12 @@ function updateOthers(dt) {
     const nLeg = pr.ag.filter(id => AUG[id] && AUG[id].rar === 3).length, pl = seenLeg.get(p.peer);
     if (pl !== undefined && nLeg > pl) { const id = pr.ag.filter(x => AUG[x] && AUG[x].rar === 3).pop(); toast(pr.n + "님이 전설 증강 「" + AUG[id].name + "」 획득!"); SFX.play("chReady", .6); }
     seenLeg.set(p.peer, nLeg);
+    const pdn = seenDn.get(p.peer);   // a teammate went down / died
+    if (pdn !== undefined && pr.dn > pdn && !(curS && curS.st === "fight" && pr.r !== me.run)) {
+      if (pr.dn === 2) { SFX.play("allyDeath"); float(d.x, d.y - 50, pr.n + " 사망", "#8f97b3", true); }
+      else { SFX.play("allyDown"); float(d.x, d.y - 50, pr.n + " 쓰러짐!", "#ffb347", true); }
+    }
+    seenDn.set(p.peer, pr.dn);
     const lc = seenCx.get(p.peer); if (lc !== undefined && lc !== pr.cx) { spawnFx(11, d.x, d.y, 0, pr.c, pr.k); float(d.x, d.y - 48, "끊김!", "#ff6f7d"); } seenCx.set(p.peer, pr.cx);
   }
   for (const key of disp.keys()) if (!seen.has(key)) disp.delete(key);
