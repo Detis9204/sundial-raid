@@ -110,6 +110,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #myAug{position:absolute;right:12px;bottom:84px;max-width:260px;display:flex;flex-direction:column;align-items:flex-end;gap:5px;pointer-events:none}
 #myAug .lbl{background:rgba(13,18,34,.8);padding:2px 6px;border-radius:3px}
 #myAug .icons{justify-content:flex-end}
+#optModal{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:16px;background:rgba(5,8,18,.62)}
+#optPanel{width:min(420px,100%);box-sizing:border-box;padding:18px 18px 16px;display:flex;flex-direction:column;gap:14px}
+#optPanel h3{margin:0;font-family:var(--f-ko);font-size:18px}
+.optRow{display:grid;grid-template-columns:84px 1fr 44px;align-items:center;gap:10px;font-size:14px}
+#optPanel .fbNote{margin:0;font-size:12.5px;color:#b9bccb;line-height:1.5}
+#optPanel .fbFoot{display:flex;justify-content:flex-end}
+.optRow input[type=range]{width:100%;accent-color:var(--brass)}
+.optRow output{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);text-align:right}
 #fbModal{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:16px;background:rgba(5,8,18,.62)}
 #fbForm{width:min(520px,100%);box-sizing:border-box;padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px}
 #fbForm h3{margin:0;font-family:var(--f-ko);font-size:18px}
@@ -238,6 +246,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <button class="btn primary" id="createBtn" disabled>새 방 만들기</button>
         <button class="btn" id="soloBtn">혼자 연습</button>
         <button class="btn" id="fbMenuBtn">피드백 보내기</button>
+        <button class="btn" id="optMenuBtn">옵션</button>
       </div>
       <div class="status" id="status">연결 라이브러리를 불러오는 중…</div>
       <p class="touchnote">이 프로토타입은 키보드와 마우스가 있는 컴퓨터에서 플레이할 수 있어요.</p>
@@ -263,6 +272,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button class="btn" id="musicBtn">음악 끄기</button>
     <button class="btn" id="muteBtn">소리 끄기</button>
     <button class="btn" id="copyBtn">코드 복사</button>
+    <button class="btn" id="optBtn">옵션</button>
     <button class="btn" id="fbBtn">피드백</button>
     <button class="btn" id="leaveBtn">나가기</button>
   </div>
@@ -318,6 +328,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
   <div id="tip" class="panel" hidden></div>
   <div id="toast" class="panel" hidden></div>
+  <div id="optModal" hidden>
+    <div id="optPanel" class="panel" role="dialog" aria-modal="true" aria-labelledby="optTitle">
+      <h3 id="optTitle">옵션</h3>
+      <div class="optRow"><label for="volMaster">전체 음량</label><input type="range" id="volMaster" min="0" max="100" step="1" data-k="master"><output id="volMasterOut"></output></div>
+      <div class="optRow"><label for="volSfx">효과음</label><input type="range" id="volSfx" min="0" max="100" step="1" data-k="sfx"><output id="volSfxOut"></output></div>
+      <div class="optRow"><label for="volMusic">배경 음악</label><input type="range" id="volMusic" min="0" max="100" step="1" data-k="music"><output id="volMusicOut"></output></div>
+      <p class="fbNote">이 브라우저에만 저장돼요. 단축키: M 소리 끄기 · N 음악 끄기</p>
+      <div class="fbFoot"><span></span><button type="button" class="btn primary" id="optClose">닫기</button></div>
+    </div>
+  </div>
   <div id="fbModal" hidden>
     <form id="fbForm" class="panel" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
       <h3 id="fbTitle">피드백 보내기</h3>
@@ -783,6 +803,9 @@ function augDesc(a) { return a.desc(a.v); }
 const SFX = (() => {
   const A = CONFIG.audio;
   let ac = null, master = null, sfxBus = null, musicBus = null, verbIn = null, driveIn = null, noiseBuf = null;
+  /* user volume (옵션 창), 0..1 each, kept in this browser */
+  const vol = (() => { try { const v = JSON.parse(load("sr.vol", "{}")); return { master: v.master ?? 1, sfx: v.sfx ?? 1, music: v.music ?? 1 }; } catch (e) { return { master: 1, sfx: 1, music: 1 }; } })();
+  const lvMaster = () => A.master * vol.master, lvSfx = () => A.sfx * vol.sfx, lvMusic = () => A.music * vol.music;
   let muted = load("sr.mute", "0") === "1", musicOff = load("sr.music", "1") === "0";
   const music = { mode: "off", stage: 0, ph: 0, low: false, step: 0, nextT: 0, timer: null };
   function impulse(sec, decay) {
@@ -794,11 +817,11 @@ const SFX = (() => {
     if (ac) { if (ac.state === "suspended") ac.resume(); return; }
     try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; return; }
     const comp = ac.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.attack.value = .003; comp.release.value = .2; comp.connect(ac.destination);
-    master = ac.createGain(); master.gain.value = muted ? 0 : A.master; master.connect(comp);
-    sfxBus = ac.createGain(); sfxBus.gain.value = A.sfx; sfxBus.connect(master);
-    musicBus = ac.createGain(); musicBus.gain.value = musicOff ? 0 : A.music; musicBus.connect(master);
+    master = ac.createGain(); master.gain.value = muted ? 0 : lvMaster(); master.connect(comp);
+    sfxBus = ac.createGain(); sfxBus.gain.value = lvSfx(); sfxBus.connect(master);
+    musicBus = ac.createGain(); musicBus.gain.value = musicOff ? 0 : lvMusic(); musicBus.connect(master);
     const verb = ac.createConvolver(); verb.buffer = impulse(A.verbTime, 2.6);
-    verbIn = ac.createGain(); const verbOut = ac.createGain(); verbOut.gain.value = A.verb; verbIn.connect(verb); verb.connect(verbOut); verbOut.connect(master);
+    verbIn = ac.createGain(); const verbOut = ac.createGain(); verbOut.gain.value = A.verb; verbIn.connect(verb); verb.connect(verbOut); verbOut.connect(sfxBus);
     const drive = ac.createWaveShaper(), curve = new Float32Array(1024), k = A.drive;
     for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; curve[i] = (1 + k) * x / (1 + k * Math.abs(x)); }
     drive.curve = curve; driveIn = ac.createGain(); const driveOut = ac.createGain(); driveOut.gain.value = .55; driveIn.connect(drive); drive.connect(driveOut); driveOut.connect(sfxBus);
@@ -836,7 +859,7 @@ const SFX = (() => {
   const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
   function duck(depth, dur) {
     if (!musicBus || musicOff) return; const t = ac.currentTime, g = musicBus.gain;
-    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(A.music * (1 - depth), t + .02); g.linearRampToValueAtTime(A.music, t + dur);
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(lvMusic() * (1 - depth), t + .02); g.linearRampToValueAtTime(lvMusic(), t + dur);
   }
   const lib = {
     push: v => { sub(.7 * v, 140, 40, .35); noise(.3, .4 * v, "lowpass", 1400, 200, 1, 0, { wet: .3 }); whoosh(.35 * v, .25, false); },
@@ -976,8 +999,16 @@ const SFX = (() => {
     riser(dur, kind) { try { riser(Math.min(dur, A.riserMax), A.riserVol, kind); } catch (e) {} },
     music(o) { const prev = music.mode; Object.assign(music, o); if (o.mode && o.mode !== prev) music.step = 0; },
     get muted() { return muted; }, get musicOff() { return musicOff; },
-    toggle() { muted = !muted; save("sr.mute", muted ? "1" : "0"); if (master) master.gain.setTargetAtTime(muted ? 0 : A.master, ac.currentTime, .05); return muted; },
-    toggleMusic() { musicOff = !musicOff; save("sr.music", musicOff ? "0" : "1"); if (musicBus) musicBus.gain.setTargetAtTime(musicOff ? 0 : A.music, ac.currentTime, .1); return musicOff; },
+    get vol() { return Object.assign({}, vol); },
+    setVol(k, v) {
+      vol[k] = clamp(v, 0, 1); save("sr.vol", JSON.stringify(vol)); if (!ac) return;
+      const t = ac.currentTime;
+      if (k === "master" && master && !muted) master.gain.setTargetAtTime(lvMaster(), t, .03);
+      if (k === "sfx" && sfxBus) sfxBus.gain.setTargetAtTime(lvSfx(), t, .03);
+      if (k === "music" && musicBus && !musicOff) musicBus.gain.setTargetAtTime(lvMusic(), t, .03);
+    },
+    toggle() { muted = !muted; save("sr.mute", muted ? "1" : "0"); if (master) master.gain.setTargetAtTime(muted ? 0 : lvMaster(), ac.currentTime, .05); return muted; },
+    toggleMusic() { musicOff = !musicOff; save("sr.music", musicOff ? "0" : "1"); if (musicBus) musicBus.gain.setTargetAtTime(musicOff ? 0 : lvMusic(), ac.currentTime, .1); return musicOff; },
   };
 })();
 /* effects: 0 swing,1 parry,2 spin,3 lunge,4 quake,5 stab,6 blink,7 exec,8 bash,9 ward,10 hammer,11 break */
@@ -2474,7 +2505,7 @@ const mouse = { x: 640, y: 300, in: false };
 let queued = new Set(), released = new Set(), armed = false;
 function inGame() { return net.mode !== "off"; }
 const SKILL_KEYS = ["KeyW", "KeyE", "KeyR"];
-function fbOpen() { const m = document.getElementById("fbModal"); return !!(m && !m.hidden); }
+function fbOpen() { const m = document.getElementById("fbModal"), o = document.getElementById("optModal"); return !!((m && !m.hidden) || (o && !o.hidden)); }
 addEventListener("keydown", e => {
   if (!inGame() || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || fbOpen()) return;
   if (["Space", "Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
@@ -3895,6 +3926,17 @@ async function fbSend() {
   } catch (err) { say("전송에 실패했어요. 잠시 뒤 다시 시도해 주세요.", "err"); }
   finally { btn.disabled = false; }
 }
+/* ---------- 옵션: volume ---------- */
+const VOL_IDS = { master: "volMaster", sfx: "volSfx", music: "volMusic" };
+function optSync() { const v = SFX.vol; for (const k in VOL_IDS) { const el = $("#" + VOL_IDS[k]); el.value = Math.round(v[k] * 100); $("#" + VOL_IDS[k] + "Out").textContent = el.value + "%"; } }
+function optShow(v) { if (v) { keys.clear(); queued.clear(); optSync(); } $("#optModal").hidden = !v; if (v) setTimeout(() => $("#volMaster").focus(), 0); }
+for (const k in VOL_IDS) $("#" + VOL_IDS[k]).addEventListener("input", e => { SFX.init(); SFX.setVol(k, e.target.value / 100); $("#" + VOL_IDS[k] + "Out").textContent = e.target.value + "%"; });
+$("#volSfx").addEventListener("change", () => SFX.play("hit", 1));
+$("#optBtn").addEventListener("click", () => optShow(true));
+$("#optMenuBtn").addEventListener("click", () => optShow(true));
+$("#optClose").addEventListener("click", () => optShow(false));
+$("#optModal").addEventListener("mousedown", e => { if (e.target.id === "optModal") optShow(false); });
+$("#optModal").addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); optShow(false); } });
 $("#fbBtn").addEventListener("click", () => fbShow(true));
 $("#fbMenuBtn").addEventListener("click", () => fbShow(true));
 $("#fbCancel").addEventListener("click", () => fbShow(false));
