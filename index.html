@@ -2623,7 +2623,11 @@ function issueRightClick(x, y) {
   if (S && (S.st === "augment")) return;
   if (me.ch) interruptChannel("이동");
   const e = enemyAt(x, y);
-  if (e) { me.order = { t: "atk", id: e.id }; addMarker(e.x, e.y, "atk"); SFX.play("orderAtk"); }
+  if (e) {   // 적 우클릭: 클릭한 순간 적이 있던 자리 앞까지만 이동 (따라가지 않음)
+    const d = dist(me.x, me.y, e.x, e.y), stop = e.r + CONFIG.player.radius + 4, k = d > stop ? (d - stop) / d : 0;
+    me.order = { t: "move", x: clamp(me.x + (e.x - me.x) * k, 14, AW - 14), y: clamp(me.y + (e.y - me.y) * k, 14, AH - 14) };
+    me.a = Math.atan2(e.y - me.y, e.x - me.x); addMarker(e.x, e.y, "atk"); SFX.play("orderAtk");
+  }
   else { me.order = { t: "move", x: clamp(x, 14, AW - 14), y: clamp(y, 14, AH - 14) }; addMarker(x, y, "move"); SFX.play("orderMove"); }
   me.eng = null;
 }
