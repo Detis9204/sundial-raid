@@ -399,7 +399,8 @@ const CONFIG = {
           cd: 7, radius: 110, speed: 950, friction: 5, bounce: .6, enemySpeedMul: .8, bossSpeedMul: .55, healPct: .06, maxTargets: 3 },
   channel: { overhold: 1.2, interruptCdRatio: .3, fizzleCd: 1.0, stageMul: [0, .45, .75, 1.0], flashTime: .35 },
   revive: { downedTime: 15, holdTime: 3, range: 80, hpRatio: .3 },
-  combat: { recDmgBonus: .2, backAttackMul: 1.4, backAngle: 2.1, minionShieldPerUnit: .15, minionShieldMin: .55, closeRange: 120, regenEvery: 5, poisonTick: .5 },
+  /* dmgVar: 피해 변동 폭(±10%). 매 타격마다 피해가 0.9~1.1배 사이에서 무작위로 정해짐 */
+  combat: { dmgVar: .1, recDmgBonus: .2, backAttackMul: 1.4, backAngle: 2.1, minionShieldPerUnit: .15, minionShieldMin: .55, closeRange: 120, regenEvery: 5, poisonTick: .5 },
   stageFlow: { transition: 2.0, phaseAt: [.7, .4], comboChance: .4, clearDelay: 3.5, augmentTimeout: 40, augmentStartDelay: 1.2, phase3TempoMul: .92 },
   scaling: { perPlayerHp: .8, perPlayerAddHp: .35 },
   /* stages 7-12 bring the wardens back awakened: more HP, harder hits, faster tempo */
@@ -439,7 +440,7 @@ const CONFIG = {
       skills: [
         { name: "연속 찌르기", tier: "공격", cd: 6, dmg: 180, hits: 3, range: 85, note: "0.3초간 3연타" },
         { name: "그림자 습격", tier: "보조", cd: 15, dmg: 120, range: 340, note: "이동 · 보스 등 뒤로 순간이동, 멀면 커서 방향 점멸" },
-        { name: "처형", tier: "결정", cd: 40, dmg: 780, channel: [.3, .6, .9], range: 95, arc: 90, lowHp: .3, lowMul: 1.5, note: "채널링 · 보스 체력 30% 이하면 1.5배" },
+        { name: "처형", tier: "결정", cd: 40, dmg: 780, channel: [.3, .6, .9], range: 95, arc: 90, lowHp: .3, lowMul: 1.5, split: [6, .07], note: "채널링 · 보스 체력 30% 이하면 1.5배 · 한 번에 베고 피해는 6번에 나눠 터짐" },
       ] },
     paladin: {
       name: "수호기사", role: "방어 · 지원", desc: "체력이 높고 주력기가 묵직하다. 동료에게 결계와 회복을 나눠 준다.",
@@ -450,7 +451,9 @@ const CONFIG = {
         { name: "심판의 망치", tier: "결정", cd: 45, dmg: 650, channel: [.4, .8, 1.2], leap: [120, 190, 260], radius: 120, heal: 30, healRange: 170, note: "채널링 · 단계마다 도약 거리 증가, 착지 시 회복" },
       ] },
     gunner: {
-      name: "사수", role: "원거리 · 관통 저격", desc: "멀리서 쏘지만 사격이 근접 주력기보다 느리고 체력이 낮다. 위험하면 물러나며 쏜다.",
+      name: "사수", role: "원거리 · 관통 저격", desc: "멀리서 쏘지만 사격이 근접 주력기보다 느리고 체력이 낮다. 위험하면 물러나며 쏜다. Q·W·E·R을 합쳐 4번째 기술마다 강화탄(피해 2배)이 나간다.",
+      /* 강화탄: Q/W/E/R 사용 횟수를 합쳐 every번째 기술의 피해 +mul */
+      empower: { every: 4, mul: 1.0 },
       hp: 85, atk: { name: "사격", dmg: 64, cd: 1.9, range: 360, arc: 0, ranged: true, speed: 1100, note: "커서 방향 직선탄, 처음 맞은 적에게 피해" },
       skills: [
         { name: "관통탄", tier: "공격", cd: 7, dmg: 190, len: 620, w: 20, note: "커서 방향 일직선의 적을 모두 관통" },
@@ -590,6 +593,11 @@ const CONFIG = {
     rewind:   { name: "시간 되감기", hard: 0.97,    g: false, warn: 1.0, rec: 1.2, dmg: 22, r: 105, count: 4, step: .4, back: .9, hint: "터진 순서의 반대로 다시 터집니다" },
     shards:   { name: "시간 파편 폭풍",  gm: true, warn: .9, minWarn: .8, rec: 0, dmg: 20, w: 26, len: 360, r: 58, dur: 9, every: .3, per: 3, near: .3, hint: "무적 · 작은 파편이 쉴 새 없이 떨어집니다. 빈자리를 찾아 계속 움직이세요" },
     doom:     { name: "종언의 초읽기",  gm: true, warn: 1.2, rec: 0, dmg: 30, steps: 14, step: .85, minStep: .75, n: 4, hint: "무적 · 붉은 시각이 시계 방향으로 돕니다. 보스 곁에 붙어 앞질러 도세요" },
+    /* 투사체 (원거리 보스 전용). sp: 탄속(px/초), r: 탄 반지름, l: 최대 사거리. 경고선이 뜬 뒤 warn초 뒤 발사되고, 날아가는 동안 닿으면 피해 */
+    volley:   { name: "별탄 부채", hard: 0.85,     g: false, warn: .75, minWarn: .6, rec: 1.0, dmg: 20, sp: 430, r: 15, l: 1150, fan: 5, spreadDeg: 14, waves: 3, step: .6, minStep: .5, hint: "부채꼴로 날아오는 별탄 · 탄 사이 틈이나 바깥으로" },
+    nova:     { name: "성운 고리탄", hard: 0.85,   g: false, warn: .9, minWarn: .75, rec: 1.1, dmg: 22, sp: 250, r: 15, l: 1350, count: 18, gaps: 2, gapW: 3, rings: 2, step: .85, minStep: .7, hint: "사방으로 퍼지는 고리탄 · 빈틈으로 빠져나가기" },
+    ember:    { name: "불씨 연사", hard: 0.85,     g: false, warn: .5, minWarn: .45, rec: 1.0, dmg: 16, sp: 650, r: 13, l: 1250, count: 5, step: .3, minStep: .26, hint: "나를 노리고 연달아 날아옵니다 · 옆으로 계속 움직이기" },
+    spiral:   { name: "등불 회전탄", hard: 0.85,   g: false, warn: 1.0, minWarn: .85, rec: 1.0, dmg: 16, sp: 200, r: 12, l: 1350, arms: 2, dur: 2.6, every: .2, turn: 1.2, hint: "돌면서 퍼지는 불씨 · 줄기 사이로 피하기" },
     mhit:     { name: "병정 베기",      g: true,  warn: .85, rec: 0,   dmg: 7,  r: 42, hint: "" },
   },
   bosses: {
@@ -637,11 +645,13 @@ const CONFIG = {
               move: { style: "pendulum", freq: 3, amp: 140 } },
     lumen:  { name: "루멘", title: "새벽의 등불지기", look: "lantern", r: 56, speed: [90, 105, 120],
               pal: ["#fff3c4", "#f2b84b", "#8a4a12", "#1d1710", "#ffd166"], floor: "255,209,102",
-              pools: [[["dawnbeam", 3], ["flare", 3], ["mark", 1], ["spin", 1]],
-                      [["dawnbeam", 3], ["flare", 3], ["ring", 1], ["heavy", 1], ["warp", 1]],
-                      [["dawnbeam", 3], ["flare", 2], ["ring", 1], ["haven", 1], ["heavy", 1], ["warp", 1]]],
-              force: [null, "flare", "dawnbeam"], gimmicks: ["lanterns"],
-              move: { style: "orbit", radius: 160, orbit: 1.2, speedMul: 1.2 } },
+              /* 원거리형: 거리를 벌리고 불씨 투사체를 쏜다 */
+              ranged: true,
+              pools: [[["ember", 3], ["dawnbeam", 3], ["flare", 2], ["mark", 1]],
+                      [["ember", 3], ["spiral", 2], ["dawnbeam", 2], ["flare", 2], ["ring", 1], ["warp", 1]],
+                      [["ember", 2], ["spiral", 3], ["dawnbeam", 2], ["flare", 2], ["haven", 1], ["warp", 1]]],
+              force: ["ember", "spiral", "dawnbeam"], gimmicks: ["lanterns"],
+              move: { style: "kite", dist: 330, band: 60, strafe: .55 } },
     vesper: { name: "베스퍼", title: "황혼의 추적자", look: "crescent", r: 48, speed: [135, 155, 175],
               pal: ["#ffd9c2", "#e0785a", "#4a1630", "#170f1c", "#ff8f6b"], floor: "255,143,107",
               pools: [[["crescent", 3], ["afterimg", 3], ["pounce", 1]],
@@ -651,11 +661,13 @@ const CONFIG = {
               move: { style: "dart", dash: .15, pause: [.35, .7], near: [100, 200], spread: 2.2, feint: [1, 2], maxMoves: 3 } },
     astra:  { name: "아스트라", title: "별자리 점성가", look: "orb", r: 58, speed: [105, 120, 135],
               pal: ["#e4ecff", "#8ea6e8", "#2c2f6e", "#10122a", "#a9c1ff"], floor: "169,193,255",
-              pools: [[["constel", 3], ["meteor", 3], ["spread", 1], ["pull", 1]],
-                      [["constel", 3], ["meteor", 3], ["stack", 1], ["spread", 1], ["warp", 1]],
-                      [["constel", 3], ["meteor", 2], ["stack", 1], ["pull", 1], ["clock", 1], ["haven", 1]]],
-              force: ["constel", "meteor", "stack"], gimmicks: ["grid"],
-              move: { style: "blink", pause: [.5, .8], near: [120, 230], spread: 2.8, feint: [1, 2] } },
+              /* 원거리형: 멀리 순간이동해 별탄을 쏜다 */
+              ranged: true,
+              pools: [[["volley", 3], ["constel", 3], ["meteor", 2], ["spread", 1]],
+                      [["volley", 3], ["nova", 2], ["constel", 2], ["meteor", 2], ["stack", 1], ["warp", 1]],
+                      [["volley", 2], ["nova", 3], ["constel", 2], ["meteor", 2], ["stack", 1], ["clock", 1], ["haven", 1]]],
+              force: ["volley", "nova", "stack"], gimmicks: ["grid"],
+              move: { style: "blink", pause: [.6, .9], near: [280, 380], spread: 2.4, feint: [1, 2] } },
     ferrum: { name: "페룸", title: "강철 진자", look: "anvil", r: 62, speed: [85, 95, 105],
               pal: ["#e2e6ec", "#8c96a6", "#3a414e", "#15181e", "#ffb347"], floor: "255,179,71",
               pools: [[["pend", 3], ["anvil", 3], ["heavy", 1], ["gear", 1]],
@@ -713,6 +725,7 @@ const CONFIG = {
     { id: "arm",      g: "臂", name: "억센 팔",      rar: 0, v: .5,  desc: v => `밀치기 회복량 +${pc(v)}`, fx: (s, v) => { s.pushHealMul *= 1 + v; } },
     { id: "gap",      g: "隙", name: "약점 파악",    rar: 0, v: .2,  desc: v => `보스가 빈틈을 보일 때(공격 직후 멈춤·기절) 주는 피해 +${pc(v)}`, fx: (s, v) => { s.recBonus += v; } },
     { id: "regen",    g: "癒", name: "재생",         rar: 0, v: 4,   desc: v => `5초마다 체력 ${v} 회복`, fx: (s, v) => { s.regen += v; } },
+    { id: "wild",     g: "賭", name: "들쭉날쭉",     rar: 1, v: [.15, .04], desc: v => `피해 변동 폭 ±${pc(CONFIG.combat.dmgVar)} → ±${pc(CONFIG.combat.dmgVar + v[0])}, 공격력 +${pc(v[1])}`, fx: (s, v) => { s.dmgVarAdd += v[0]; s.atkMul *= 1 + v[1]; } },
     { id: "qcd",      g: "先", name: "첫 수",        rar: 0, v: .2,  desc: v => `W 재사용 대기시간 -${pc(v)}`, fx: (s, v) => { s.cdMul[0] *= 1 - v; } },
     { id: "kn_arc",   g: "劍", name: "검술 숙련",    rar: 0, cls: "knight",  v: [30, .06], desc: v => `베기 각도 +${v[0]}°, 공격력 +${pc(v[1])}`, fx: (s, v) => { s.arcAdd += v[0]; s.atkMul *= 1 + v[1]; } },
     { id: "ro_poison",g: "毒", name: "독칼",         rar: 0, cls: "rogue",   v: [3, 6],    desc: v => `찌르기 적중 시 ${v[0]}초 동안 초당 ${v[1]} 독 피해`, fx: (s, v) => { s.poisonTime = v[0]; s.poisonDps = v[1]; } },
@@ -729,7 +742,7 @@ const CONFIG = {
     { id: "kn_spin",  g: "旋", name: "회오리",       rar: 1, cls: "knight",  v: [.4, .3], desc: v => `회전베기 범위 +${pc(v[0])}, 피해 +${pc(v[1])}`, fx: (s, v) => { s.spinRange *= 1 + v[0]; s.spinMul *= 1 + v[1]; } },
     { id: "ro_shadow",g: "影", name: "그림자 발걸음",rar: 1, cls: "rogue",   v: 2,   desc: v => `그림자 습격 뒤 ${v}초 동안 모든 공격이 백어택`, fx: (s, v) => { s.shadowBack = v; } },
     { id: "pa_sanct", g: "聖", name: "성역",         rar: 1, cls: "paladin", v: [.5, 10], desc: v => `결계 범위 +${pc(v[0])}, 결계 받은 동료 체력 ${v[1]} 회복`, fx: (s, v) => { s.wardRangeMul *= 1 + v[0]; s.wardHeal += v[1]; } },
-    { id: "gn_head",  g: "的", name: "헤드샷",       rar: 1, cls: "gunner",  v: [4, 1.0], desc: v => `사격 ${v[0]}발째마다 그 한 발의 피해 +${pc(v[1])}`, fx: (s, v) => { s.headEvery = v[0]; s.headMul = Math.max(s.headMul, v[1]); } },
+    { id: "gn_rapid", g: "裝", name: "속사 장전",    rar: 1, cls: "gunner",  v: 3, desc: v => `강화탄이 ${CLASSES.gunner.empower.every}번째 → ${v}번째 기술마다 나감`, fx: (s, v) => { s.gnEvery = s.gnEvery ? Math.min(s.gnEvery, v) : v; } },
     { id: "haste",    g: "時", name: "시간 가속",    rar: 2, v: [.2, .1], desc: v => `W·E·R 재사용 대기시간 -${pc(v[0])}, Q(주력기) 재사용 대기시간 -${pc(v[1])}`, fx: (s, v) => { for (let i = 0; i < 3; i++) s.cdMul[i] *= 1 - v[0]; s.aspdMul /= 1 - v[1]; } },
     { id: "shock",    g: "震", name: "충격파",       rar: 2, v: [.4, .5], desc: v => `밀치기 범위 +${pc(v[0])}, 밀려나는 거리 +${pc(v[1])}`, fx: (s, v) => { s.pushRadiusMul *= 1 + v[0]; s.pushForceMul *= 1 + v[1]; } },
     { id: "undying",  g: "不", name: "불굴",         rar: 2, v: .3,  desc: v => `스테이지마다 1회, 쓰러질 피해를 받으면 체력 ${pc(v)}로 버팀`, fx: (s, v) => { s.undying = v; } },
@@ -1297,7 +1310,7 @@ function hostTick(now) {
     hostL.trailAt = T; const tr = hostL.trail || (hostL.trail = {});
     for (const p of pl) { const a = tr[p.peer] || (tr[p.peer] = []); a.push([T, p.pr.x, p.pr.y]); while (a.length > 40) a.shift(); }
   }
-  H.atk = H.atk.filter(a => a.th > T - .7);
+  H.atk = H.atk.filter(a => (a.te || a.th) > T - .7);
   H.pools = H.pools.filter(p => p.t1 > T);
   for (const a of H.atk) if (a.k === "sandpool" && a.lk && T < a.lk) {   // tracking phase: follow everyone still standing
     a.p = pl.filter(p => !p.pr.dn).map(p => [Math.round(p.pr.x), Math.round(p.pr.y)]).concat(a.ex || []);
@@ -1398,6 +1411,15 @@ function hostTick(now) {
         if (Math.random() < dt * .25) hostL.orbDir *= -1;
         const ox = tx + Math.cos(hostL.orb) * M.radius, oy = ty + Math.sin(hostL.orb) * M.radius, ddx = ox - H.bx, ddy = oy - H.by, dd = Math.hypot(ddx, ddy);
         if (dd > 4) { const st2 = Math.min(dd, sp * M.speedMul * dt); H.bx += ddx / dd * st2; H.by += ddy / dd * st2; }
+      } else if (M.style === "kite") {
+        // keep a set distance from the target and strafe sideways: a ranged caster
+        if (!hostL.orbDir) hostL.orbDir = 1;
+        if (Math.random() < dt * .3) hostL.orbDir *= -1;
+        const ux = dx / (d || 1), uy = dy / (d || 1); let vx = 0, vy = 0;
+        if (d < M.dist - M.band) { vx = -ux * sp; vy = -uy * sp; } else if (d > M.dist + M.band) { vx = ux * sp; vy = uy * sp; }
+        vx += -uy * sp * M.strafe * hostL.orbDir; vy += ux * sp * M.strafe * hostL.orbDir;
+        H.bx += vx * dt; H.by += vy * dt;
+        if (H.bx < 100 || H.bx > AW - 100 || H.by < 150 || H.by > AH - 90) hostL.orbDir *= -1;   // cornered: slide the other way
       } else {
         let vx = 0, vy = 0;
         if (d > 120) { vx = dx / d * sp; vy = dy / d * sp; }
@@ -1892,6 +1914,36 @@ function castAttack(kind, T, alive) {
       pts.forEach((q, k) => { E({ x: Math.round(q[0]), y: Math.round(q[1]), th: r3(th + k * stp), r: def.r }); E({ x: Math.round(q[0]), y: Math.round(q[1]), th: r3(back0 + (n - 1 - k) * stp), r: def.r, rw: 1 }); });
       end = back0 + (n - 1) * stp; break;
     }
+    /* ---------- 투사체 ---------- */
+    case "volley": case "nova": case "ember": case "spiral": {
+      const bolt = (t, ox, oy, ang, o) => { const th2 = r3(t + warn); H.atk.push(Object.assign({ i: ++H.aid, k: kind, t0: r3(t), th: th2, x: Math.round(ox), y: Math.round(oy), a: r3(ang), sp: def.sp, r: def.r, l: def.l, d, te: r3(th2 + def.l / def.sp) }, o || {})); return th2; };
+      const live = () => playersList().filter(q => q.pr.r === H.run && !q.pr.dn);
+      if (kind === "volley") {   // 3 waves, each a fan aimed at someone; the fan shifts by half a gap every wave
+        const n = def.waves + X, stp = Math.max(def.minStep, def.step * tempo * D.warnMul), sd = def.spreadDeg * DEG;
+        const wave = (t, k) => { const L = live(); if (!L.length) return; const q = L[Math.floor(Math.random() * L.length)].pr, a0 = Math.atan2(q.y - H.by, q.x - H.bx) + (k % 2 ? sd / 2 : 0);
+          for (let j = 0; j < def.fan; j++) bolt(t, H.bx, H.by, a0 + (j - (def.fan - 1) / 2) * sd); };
+        wave(T, 0); for (let k = 1; k < n; k++) hostL.pending.push({ at: T + k * stp, fn: t => wave(t, k) });
+        end = T + (n - 1) * stp + warn;
+      } else if (kind === "nova") {   // rings of bolts outward with a couple of gaps to slip through
+        const n = def.rings + X, stp = Math.max(def.minStep, def.step * tempo * D.warnMul);
+        const ring = t => { const c = def.count, off = Math.random() * TAU, skip = new Set();
+          for (let g = 0; g < def.gaps; g++) { const s0 = Math.floor(Math.random() * c); for (let w = 0; w < def.gapW; w++) skip.add((s0 + w) % c); }
+          for (let j = 0; j < c; j++) if (!skip.has(j)) bolt(t, H.bx, H.by, off + j * TAU / c); };
+        ring(T); for (let k = 1; k < n; k++) hostL.pending.push({ at: T + k * stp, fn: ring });
+        end = T + (n - 1) * stp + warn;
+      } else if (kind === "ember") {   // a stream of shots at every player, each aimed where they stand when it is marked
+        const n = def.count + X, stp = Math.max(def.minStep, def.step * tempo * D.warnMul);
+        const shot = t => { for (const p of live()) bolt(t, H.bx, H.by, Math.atan2(p.pr.y - H.by, p.pr.x - H.bx)); };
+        shot(T); for (let k = 1; k < n; k++) hostL.pending.push({ at: T + k * stp, fn: shot });
+        end = T + (n - 1) * stp + warn;
+      } else {   // spiral: rotating arms shed embers; one warning for the whole pattern
+        const arms = def.arms + X, dir = Math.random() < .5 ? 1 : -1, base = Math.random() * TAU, n = Math.round(def.dur / def.every);
+        E({ mk: 1, arms, dir, base, l: 0, te: r3(th + def.dur) });
+        for (let j = 0; j < n; j++) { const tl = th + j * def.every; for (let m = 0; m < arms; m++) bolt(tl - warn, bx, by, base + m * TAU / arms + dir * def.turn * j * def.every, { t0: r3(tl), nl: 1 }); }
+        end = th + def.dur;
+      }
+      break;
+    }
     case "polarity": {
       const arr = alive.map(p => p.peer).sort(() => Math.random() - .5), pol = {};
       arr.forEach((pp, ix) => { pol[pp] = ix % 2; });
@@ -1918,7 +1970,7 @@ let shake = 0, bossFlash = 0;
 const bossDisp = { x: 640, y: 260, f: Math.PI / 2 };
 
 function baseStats() {
-  return { atkMul: 1, aspdMul: 1, moveMul: 1, hpAdd: 0, dashCdMul: 1, chargeMul: 1, guardAdd: 0, recBonus: 0, regen: 0, cdMul: [1, 1, 1],
+  return { dmgVarAdd: 0, gnEvery: 0, gnEmpAdd: 0, atkMul: 1, aspdMul: 1, moveMul: 1, hpAdd: 0, dashCdMul: 1, chargeMul: 1, guardAdd: 0, recBonus: 0, regen: 0, cdMul: [1, 1, 1],
     counterAdd: 0, counterTimeAdd: 0, dashBuff: 0, dashBuffTime: 0, lifesteal: 0, closeBonus: 0, reviveSpd: 1, reviveHp: 0,
     parryIframe: 0, parryReset: false, perfectCounter: 0, undying: 0, maxChargeBonus: 0,
     arcAdd: 0, spinRange: 1, spinMul: 1, quakeEcho: 0, poisonTime: 0, poisonDps: 0, shadowBack: 0, execLow: 0, execMul: 0,
@@ -1936,7 +1988,7 @@ function resetMe() {
   const C = CLASSES[myClass];
   me.mh = C.hp + (me.st ? me.st.hpAdd : 0); me.hp = me.mh; me.dn = 0; me.downT = 0; me.ifr = 1; me.dm = 0; me.ad = {};
   me.x = 460 + Math.random() * 360; me.y = 610; me.order = null; me.eng = null;
-  Object.assign(me, { cd: [0, 0, 0], atkCd: 0, dashCd: 0, dashT: 0, stagT: 0, stagQ: null, guardT: 0, guardCd: 0, counterT: 0, wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0,
+  Object.assign(me, { gnN: 0, cd: [0, 0, 0], atkCd: 0, dashCd: 0, dashT: 0, stagT: 0, stagQ: null, guardT: 0, guardCd: 0, counterT: 0, wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0,
     cast: null, move: null, multi: null, burst: null, ch: null, rv: null, rvT: null, rvP: 0, poolT: 0, shots: [], shotN: 0, pushCd: 0, kb: null,
     tp: null, tl: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, pend: [], rs: null, fb: null, gnQ: null, dashSpare: 0 });
   resolved = new Set();
@@ -1952,10 +2004,10 @@ function myPresence() {
     ch: me.ch ? [me.ch.i, r3(Math.min(me.ch.t, chSk(myClass, me.ch.i).channel[2] + .01)), me.ch.stage] : null };
 }
 /* 내가 준 피해 숫자: 크게 튀어나왔다가 줄어들며 포물선으로 흩어짐. 피해가 클수록 큼, 강한 일격(2배 이상)은 더 크고 흔들림 */
-function dmgFloat(x, y, d, tag, col, strong) {
+function dmgFloat(x, y, d, tag, col, strong, wait) {
   const D = CONFIG.dmgNum, size = D.base + clamp(Math.log2(Math.max(1, d) / D.ref) * D.perDouble, 0, D.maxAdd) + (strong ? D.strongAdd : 0);
   const side = Math.random() < .5 ? -1 : 1;
-  floats.push({ dmg: true, x: x + side * Math.random() * 16, y, txt: String(d), tag: (tag || "").trim(), col: strong && col === "#f3e6c8" ? "#ffd166" : col, t: 0, size, strong: !!strong,
+  floats.push({ dmg: true, x: x + side * Math.random() * 16, y, txt: String(d), tag: (tag || "").trim(), col: strong && col === "#f3e6c8" ? "#ffd166" : col, t: 0, wait: wait || 0, size, strong: !!strong,
     vx: side * (D.spread[0] + Math.random() * (D.spread[1] - D.spread[0])), vy: -D.rise * (strong ? 1.2 : 1), rot: strong ? (Math.random() - .5) * .3 : 0 });
 }
 function float(x, y, txt, col, big) { floats.push({ x: x + (Math.random() - .5) * 30, y, txt: String(txt), col, t: 0, big: !!big }); }
@@ -2023,7 +2075,7 @@ function dealCore(e, base, opts) {
   if (st.closeBonus && edgeDist(e) <= CONFIG.combat.closeRange) mult *= 1 + st.closeBonus;
   if (me.hasteT > 0 && me.hasteAmp) { mult *= 1 + me.hasteAmp; tag += "찬가 "; if (col === "#f3e6c8") col = "#ffd166"; }
   if (me.linkBuff) { mult *= 1 + me.linkBuff; tag += "맥동 "; if (col === "#f3e6c8") col = "#ffd166"; }   // 성녀 맥동
-  if (practice) { dmgFloat(fx, fy, Math.max(1, Math.round(base * mult)), tag, tag ? col : "#8f97b3", false); SFX.play("hit", .6); return 0; }
+  if (practice) { dmgFloat(fx, fy, Math.max(1, Math.round(base * mult * (1 + (Math.random() * 2 - 1) * (CONFIG.combat.dmgVar + st.dmgVarAdd)))), tag, tag ? col : "#8f97b3", false); SFX.play("hit", .6); return 0; }
   if (e.boss) {
     if (S.bs === "rec") mult *= 1 + CONFIG.combat.recDmgBonus + st.recBonus;
     else if (S.bs === "groggy") mult *= 1 + CONFIG.gimmick.groggyBonus + st.recBonus;
@@ -2031,9 +2083,19 @@ function dealCore(e, base, opts) {
     const mc = S.boss === "mekan" ? (S.adds || []).filter(a => a.k === "minion").length : 0;
     if (mc) { mult *= Math.max(CONFIG.combat.minionShieldMin, 1 - CONFIG.combat.minionShieldPerUnit * mc); tag += "태엽 보호막 "; col = "#8f97b3"; }
   }
-  const d = Math.max(1, Math.round(base * mult));
+  const V = CONFIG.combat.dmgVar + st.dmgVarAdd, roll = 1 + (Math.random() * 2 - 1) * V;
+  const d = Math.max(1, Math.round(base * mult * roll));
   if (e.boss) me.dm += d; else me.ad[e.id] = (me.ad[e.id] || 0) + d;
-  dmgFloat(fx, fy, d, tag, col, mult >= 2);
+  if (opts.split && opts.split[0] > 1) {   // 판정은 1회, 숫자는 여러 번에 나눠서 표시 (쌍검사 처형 등)
+    const [n, gap] = opts.split, w = []; for (let k = 0; k < n; k++) w.push(.85 + Math.random() * .3);
+    const sum = w.reduce((a, b) => a + b, 0); let left = d;
+    for (let k = 0; k < n; k++) {
+      const part = k === n - 1 ? left : Math.max(1, Math.round(d * w[k] / sum)); left -= part;
+      dmgFloat(fx + (k % 2 ? 1 : -1) * 18, fy - k * 15, part, k === 0 ? tag : "", col, mult >= 2 && k === n - 1, k * gap);
+      const lf = floats[floats.length - 1]; lf.vx = (k % 2 ? 1 : -1) * 22; lf.vy = -70;   // 계단식으로 쌓이게: 옆으로 덜 튀고 천천히 오름
+      if (k > 0) setTimeout(() => { SFX.play(k === n - 1 ? "crit" : "hit", .8); if (e.boss) bossFlash = .06; }, k * gap * 1000);
+    }
+  } else dmgFloat(fx, fy, d, tag, col, mult >= 2);
   SFX.play(mult >= 2 ? "crit" : "hit", e.boss ? 1 : .7);
   if (opts.basic) {
     if (st.lifesteal && me.hp < me.mh) me.hp = Math.min(me.mh, me.hp + st.lifesteal);
@@ -2056,11 +2118,19 @@ function fireShot(baseDmg) {
   }
   fireOne(baseDmg);
 }
+function gunEvery() { return me.st.gnEvery || CLASSES.gunner.empower.every; }
+function gunCount() {   // 사수 강화탄: 기술을 쓸 때마다 1 증가, every번째면 강화 배율을 돌려줌
+  if (myClass !== "gunner") return 1;
+  me.gnN = (me.gnN || 0) + 1;
+  if (me.gnN < gunEvery()) return 1;
+  me.gnN = 0; float(me.x, me.y - 58, "강화탄!", "#ffb347", true); SFX.play("crit", .7);
+  return 1 + CLASSES.gunner.empower.mul + me.st.gnEmpAdd;
+}
 function fireOne(baseDmg) {
   const st = me.st, C = CLASSES[myClass];
   let dmg = baseDmg || C.atk.dmg; me.shotN++;
-  const head = st.headEvery && me.shotN % st.headEvery === 0;
-  if (head) dmg *= 1 + st.headMul;
+  const em = gunCount(), head = em > 1;
+  dmg *= em;
   me.shots.push({ x: me.x + Math.cos(me.aim) * 18, y: me.y + Math.sin(me.aim) * 18 - 8, a: me.aim, left: C.atk.range + st.rangeAdd, dmg, head });
 }
 function updateShots(dt) {
@@ -2068,7 +2138,7 @@ function updateShots(dt) {
   for (const sh of me.shots) {
     const step = spd * dt;
     sh.x += Math.cos(sh.a) * step; sh.y += Math.sin(sh.a) * step; sh.left -= step;
-    for (const e of enemies()) if (dist(sh.x, sh.y, e.x, e.y) <= e.r + 6) { sh.dead = true; deal(e, sh.dmg, { basic: true }); if (sh.head) float(e.x, e.y - e.r - 34, "헤드샷", "#ffd166", true); break; }
+    for (const e of enemies()) if (dist(sh.x, sh.y, e.x, e.y) <= e.r + 6) { sh.dead = true; deal(e, sh.dmg, { basic: true }); if (sh.head) float(e.x, e.y - e.r - 34, "강화탄", "#ffb347", true); break; }
     if (sh.left <= 0) sh.dead = true;
   }
   me.shots = me.shots.filter(sh => !sh.dead);
@@ -2298,6 +2368,7 @@ function inAtk(a, px, py) {
 /* charges sweep along their line: each spot is hit when the boss passes it */
 function segDist(px, py, x0, y0, x1, y1) { const vx = x1 - x0, vy = y1 - y0, L2 = vx * vx + vy * vy || 1, u = clamp(((px - x0) * vx + (py - y0) * vy) / L2, 0, 1); return Math.hypot(px - x0 - vx * u, py - y0 - vy * u); }
 function hitTime(a) {
+  if (a.sp || a.mk) return Infinity;   // 투사체는 날아가는 동안 따로 판정
   if (a.k !== "charge" && a.k !== "rush") return a.th;
   const along = (me.x - a.x) * Math.cos(a.a) + (me.y - a.y) * Math.sin(a.a);
   return a.th + ATK[a.k].move * clamp((along - bossDef(curS).r * .5) / Math.max(1, a.l), 0, 1);
@@ -2305,6 +2376,7 @@ function hitTime(a) {
 function quadOf(dx, dy) { const t = (Math.atan2(dy, dx) + Math.PI / 2 + TAU) % TAU; return Math.floor(t / (Math.PI / 2)) % 4; }
 function damageFor(a, S) {
   const def = ATK[a.k];
+  if (a.sp || a.mk) return 0;
   switch (a.k) {
     case "stack": {   // stand in the circle with at least `need` people: no damage. Anyone else takes the hit.
       const c = posOf(a.tg); if (!c) return 0;
@@ -2427,12 +2499,12 @@ function useSkill(i) {
   } else if (myClass === "gunner") {
     if (i === 1) {
       const tgt = enemies().filter(e => onLine(e, me.x, me.y, a, C.atk.range + 40, 14)).sort((p, q) => dist(me.x, me.y, p.x, p.y) - dist(me.x, me.y, q.x, q.y))[0];
-      emitFx(14); if (tgt) deal(tgt, sk.dmg);
+      const em = gunCount(); emitFx(14); if (tgt) deal(tgt, sk.dmg * em);
       me.ifr = Math.max(me.ifr, .25);
       startMove(.18, me.x - ux * sk.back, me.y - uy * sk.back);
     } else if (i === 0) {
-      emitFx(12, sk.len); shake = .1;
-      hitAll(e => onLine(e, me.x, me.y, a, sk.len, sk.w), sk.dmg);
+      const em = gunCount(); emitFx(12, sk.len); shake = em > 1 ? .18 : .1;
+      hitAll(e => onLine(e, me.x, me.y, a, sk.len, sk.w), sk.dmg * em);
       if (st.gnBurst) me.gnQ = { left: st.gnBurst[0] - 1, t: st.gnBurst[1], every: st.gnBurst[1], dmg: sk.dmg, len: sk.len, w: sk.w };   // 탄환 폭풍
     }
   }
@@ -2466,7 +2538,7 @@ function releaseChannel() {
     emitFx(7, 0, .55 + s * .2);
     const S = curS, low = S && S.st === "fight" && S.hp / S.mhp < (st.execLow || sk.lowHp);
     const lowMul = st.execMul || sk.lowMul;
-    hitAll(e => inArc(e, sk.range, sk.arc / 2 * DEG, a), sk.dmg * mul * (low ? lowMul : 1));
+    hitAll(e => inArc(e, sk.range, sk.arc / 2 * DEG, a), sk.dmg * mul * (low ? lowMul : 1), { split: sk.split });
   } else if (myClass === "paladin") {
     const d = sk.leap[s - 1], rad = sk.radius * st.hammerRadiusMul;
     me.ifr = Math.max(me.ifr, .45);
@@ -2480,7 +2552,7 @@ function releaseChannel() {
   } else if (myClass === "gunner") {
     const len = sk.len[s - 1], w = sk.w[s - 1];
     emitFx(13, len, .55 + s * .2); shake = .12 + s * .05;
-    hitAll(e => onLine(e, me.x, me.y, a, len, w), sk.dmg * mul * (s === 3 ? 1 + st.snipeMax : 1));
+    hitAll(e => onLine(e, me.x, me.y, a, len, w), sk.dmg * mul * (s === 3 ? 1 + st.snipeMax : 1) * gunCount());
     if (s === 3 && st.snipeRefund) me.cd[ch.i] *= 1 - st.snipeRefund;
   } else if (myClass === "gladiator") {
     const f = clamp(ch.t / sk.channel[2], 0, 1), lerp = arr => arr[0] + (arr[2] - arr[0]) * f;
@@ -2778,6 +2850,12 @@ function updateMe(dt, T, S) {
       const ht = hitTime(a);
       if (T >= ht && !resolved.has(a.i)) { resolved.add(a.i); if (T - ht < .5) { const d = damageFor(a, S); if (d > 0) bossHit(d, ATK[a.k].gm, a.x != null ? a.x : bossDisp.x, a.y != null ? a.y : bossDisp.y); } }
     }
+    for (const a of S.atk || []) {   // 투사체: 이번 프레임에 탄이 지나간 구간과 내 위치가 겹치면 피격
+      if (!a.sp || T < a.th || resolved.has(a.i) || T > a.te + .05) continue;
+      const ux = Math.cos(a.a), uy = Math.sin(a.a), dx = me.x - a.x, dy = me.y - a.y, along = dx * ux + dy * uy, perp = Math.abs(dx * uy - dy * ux);
+      const head = Math.min(a.l, (T - a.th) * a.sp), tail = Math.max(0, head - a.sp * dt - 4), rr = a.r + CONFIG.player.radius;
+      if (perp <= rr && along >= tail - rr && along <= head + rr) { resolved.add(a.i); bossHit(a.d, false, a.x + ux * head, a.y + uy * head); spawnFx(6, me.x, me.y, 0, "#ffd166", myClass); }
+    }
     for (const a of S.atk || []) if (a.k === "echo" && a.tg === myPeer && T >= a.rb && !resolved.has("rb" + a.i)) {   // 과거의 그림자: snap back
       resolved.add("rb" + a.i); spawnFx(6, me.x, me.y, 0, myColor, myClass);
       me.x = a.x; me.y = a.y; me.move = null; me.order = null; me.kb = null; me.dashT = 0;
@@ -2838,6 +2916,7 @@ function updateOthers(dt) {
   for (const f of fxList) f.t += dt;
   fxList = fxList.filter(f => f.t < (f.type === 20 ? 1.2 : f.type === 21 ? 1.5 : .5));
   for (const f of floats) {
+    if (f.wait > 0) { f.wait -= dt; continue; }
     f.t += dt;
     if (f.dmg) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += CONFIG.dmgNum.gravity * dt; f.vx *= Math.exp(-2.5 * dt); }
     else f.y -= 34 * dt;
@@ -2874,8 +2953,35 @@ function teleCol(a, al) {
   if (def.c === "spread") return "rgba(184,146,255," + al + ")";
   return "rgba(255,111,125," + al + ")";
 }
+function drawBolt(a, T, S) {
+  if (a.mk) {   // 회전탄 예고: 회전하며 뻗을 줄기를 미리 보여줌
+    if (T < a.t0 || T > a.th) return;
+    const p = clamp((T - a.t0) / Math.max(.01, a.th - a.t0), 0, 1); ctx.save(); ctx.strokeStyle = teleCol(a, .25 + .45 * p); ctx.lineWidth = 3; ctx.setLineDash([10, 8]); ctx.lineDashOffset = -T * 60;
+    for (let m = 0; m < a.arms; m++) { const an = a.base + m * TAU / a.arms; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(a.x + Math.cos(an) * (90 + 200 * p), a.y + Math.sin(an) * (90 + 200 * p)); ctx.stroke(); }
+    ctx.setLineDash([]); ctx.restore(); return;
+  }
+  if (T < a.t0 || T > a.te) return;
+  const ux = Math.cos(a.a), uy = Math.sin(a.a);
+  ctx.save();
+  if (T < a.th) {   // 경고선 + 발사 지점에서 모이는 빛
+    const p = clamp((T - a.t0) / Math.max(.01, a.th - a.t0), 0, 1);
+    if (!a.nl) { ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.a); ctx.fillStyle = teleCol(a, .06 + .16 * p); ctx.fillRect(0, -a.r, Math.min(a.l, 1000), a.r * 2);
+      ctx.strokeStyle = teleCol(a, .25 + .4 * p); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.min(a.l, 1000) * p, 0); ctx.stroke(); ctx.restore(); }
+    ctx.fillStyle = teleCol(a, .3 + .5 * p); ctx.beginPath(); ctx.arc(a.x + ux * 20, a.y + uy * 20, a.r * (.3 + .7 * p), 0, TAU); ctx.fill();
+  } else {   // 날아가는 탄: 꼬리 + 빛무리 + 흰 심
+    const h = Math.min(a.l, (T - a.th) * a.sp), x = a.x + ux * h, y = a.y + uy * h;
+    if (x < -40 || x > AW + 40 || y < -40 || y > AH + 40) { ctx.restore(); return; }
+    const tl = Math.min(h, 46), g = ctx.createLinearGradient(x - ux * tl, y - uy * tl, x, y); g.addColorStop(0, teleCol(a, 0)); g.addColorStop(1, teleCol(a, .7));
+    ctx.strokeStyle = g; ctx.lineWidth = a.r * 1.3; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(x - ux * tl, y - uy * tl); ctx.lineTo(x, y); ctx.stroke();
+    ctx.fillStyle = teleCol(a, .28); ctx.beginPath(); ctx.arc(x, y, a.r * 1.7, 0, TAU); ctx.fill();
+    ctx.fillStyle = teleCol(a, .95); ctx.beginPath(); ctx.arc(x, y, a.r, 0, TAU); ctx.fill();
+    ctx.fillStyle = "rgba(255,250,235,.95)"; ctx.beginPath(); ctx.arc(x, y, a.r * .45, 0, TAU); ctx.fill();
+  }
+  ctx.restore();
+}
 function drawTele(a, T, S) {
   const def = ATK[a.k];
+  if (a.sp || a.mk) { drawBolt(a, T, S); return; }
   if (T < a.t0) return;   // staggered pieces appear in turn
   const p = clamp((T - a.t0) / Math.max(.01, a.th - a.t0), 0, 1);
   const flash = T >= a.th ? 1 - (T - a.th) / .35 : -1;
@@ -3477,6 +3583,7 @@ function drawFx() {
   }
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   for (const f of floats) {
+    if (f.wait > 0) continue;
     if (f.dmg) {   // 피해 숫자: 팝(1.7배 → 1배) 후 포물선, 마지막 0.3초 동안 사라짐
       const D = CONFIG.dmgNum, p = Math.min(1, f.t / D.pop), back = 1 + 2.2 * Math.pow(p - 1, 3) + 1.2 * Math.pow(p - 1, 2);
       const sc = REDUCED ? 1 : D.popScale - (D.popScale - 1) * back;
@@ -3605,6 +3712,20 @@ function drawHUD(T, S) {
     const state = me.ch && me.ch.i === i ? { ch: true, stage: me.ch.stage, p: clamp(me.ch.t / sk.channel[2], 0, 1) } : null;
     const chain = myClass === "wizard" && i === 2 && me.rs;
     drawSlot(sx + 84 + i * 84, sY, "WER"[i] + (sk.channel ? " ⟳" : ""), chain ? (me.rs.step === 3 ? "종장" : "영창 " + (me.rs.step + 1)) : sk.name, chain ? (me.rs.step + 1) + "/4" : sk.tier, me.cd[i], chain ? sk.gap[me.rs.step - 1] * me.st.wzGapMul : skillCd(i), chain && me.cd[i] <= 0 ? { active: true } : state);
+  }
+  if (myClass === "gunner" && !me.dn) {   // 강화탄 카운터: 칸이 다 차면 다음 기술이 강화탄
+    const ev = gunEvery(), n = me.gnN || 0, ready = n === ev - 1, bx = sx, bw = 84 * 3 + 76, pw = 18, gap = 6, tw = ev * pw + (ev - 1) * gap, px0 = bx + bw / 2 - tw / 2, py = sY - 13;
+    for (let k = 0; k < ev; k++) {
+      const filled = k < n || (ready && k === ev - 1);
+      ctx.fillStyle = filled ? (ready ? "#ffb347" : "#e8b45a") : "rgba(13,18,34,.88)"; ctx.fillRect(px0 + k * (pw + gap), py, pw, 6);
+      ctx.strokeStyle = ready ? "#ffb347" : "#2c3558"; ctx.lineWidth = 1; ctx.strokeRect(px0 + k * (pw + gap) + .5, py + .5, pw - 1, 5);
+    }
+    ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.font = '600 11px "IBM Plex Sans KR", system-ui, sans-serif';
+    ctx.fillStyle = ready ? "#ffb347" : "#8f97b3"; ctx.fillText(ready ? "다음 기술 강화탄" : "강화탄 " + n + "/" + ev, px0 - 8, py + 3);
+    if (ready) {
+      const pul = .55 + .45 * Math.sin(performance.now() / 90); ctx.strokeStyle = "rgba(255,179,71," + pul + ")"; ctx.lineWidth = 2.5;
+      for (let k = 0; k < 4; k++) ctx.strokeRect(sx + k * 84 - 2, sY - 2, 80, 58);
+    }
   }
   drawSlot(sx + 350, sY, "SPC", "회피", me.dashCd > 0 && me.dashSpare > 0 ? "+" + me.dashSpare : "", me.dashCd, CONFIG.dash.cd * me.st.dashCdMul, null);
   drawSlot(sx + 434, sY, "D", "밀치기", "", me.pushCd, CONFIG.push.cd * me.st.pushCdMul, null);
@@ -3815,6 +3936,10 @@ function audioEvents(S, T) {
   if (minions > aud.adds) SFX.play("summon"); aud.adds = minions;
   for (const a of S.atk || []) {
     const ck = a.t0 + ":" + a.k, def = ATK[a.k];
+    if (a.sp || a.mk) {   // 투사체: 같은 순간 발사된 탄은 소리 한 번
+      if (a.sp && T >= a.th && T - a.th < .2 && !aud.seenImpact.has(a.i)) { aud.seenImpact.add(a.i); if (aud.boltT !== a.th) { aud.boltT = a.th; SFX.play("imp_small", .35); } }
+      continue;
+    }
     if (a.k === "mhit") {   // minion swings: only loud when they are near me
       if (T >= a.th && T - a.th < .3 && !aud.seenImpact.has(a.i)) { aud.seenImpact.add(a.i); SFX.play("imp_small", dist(me.x, me.y, a.x, a.y) < 160 ? 1 : .3); }
       continue;
