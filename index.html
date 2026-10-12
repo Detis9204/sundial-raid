@@ -384,6 +384,10 @@ const CONFIG = {
   controls: { acquireRange: 170, arriveDist: 6, markerTime: .6, pickPad: 12 },
   /* 회피: no invulnerability, just a quick burst of movement toward the cursor */
   dash: { cd: 2.0, time: .16, speed: 760, iframe: 0 },
+  /* 피격 반응: 보스 공격에 맞으면 공격 중심 반대쪽으로 살짝 밀려나고(knock = 처음 속도, 약 knock/5 px 이동),
+     stagger초 동안 이동·공격·회피가 멈춥니다(무적 시간 안이라 추가 피해는 없음). 그동안 누른 키는 경직이 풀리면 바로 실행됩니다.
+     flash: 캐릭터가 하얗게 번쩍이는 시간, lean: 뒤로 젖혀지는 각도(라디안) */
+  hitReact: { knock: 200, stagger: .2, flash: .08, lean: .32 },
   /* 밀치기: knocks back everyone around (allies too). Each body hit heals the pusher. */
   /* 밀치기: no damage. Targets are flung away (speed), slow down with friction and bounce off the arena walls. */
   /* bossImmune: while casting these (dashes / leaps) the boss can't be pushed.
@@ -1898,7 +1902,7 @@ function castAttack(kind, T, alive) {
 /* =====================================================================
    LOCAL PLAYER
    ===================================================================== */
-const me = { x: 640, y: 600, hp: 100, mh: 100, dn: 0, downT: 0, ifr: 0, dashT: 0, ddx: 0, ddy: 0, dm: 0, ad: {}, run: -1, game: -1,
+const me = { x: 640, y: 600, hp: 100, mh: 100, dn: 0, downT: 0, ifr: 0, stagT: 0, stagQ: null, stagLean: 1, dashT: 0, ddx: 0, ddy: 0, dm: 0, ad: {}, run: -1, game: -1,
   a: -Math.PI / 2, aim: 0, order: null, eng: null, cd: [0, 0, 0], atkCd: 0, dashCd: 0, guardT: 0, guardCd: 0, counterT: 0, counterMul: 2,
   wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, poisonAcc: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0, waveN: 0, hsRegenAcc: 0, hasteRegen: 0, poolT: 0,
   cast: null, move: null, multi: null, ch: null, chFlash: 0, sw: 0, cx: 0, fx: null, fxN: 0, wd: null, hl: null, evId: 0,
@@ -1929,7 +1933,7 @@ function resetMe() {
   const C = CLASSES[myClass];
   me.mh = C.hp + (me.st ? me.st.hpAdd : 0); me.hp = me.mh; me.dn = 0; me.downT = 0; me.ifr = 1; me.dm = 0; me.ad = {};
   me.x = 460 + Math.random() * 360; me.y = 610; me.order = null; me.eng = null;
-  Object.assign(me, { cd: [0, 0, 0], atkCd: 0, dashCd: 0, dashT: 0, guardT: 0, guardCd: 0, counterT: 0, wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0,
+  Object.assign(me, { cd: [0, 0, 0], atkCd: 0, dashCd: 0, dashT: 0, stagT: 0, stagQ: null, guardT: 0, guardCd: 0, counterT: 0, wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0,
     cast: null, move: null, multi: null, burst: null, ch: null, rv: null, rvT: null, rvP: 0, poolT: 0, shots: [], shotN: 0, pushCd: 0, kb: null,
     tp: null, tl: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, pend: [], rs: null, fb: null, gnQ: null, dashSpare: 0 });
   resolved = new Set();
@@ -2208,7 +2212,7 @@ function goDown() {
   me.tp = null; me.tl = null; me.rs = null;
   SFX.play("downed"); float(me.x, me.y - 40, "쓰러짐", "#ff6f7d", true);
 }
-function hurt(n, why) {
+function hurt(n, why, sx, sy) {
   n = Number(n); if (!isFinite(n) || n <= 0) return;
   if (me.dn) return;
   if (me.ch && me.st.glStance) n = Math.max(1, Math.round(n * (1 - me.st.glStance)));   // 불굴의 자세
@@ -2216,19 +2220,26 @@ function hurt(n, why) {
   if (me.rvP > 0) { me.rvP = 0; me.rv = null; float(me.x, me.y - 56, "부활 취소", "#ff6f7d"); }
   me.hp -= n; me.ifr = Math.max(me.ifr, me.st.hurtIfr || .8); me.hitT = .35; shake = .25;
   float(me.x, me.y - 30, "-" + n, "#ff6f7d"); SFX.play("hurt");
+  if (sx != null && me.hp > 0) {   // 피격 반응: 살짝 밀려남 + 짧은 경직
+    const R = CONFIG.hitReact; let dx = me.x - sx, dy = me.y - sy, d = Math.hypot(dx, dy);
+    if (d < 4) { dx = me.x - bossDisp.x; dy = me.y - bossDisp.y; d = Math.hypot(dx, dy); }
+    if (d < 4) { dx = -Math.cos(me.a); dy = -Math.sin(me.a); d = 1; }
+    if (!me.kb || Math.hypot(me.kb.vx, me.kb.vy) < R.knock) me.kb = { vx: dx / d * R.knock, vy: dy / d * R.knock };
+    me.stagT = R.stagger; me.stagLean = dx >= 0 ? 1 : -1; me.dashT = 0;
+  }
   if (me.hp <= 0) {   // priority: 불굴 keeps you standing; only if it is spent does 불사조 bring you back
     if (me.st.undying && !me.undyingUsed) { me.undyingUsed = true; me.hp = Math.max(1, Math.round(me.mh * me.st.undying)); me.ifr = 1.5; float(me.x, me.y - 50, "불굴!", "#c38bff", true); }
     else if (me.st.phoenix && !me.phoenixUsed) { me.phoenixUsed = true; goDown(); me.phoenixT = me.st.phoenix[0]; float(me.x, me.y - 64, "불꽃이 타오른다…", "#ffb347", true); }
     else goDown();
   }
 }
-function bossHit(dmg, mustDodge) {
+function bossHit(dmg, mustDodge, sx, sy) {
   if (me.dn || dmg <= 0) return;
   if (me.ifr > 0) { float(me.x, me.y - 30, "무효", "#9fd8ff"); SFX.play("evade"); return; }
   if (!mustDodge && me.wardUntil > nowS()) { me.wardUntil = 0; me.ifr = .4; float(me.x, me.y - 30, "결계", "#9fd8ff"); SFX.play("ward", .6); return; }
 
 
-  hurt(dmg);
+  hurt(dmg, null, sx, sy);
 }
 function alivePositions(includeMe) {
   const S = curS, out = [];
@@ -2303,9 +2314,9 @@ function damageFor(a, S) {
 
 /* ---------- skills ---------- */
 function skillCd(i) { return CLASSES[myClass].skills[i].cd * me.st.cdMul[i]; }
-function busy() { return !!(me.ch || me.cast || me.move || me.multi || me.burst || me.dashT > 0); }
+function busy() { return !!(me.ch || me.cast || me.move || me.multi || me.burst || me.dashT > 0 || me.stagT > 0); }
 /* 난사 keeps firing while you walk: only movement ignores it */
-function moveBusy() { return !!(me.ch || me.cast || me.move || me.multi || me.dashT > 0); }
+function moveBusy() { return !!(me.ch || me.cast || me.move || me.multi || me.dashT > 0 || me.stagT > 0); }
 function startMove(dur, tx, ty, onTick, onEnd) {
   tx = clamp(tx, 14, AW - 14); ty = clamp(ty, 14, AH - 14);
   me.move = { t: 0, dur, x0: me.x, y0: me.y, tx, ty, onTick, onEnd };
@@ -2638,7 +2649,7 @@ function updateMe(dt, T, S) {
   if (me.danger > 0 && me.st.foresight) me.dashCd = Math.max(0, me.dashCd - dt * (me.st.foresight[1] - 1));   // 생존 본능
   const cdRate = 1;
   me.atkCd = Math.max(0, me.atkCd - dt * cdRate * (me.fb && me.fb.qcd > 0 ? CLASSES.acrobat.fortune.buffs[2].v : 1));
-  for (const k of ["ifr", "dashCd", "pushCd", "guardT", "guardCd", "counterT", "hitT", "dashBuffT", "shadowT", "chFlash"]) me[k] = Math.max(0, me[k] - dt);
+  for (const k of ["ifr", "dashCd", "pushCd", "guardT", "guardCd", "counterT", "hitT", "stagT", "dashBuffT", "shadowT", "chFlash"]) me[k] = Math.max(0, me[k] - dt);
   for (let i = 0; i < 3; i++) me.cd[i] = Math.max(0, me.cd[i] - dt * cdRate);
   updateShots(dt); updateTether(dt); updatePend(dt);
 
@@ -2660,6 +2671,9 @@ function updateMe(dt, T, S) {
   me.danger = 0;
   if (st.foresight && fighting) for (const a of S.atk || []) { const ht = hitTime(a); if (T >= a.t0 && T < ht && !resolved.has(a.i)) { let dd = 0; try { dd = damageFor(a, S); } catch (e) {} if (dd > 0 && (!me.danger || ht - T < me.danger)) me.danger = ht - T; } }   // 생존 본능: danger detection
 
+  // 경직 중에 누른 회피·스킬은 경직이 풀리는 순간 실행
+  if (me.stagT > 0) { for (const k of ["Space", ...SKILL_KEYS]) if (queued.has(k)) { me.stagQ = k; queued.delete(k); } }
+  else if (me.stagQ) { queued.add(me.stagQ); me.stagQ = null; }
   // instant inputs
   if (queued.has("KeyS")) { me.order = null; me.eng = null; if (me.ch) interruptChannel("정지"); }
   if (queued.has("KeyH")) { me.order = { t: "hold" }; me.eng = null; }
@@ -2752,7 +2766,7 @@ function updateMe(dt, T, S) {
   if (fighting) {
     for (const a of S.atk || []) {
       const ht = hitTime(a);
-      if (T >= ht && !resolved.has(a.i)) { resolved.add(a.i); if (T - ht < .5) { const d = damageFor(a, S); if (d > 0) bossHit(d, ATK[a.k].gm); } }
+      if (T >= ht && !resolved.has(a.i)) { resolved.add(a.i); if (T - ht < .5) { const d = damageFor(a, S); if (d > 0) bossHit(d, ATK[a.k].gm, a.x != null ? a.x : bossDisp.x, a.y != null ? a.y : bossDisp.y); } }
     }
     for (const a of S.atk || []) if (a.k === "echo" && a.tg === myPeer && T >= a.rb && !resolved.has("rb" + a.i)) {   // 과거의 그림자: snap back
       resolved.add("rb" + a.i); spawnFx(6, me.x, me.y, 0, myColor, myClass);
@@ -3231,7 +3245,8 @@ function drawPlayer(x, y, pr, isMe, peer, T) {
   if (pr.ch && pr.dn === 0) drawChannelFloor(k, pr.a, x, y, pr.ch[2], pr.ch[1], pr.ch[0]);
   ctx.save(); ctx.translate(x, y);
   if (pr.dn === 2) { ctx.globalAlpha = .3; }
-  else if (isMe && me.ifr > 0 && !pr.dn && Math.floor(me.ifr * 14) % 2 === 0) ctx.globalAlpha = .5;
+  else if (isMe && me.ifr > 0 && !pr.dn && !(me.stagT > 0) && Math.floor(me.ifr * 14) % 2 === 0) ctx.globalAlpha = .5;
+
   if (!pr.dn) {
     if (pr.bk) { ctx.strokeStyle = "rgba(159,216,255,.8)"; ctx.lineWidth = 2; ctx.beginPath(); for (let i = 0; i <= 6; i++) { const a = i * TAU / 6; ctx.lineTo(Math.cos(a) * 20, Math.sin(a) * 20); } ctx.stroke(); }
     if (pr.ct) { ctx.strokeStyle = "rgba(255,209,102,.9)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 16 + Math.sin(performance.now() / 80) * 2, 0, TAU); ctx.stroke(); }
@@ -3242,7 +3257,13 @@ function drawPlayer(x, y, pr, isMe, peer, T) {
       ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(0, 10, 15, 6, 0, 0, TAU); ctx.stroke();
       ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(Math.cos(pr.a) * 26, 10 + Math.sin(pr.a) * 12); ctx.lineTo(Math.cos(pr.a + .35) * 18, 10 + Math.sin(pr.a + .35) * 8); ctx.lineTo(Math.cos(pr.a - .35) * 18, 10 + Math.sin(pr.a - .35) * 8); ctx.closePath(); ctx.fill();
       const flip = (Math.cos(pr.a) < 0 ? -1 : 1) * (cfg.facesRight ? 1 : -1);
-      ctx.save(); ctx.scale(flip, 1); ctx.imageSmoothingEnabled = false; drawOutlined(k, spr, -w / 2, 12 - h, w, h, ol); ctx.restore();
+      ctx.save();
+      if (isMe && me.stagT > 0) {   // 피격 경직: 발밑을 축으로 뒤로 젖혀지며 떨림, 처음 잠깐 하얗게 번쩍
+        const R = CONFIG.hitReact, u = me.stagT / R.stagger;
+        ctx.translate((Math.random() - .5) * 4 * u, 10); ctx.rotate(me.stagLean * R.lean * u); ctx.translate(0, -10);
+        if (R.stagger - me.stagT < R.flash) ctx.filter = "brightness(2.6) saturate(.3)";
+      }
+      ctx.scale(flip, 1); ctx.imageSmoothingEnabled = false; drawOutlined(k, spr, -w / 2, 12 - h, w, h, ol); ctx.restore();
       if (pr.gd) { ctx.save(); ctx.rotate(pr.a); ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, -8, 26, -1.1, 1.1); ctx.stroke(); ctx.restore(); }
     } else {
     ctx.save(); ctx.rotate(pr.a);
