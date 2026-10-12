@@ -3713,15 +3713,15 @@ function drawHUD(T, S) {
     const chain = myClass === "wizard" && i === 2 && me.rs;
     drawSlot(sx + 84 + i * 84, sY, "WER"[i] + (sk.channel ? " ⟳" : ""), chain ? (me.rs.step === 3 ? "종장" : "영창 " + (me.rs.step + 1)) : sk.name, chain ? (me.rs.step + 1) + "/4" : sk.tier, me.cd[i], chain ? sk.gap[me.rs.step - 1] * me.st.wzGapMul : skillCd(i), chain && me.cd[i] <= 0 ? { active: true } : state);
   }
-  if (myClass === "gunner" && !me.dn) {   // 강화탄 카운터: 칸이 다 차면 다음 기술이 강화탄
-    const ev = gunEvery(), n = me.gnN || 0, ready = n === ev - 1, bx = sx, bw = 84 * 3 + 76, pw = 18, gap = 6, tw = ev * pw + (ev - 1) * gap, px0 = bx + bw / 2 - tw / 2, py = sY - 13;
-    for (let k = 0; k < ev; k++) {
-      const filled = k < n || (ready && k === ev - 1);
+  if (myClass === "gunner" && !me.dn) {   // 강화탄 카운터: (주기-1)칸. 칸이 다 차면 다음 기술이 강화탄
+    const ev = gunEvery(), slots = ev - 1, n = me.gnN || 0, ready = n >= slots, bx = sx, bw = 84 * 3 + 76, pw = 18, gap = 6, tw = slots * pw + (slots - 1) * gap, px0 = bx + bw / 2 - tw / 2, py = sY - 13;
+    for (let k = 0; k < slots; k++) {
+      const filled = k < n;
       ctx.fillStyle = filled ? (ready ? "#ffb347" : "#e8b45a") : "rgba(13,18,34,.88)"; ctx.fillRect(px0 + k * (pw + gap), py, pw, 6);
       ctx.strokeStyle = ready ? "#ffb347" : "#2c3558"; ctx.lineWidth = 1; ctx.strokeRect(px0 + k * (pw + gap) + .5, py + .5, pw - 1, 5);
     }
     ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.font = '600 11px "IBM Plex Sans KR", system-ui, sans-serif';
-    ctx.fillStyle = ready ? "#ffb347" : "#8f97b3"; ctx.fillText(ready ? "다음 기술 강화탄" : "강화탄 " + n + "/" + ev, px0 - 8, py + 3);
+    ctx.fillStyle = ready ? "#ffb347" : "#8f97b3"; ctx.fillText(ready ? "다음 기술 강화탄" : "강화탄 " + n + "/" + slots, px0 - 8, py + 3);
     if (ready) {
       const pul = .55 + .45 * Math.sin(performance.now() / 90); ctx.strokeStyle = "rgba(255,179,71," + pul + ")"; ctx.lineWidth = 2.5;
       for (let k = 0; k < 4; k++) ctx.strokeRect(sx + k * 84 - 2, sY - 2, 80, 58);
