@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>해시계 레이드 보스 도감</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;600&display=swap">
+<style>
+/* Layout: dial-face header, a 12-slot gallery like hour marks, then one bench section per boss (live render left, spec right). */
+:root{
+  color-scheme:dark;
+  --night:#0f1220; --plate:#171b2e; --rule:#2a3050; --ink:#ece4cf; --dim:#a9a38f; --brass:#e0b45e; --ember:#ff7a6b;
+  --f-display:"Gowun Batang","Nanum Myeongjo",serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--night);color:var(--ink);font:15px/1.65 var(--f-body);
+  background-image:radial-gradient(1200px 500px at 50% -200px,#1d2340 0,transparent 70%)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px;padding-block:40px 80px}
+header{display:grid;gap:14px;padding-bottom:28px;border-bottom:1px solid var(--rule)}
+.kick{font:600 12px/1 var(--f-mono);letter-spacing:.18em;color:var(--brass);text-transform:uppercase;margin:0}
+h1{font:700 clamp(30px,5vw,46px)/1.15 var(--f-display);margin:0;text-wrap:balance}
+.lede{max-width:62ch;color:var(--dim);margin:0}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.links a{color:var(--ink);text-decoration:none;border:1px solid var(--rule);padding:6px 12px;border-radius:999px;font-size:13px}
+.links a:hover,.links a:focus-visible{border-color:var(--brass);color:var(--brass)}
+h3.sec{font:700 22px/1.3 var(--f-display);margin:40px 0 14px}
+.guide{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px 28px;margin:0;padding:0;list-style:none}
+.guide li{padding:10px 0;border-top:1px dashed var(--rule);min-width:0}
+.guide b{color:var(--brass);font-weight:600;margin-right:4px}
+.gal{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+@media (max-width:980px){.gal{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:620px){.gal{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card{display:grid;justify-items:center;text-align:center;gap:2px;padding:12px 8px 14px;background:var(--plate);border:1px solid var(--rule);border-radius:10px;color:var(--ink);text-decoration:none;min-width:0}
+.card:hover,.card:focus-visible{border-color:var(--brass);outline:none}
+.card canvas{width:100%;max-width:150px;aspect-ratio:1;height:auto}
+.st{font:600 11px/1 var(--f-mono);color:var(--dim);letter-spacing:.08em;margin-top:4px}
+.nm{font:700 19px/1.3 var(--f-display)}
+.tt{font-size:12px;color:var(--dim)}
+.mf{font-size:12px;color:var(--brass);min-height:1.6em}
+.mini{display:flex;gap:3px;margin-top:6px}
+.mini i{width:12px;height:12px;border-radius:3px;border:1px solid #0006}
+.boss{display:grid;grid-template-columns:340px minmax(0,1fr);gap:32px;padding-block:44px;border-top:1px solid var(--rule);scroll-margin-top:16px}
+.txt{min-width:0}
+@media (max-width:820px){.boss{grid-template-columns:minmax(0,1fr)}}
+.stage{display:grid;justify-items:center;align-content:start;gap:10px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);align-self:start}
+@media (max-width:820px){.stage{position:static}}
+.stage canvas{width:100%;max-width:320px;aspect-ratio:1;height:auto;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,#22284a 0,#141830 62%,transparent 63%)}
+.cap{margin:0;font:12px/1.4 var(--f-mono);color:var(--dim);text-align:center}
+.png{font:600 13px/1 var(--f-body);color:var(--night);background:var(--brass);border:0;border-radius:8px;padding:10px 14px;cursor:pointer}
+.png:focus-visible,.sw:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.eyebrow{margin:0;font:600 12px/1 var(--f-mono);letter-spacing:.14em;color:var(--b4,var(--brass))}
+.boss h2{font:700 clamp(28px,4vw,38px)/1.2 var(--f-display);margin:8px 0 12px;text-wrap:balance}
+.boss h2 small{font-size:.5em;color:var(--dim);font-weight:400;margin-left:6px}
+.concept{max-width:62ch;margin:0 0 18px;font-size:16px}
+dl{margin:0 0 22px;display:grid;gap:0}
+.fld{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;padding:10px 0;border-top:1px dashed var(--rule)}
+@media (max-width:480px){.fld{grid-template-columns:1fr;gap:4px}}
+dt{color:var(--dim);font-size:13px}
+dd{margin:0;min-width:0}
+.sws{display:flex;flex-wrap:wrap;gap:8px}
+.sw{display:grid;grid-template-columns:28px auto;grid-template-rows:auto auto;column-gap:8px;align-items:center;background:none;border:1px solid var(--rule);border-radius:8px;padding:5px 10px 5px 5px;color:var(--ink);cursor:pointer;text-align:left}
+.sw:hover{border-color:var(--brass)}
+.sw i{grid-row:1/3;width:28px;height:28px;border-radius:5px;border:1px solid #0008}
+.hx{font:12px/1.2 var(--f-mono)}
+.sl{font-size:11px;color:var(--dim);line-height:1.2}
+.sw.ok .hx::after{content:" 복사됨";color:var(--brass)}
+.note{margin:6px 0 0;font-size:13px;color:var(--dim)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:460px}
+thead th{text-align:left;font:600 12px/1 var(--f-mono);letter-spacing:.06em;color:var(--dim);padding:8px 10px;border-bottom:1px solid var(--rule)}
+tbody th{text-align:left;font-weight:600;white-space:nowrap}
+tbody th,tbody td{padding:9px 10px;border-bottom:1px solid #ffffff10;vertical-align:top}
+.tag{display:inline-block;font-size:11.5px;line-height:1;padding:5px 8px;border-radius:999px;white-space:nowrap;border:1px solid currentColor}
+.tag.gim{color:var(--ember)}
+.tag.main{color:var(--brass)}
+.tag.com{color:#9fb4d9}
+.tag.move{color:var(--dim)}
+.tag.ph{color:#c7a8ff}
+footer{margin-top:40px;color:var(--dim);font-size:13px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head><body>
+<div class="wrap">
+<header>
+  <p class="kick">Sundial Raid · Boss Art Brief</p>
+  <h1>해시계 레이드 보스 도감</h1>
+  <p class="lede">보스는 12명이고, 스테이지마다 두 명 중 한 명이 나옵니다. 모두 &quot;시계·시간&quot; 모티프의 수호자이고, 7스테이지부터는 같은 보스가 각성해서 다시 나옵니다. 그림은 지금 게임에 들어간 실제 모습이고, 색 칩을 누르면 색상 코드가 복사됩니다.</p>
+  <div class="links"><a href="./">게임 하러 가기</a><a href="#gallery">보스 12종 한눈에</a><a href="#guide">제작 공통 가이드</a></div>
+</header>
+<h3 class="sec" id="guide">제작 공통 가이드</h3>
+<ul class="guide"><li><b>화면 크기:</b> 게임 화면 1280×720에서 보스 몸은 지름 약 96~128px입니다. 캐릭터는 키 약 50px라, 보스가 캐릭터의 2~2.5배로 보여야 합니다.</li><li><b>파일 형식:</b> 배경 투명 PNG, 정사각형 512×512 권장. 게임에서 축소해서 씁니다.</li><li><b>시점·방향:</b> 플레이어 캐릭터와 같은 살짝 위에서 본 정면, 오른쪽을 보는 자세. 왼쪽을 볼 때는 게임이 좌우 반전합니다.</li><li><b>그림체:</b> 캐릭터 8종과 같은 도트(픽셀) SD 스타일.</li><li><b>실루엣:</b> 작게 보여도 누구인지 알 수 있게, 보스마다 모티프 하나(해시계, 초승달, 모래시계 등)가 멀리서도 보여야 합니다.</li><li><b>색:</b> 아래 보스별 팔레트는 지금 게임 화면에 쓰는 색입니다. 바닥 경고 표시도 이 색을 쓰니 맞춰 주면 통일감이 삽니다.</li><li><b>각성 버전(선택):</b> 7~12스테이지용 각성 모습을 따로 그린다면, 같은 보스에 붉은 기운·균열·빛나는 눈 정도를 더하는 방향을 권합니다.</li></ul>
+<h3 class="sec" id="gallery">보스 12종</h3>
+<div class="gal"><a class="card" href="#hora">
+  <canvas class="bz" data-boss="hora" width="220" height="220" aria-label="호라 게임 내 모습"></canvas>
+  <span class="st">1·7</span>
+  <span class="nm">호라</span>
+  <span class="tt">해시계 수호자</span>
+  <span class="mf">해시계, 정오의 햇빛</span>
+  <span class="mini"><i style="background:#f6d595"></i><i style="background:#c48f3c"></i><i style="background:#7a5220"></i><i style="background:#181d33"></i><i style="background:#e8b45a"></i></span>
+</a><a class="card" href="#lumen">
+  <canvas class="bz" data-boss="lumen" width="220" height="220" aria-label="루멘 게임 내 모습"></canvas>
+  <span class="st">1·7</span>
+  <span class="nm">루멘</span>
+  <span class="tt">새벽의 등불지기</span>
+  <span class="mf">등불, 새벽빛</span>
+  <span class="mini"><i style="background:#fff3c4"></i><i style="background:#f2b84b"></i><i style="background:#8a4a12"></i><i style="background:#1d1710"></i><i style="background:#ffd166"></i></span>
+</a><a class="card" href="#seka">
+  <canvas class="bz" data-boss="seka" width="220" height="220" aria-label="세카 게임 내 모습"></canvas>
+  <span class="st">2·8</span>
+  <span class="nm">세카</span>
+  <span class="tt">초침 사냥꾼</span>
+  <span class="mf">초침, 칼날</span>
+  <span class="mini"><i style="background:#eef0f6"></i><i style="background:#9aa3b8"></i><i style="background:#5a1622"></i><i style="background:#1a1420"></i><i style="background:#ff5d6c"></i></span>
+</a><a class="card" href="#vesper">
+  <canvas class="bz" data-boss="vesper" width="220" height="220" aria-label="베스퍼 게임 내 모습"></canvas>
+  <span class="st">2·8</span>
+  <span class="nm">베스퍼</span>
+  <span class="tt">황혼의 추적자</span>
+  <span class="mf">초승달, 노을</span>
+  <span class="mini"><i style="background:#ffd9c2"></i><i style="background:#e0785a"></i><i style="background:#4a1630"></i><i style="background:#170f1c"></i><i style="background:#ff8f6b"></i></span>
+</a><a class="card" href="#klepsy">
+  <canvas class="bz" data-boss="klepsy" width="220" height="220" aria-label="클렙시 게임 내 모습"></canvas>
+  <span class="st">3·9</span>
+  <span class="nm">클렙시</span>
+  <span class="tt">모래시계 여왕</span>
+  <span class="mf">모래시계, 사막</span>
+  <span class="mini"><i style="background:#f7e1a8"></i><i style="background:#c9a35a"></i><i style="background:#3e6f70"></i><i style="background:#14232a"></i><i style="background:#f2c46b"></i></span>
+</a><a class="card" href="#astra">
+  <canvas class="bz" data-boss="astra" width="220" height="220" aria-label="아스트라 게임 내 모습"></canvas>
+  <span class="st">3·9</span>
+  <span class="nm">아스트라</span>
+  <span class="tt">별자리 점성가</span>
+  <span class="mf">별자리, 천체의</span>
+  <span class="mini"><i style="background:#e4ecff"></i><i style="background:#8ea6e8"></i><i style="background:#2c2f6e"></i><i style="background:#10122a"></i><i style="background:#a9c1ff"></i></span>
+</a><a class="card" href="#mekan">
+  <canvas class="bz" data-boss="mekan" width="220" height="220" aria-label="메카니카 게임 내 모습"></canvas>
+  <span class="st">4·10</span>
+  <span class="nm">메카니카</span>
+  <span class="tt">태엽 인형사</span>
+  <span class="mf">태엽, 톱니, 꼭두각시</span>
+  <span class="mini"><i style="background:#f0b98a"></i><i style="background:#b56a35"></i><i style="background:#4d2a14"></i><i style="background:#1c1612"></i><i style="background:#ffae5c"></i></span>
+</a><a class="card" href="#ferrum">
+  <canvas class="bz" data-boss="ferrum" width="220" height="220" aria-label="페룸 게임 내 모습"></canvas>
+  <span class="st">4·10</span>
+  <span class="nm">페룸</span>
+  <span class="tt">강철 진자</span>
+  <span class="mf">진자, 모루, 강철</span>
+  <span class="mini"><i style="background:#e2e6ec"></i><i style="background:#8c96a6"></i><i style="background:#3a414e"></i><i style="background:#15181e"></i><i style="background:#ffb347"></i></span>
+</a><a class="card" href="#dualis">
+  <canvas class="bz" data-boss="dualis" width="220" height="220" aria-label="듀얼리스 게임 내 모습"></canvas>
+  <span class="st">5·11</span>
+  <span class="nm">듀얼리스</span>
+  <span class="tt">쌍극의 시계</span>
+  <span class="mf">빛과 그림자 반반</span>
+  <span class="mini"><i style="background:#fff1c9"></i><i style="background:#d9b25c"></i><i style="background:#5a3f9e"></i><i style="background:#151229"></i><i style="background:#b892ff"></i></span>
+</a><a class="card" href="#umbra">
+  <canvas class="bz" data-boss="umbra" width="220" height="220" aria-label="움브라 게임 내 모습"></canvas>
+  <span class="st">5·11</span>
+  <span class="nm">움브라</span>
+  <span class="tt">그림자 시계공</span>
+  <span class="mf">그림자, 연기, 분신</span>
+  <span class="mini"><i style="background:#d8ccff"></i><i style="background:#7c6bc4"></i><i style="background:#251a4a"></i><i style="background:#0c0a18"></i><i style="background:#c38bff"></i></span>
+</a><a class="card" href="#tollia">
+  <canvas class="bz" data-boss="tollia" width="220" height="220" aria-label="톨리아 게임 내 모습"></canvas>
+  <span class="st">6·12</span>
+  <span class="nm">톨리아</span>
+  <span class="tt">종탑의 집행자</span>
+  <span class="mf">종, 종탑</span>
+  <span class="mini"><i style="background:#e6f4ff"></i><i style="background:#7fb2d9"></i><i style="background:#2b4a6e"></i><i style="background:#101a2b"></i><i style="background:#9fd8ff"></i></span>
+</a><a class="card" href="#aeon">
+  <canvas class="bz" data-boss="aeon" width="220" height="220" aria-label="에온 게임 내 모습"></canvas>
+  <span class="st">6·12</span>
+  <span class="nm">에온</span>
+  <span class="tt">영겁의 종언</span>
+  <span class="mf">최후의 시계, 두 바늘</span>
+  <span class="mini"><i style="background:#fff6dc"></i><i style="background:#d7b46a"></i><i style="background:#5b3a1a"></i><i style="background:#120e08"></i><i style="background:#ff6f7d"></i></span>
+</a></div>
+<section class="boss" id="hora" style="--b0:#f6d595;--b4:#e8b45a">
+  <div class="stage">
+    <canvas class="bz big" data-boss="hora" width="360" height="360" aria-label="호라 게임 내 모습"></canvas>
+    <p class="cap">지금 게임에 나오는 모습 · 반지름 58 (지름 116px)</p>
+    <button type="button" class="png" data-boss="hora">512×512 PNG로 저장</button>
+  </div>
+  <div class="txt">
+    <p class="eyebrow">1·7스테이지</p>
+    <h2>호라 <small>해시계 수호자</small></h2>
+    <p class="concept">정오의 해시계를 지키는 첫 수호자. 묵직하고 정직한 기사 같은 느낌으로, 햇빛과 그림자로 시간을 다스립니다.</p>
+    <dl><div class="fld"><dt>외형 키워드</dt><dd>황동 해시계 원판 몸, 앞을 가리키는 그림자 막대(그노몬), 평판에 새겨진 로마 숫자, 시침·분침</dd></div><div class="fld"><dt>팔레트</dt><dd><div class="sws"><button type="button" class="sw" data-hex="#f6d595" title="#f6d595 복사"><i style="background:#f6d595"></i><span class="hx">#f6d595</span><span class="sl">밝은 면</span></button><button type="button" class="sw" data-hex="#c48f3c" title="#c48f3c 복사"><i style="background:#c48f3c"></i><span class="hx">#c48f3c</span><span class="sl">주색</span></button><button type="button" class="sw" data-hex="#7a5220" title="#7a5220 복사"><i style="background:#7a5220"></i><span class="hx">#7a5220</span><span class="sl">그림자</span></button><button type="button" class="sw" data-hex="#181d33" title="#181d33 복사"><i style="background:#181d33"></i><span class="hx">#181d33</span><span class="sl">시계판</span></button><button type="button" class="sw" data-hex="#e8b45a" title="#e8b45a 복사"><i style="background:#e8b45a"></i><span class="hx">#e8b45a</span><span class="sl">강조</span></button></div><p class=note>황동·햇금빛</p></dd></div><div class="fld"><dt>크기·움직임</dt><dd>지름 약 116px · 플레이어 주위를 크게 돌며 이동</dd></div></dl>
+    <div class="tw"><table><thead><tr><th>기술</th><th>구분</th><th>연출 포인트</th></tr></thead><tbody><tr><th scope="row">시침 회전</th><td><span class="tag gim">무적 기믹</span></td><td>거대한 시침 두 개가 바닥을 훑으며 회전</td></tr><tr><th scope="row">내려찍기</th><td><span class="tag main">주력</span></td><td>앞 부채꼴을 내리침</td></tr><tr><th scope="row">휩쓸기</th><td><span class="tag main">주력</span></td><td>몸 주위를 한 바퀴 휩씀</td></tr><tr><th scope="row">정오의 빛</th><td><span class="tag main">주력</span></td><td>보스 곁만 빼고 햇빛이 내리꽂힘</td></tr><tr><th scope="row">그림자 표식</th><td><span class="tag main">주력</span></td><td>모두의 발밑에 그림자 표식</td></tr><tr><th scope="row">돌진 / 철퇴 / 사분면 심판</th><td><span class="tag ph">2·3페이즈</span></td><td>일직선 돌진, 강한 내리찍기, 시계판 4분면 중 3곳 심판</td></tr><tr><th scope="row">시간 도약 / 연속 도약</th><td><span class="tag move">이동기</span></td><td>사라졌다 다른 곳에 나타남</td></tr></tbody></table></div>
+  </div>
+</section><section class="boss" id="lumen" style="--b0:#fff3c4;--b4:#ffd166">
+  <div class="stage">
+    <canvas class="bz big" data-boss="lumen" width="360" height="360" aria-label="루멘 게임 내 모습"></canvas>
+    <p class="cap">지금 게임에 나오는 모습 · 반지름 56 (지름 112px)</p>
+    <button type="button" class="png" data-boss="lumen">512×512 PNG로 저장</button>
+  </div>
+  <div class="txt">
+    <p class="eyebrow">1·7스테이지</p>
+    <h2>루멘 <small>새벽의 등불지기</small></h2>
+    <p class="concept">해가 뜨기 전 어둠 속에서 등불을 들고 길을 비추는 수호자. 따뜻하지만 빛 밖에 서면 용서하지 않습니다.</p>
+    <dl><div class="fld"><dt>외형 키워드</dt><dd>머리 위에서 흔들리는 불꽃, 등불 모양 몸통, 몸 주위의 후광, 따뜻한 주황빛</dd></div><div class="fld"><dt>팔레트</dt><dd><div class="sws"><button type="button" class="sw" data-hex="#fff3c4" title="#fff3c4 복사"><i style="background:#fff3c4"></i><span class="hx">#fff3c4</span><span class="sl">밝은 면</span></button><button type="button" class="sw" data-hex="#f2b84b" title="#f2b84b 복사"><i style="background:#f2b84b"></i><span class="hx">#f2b84b</span><span class="sl">주색</span></button><button type="button" class="sw" data-hex="#8a4a12" title="#8a4a12 복사"><i style="background:#8a4a12"></i><span class="hx">#8a4a12</span><span class="sl">그림자</span></button><button type="button" class="sw" data-hex="#1d1710" title="#1d1710 복사"><i style="background:#1d1710"></i><span class="hx">#1d1710</span><span class="sl">시계판</span></button><button type="button" class="sw" data-hex="#ffd166" title="#ffd166 복사"><i style="background:#ffd166"></i><span class="hx">#ffd166</span><span class="sl">강조</span></button></div><p class=note>촛불·새벽빛</p></dd></div><div class="fld"><dt>크기·움직임</dt><dd>지름 약 112px · 플레이어 주위를 천천히 돌며 이동</dd></div></dl>
+    <div class="tw"><table><thead><tr><th>기술</th><th>구분</th><th>연출 포인트</th></tr></thead><tbody><tr><th scope="row">새벽의 등불</th><td><span class="tag gim">무적 기믹</span></td><td>화면이 어두워지고 켜진 등불 빛 안만 안전, 등불이 옮겨 다님</td></tr><tr><th scope="row">새벽 광선</th><td><span class="tag main">전용</span></td><td>빛줄기가 부채꼴로 차례차례 쓸고 지나감</td></tr><tr><th scope="row">섬광탄</th><td><span class="tag main">전용</span></td><td>안쪽 원이 먼저, 바깥 고리가 나중에 터짐</td></tr><tr><th scope="row">그림자 표식 / 휩쓸기 / 종소리 파문 / 철퇴 / 피난처</th><td><span class="tag com">공통</span></td><td>가끔 섞여 나옴</td></tr><tr><th scope="row">시간 도약</th><td><span class="tag move">이동기</span></td><td>사라졌다 다른 곳에 나타남</td></tr></tbody></table></div>
+  </div>
+</section><section class="boss" id="seka" style="--b0:#eef0f6;--b4:#ff5d6c">
+  <div class="stage">
+    <canvas class="bz big" data-boss="seka" width="360" height="360" aria-label="세카 게임 내 모습"></canvas>
+    <p class="cap">지금 게임에 나오는 모습 · 반지름 50 (지름 100px)</p>
+    <button type="button" class="png" data-boss="seka">512×512 PNG로 저장</button>
+  </div>
+  <div class="txt">
+    <p class="eyebrow">2·8스테이지</p>
+    <h2>세카 <small>초침 사냥꾼</small></h2>
+    <p class="concept">가장 빠른 바늘인 초침을 칼로 쓰는 사냥꾼. 짧게 순간 돌진하며 헛동작을 섞고, 등 뒤를 노립니다.</p>
+    <dl><div class="fld"><dt>외형 키워드</dt><dd>은빛 칼날 같은 초침을 든 날렵한 체형, 붉은 강조색, 빠르게 도는 바늘</dd></div><div class="fld"><dt>팔레트</dt><dd><div class="sws"><button type="button" class="sw" data-hex="#eef0f6" title="#eef0f6 복사"><i style="background:#eef0f6"></i><span class="hx">#eef0f6</span><span class="sl">밝은 면</span></button><button type="button" class="sw" data-hex="#9aa3b8" title="#9aa3b8 복사"><i style="background:#9aa3b8"></i><span class="hx">#9aa3b8</span><span class="sl">주색</span></button><button type="button" class="sw" data-hex="#5a1622" title="#5a1622 복사"><i style="background:#5a1622"></i><span class="hx">#5a1622</span><span class="sl">그림자</span></button><button type="button" class="sw" data-hex="#1a1420" title="#1a1420 복사"><i style="background:#1a1420"></i><span class="hx">#1a1420</span><span class="sl">시계판</span></button><button type="button" class="sw" data-hex="#ff5d6c" title="#ff5d6c 복사"><i style="background:#ff5d6c"></i><span class="hx">#ff5d6c</span><span class="sl">강조</span></button></div><p class=note>은빛·진홍</p></dd></div><div class="fld"><dt>크기·움직임</dt><dd>지름 약 100px (보스 중 가장 작음) · 짧게 순간 돌진하며 이리저리, 최대 4번 연속 이동</dd></div></dl>
+    <div class="tw"><table><thead><tr><th>기술</th><th>구분</th><th>연출 포인트</th></tr></thead><tbody><tr><th scope="row">배후 참격</th><td><span class="tag gim">무적 기믹</span></td><td>플레이어 등 뒤에 나타나 베어 옴, 6번</td></tr><tr><th scope="row">연속 돌진</th><td><span class="tag main">주력</span></td><td>일직선 돌진 3번 연속</td></tr><tr><th scope="row">삼연참</th><td><span class="tag main">주력</span></td><td>앞 부채꼴을 방향 바꿔 3번 베기</td></tr><tr><th scope="row">도약 강습</th><td><span class="tag main">주력</span></td><td>가장 먼 사람에게 뛰어듦</td></tr><tr><th scope="row">회전 칼날</th><td><span class="tag main">주력</span></td><td>몸 주위를 칼날이 휘몰아침</td></tr><tr><th scope="row">내려찍기 / 철퇴</th><td><span class="tag com">공통</span></td><td>가끔 섞여 나옴</td></tr><tr><th scope="row">연속 도약 / 시간 도약</th><td><span class="tag move">이동기</span></td><td>착지 지점에 피해</td></tr></tbody></table></div>
+  </div>
+</section><section class="boss" id="vesper" style="--b0:#ffd9c2;--b4:#ff8f6b">
+  <div class="stage">
+    <canvas class="bz big" data-boss="vesper" width="360" height="360" aria-label="베스퍼 게임 내 모습"></canvas>
+    <p class="cap">지금 게임에 나오는 모습 · 반지름 48 (지름 96px)</p>
+    <button type="button" class="png" data-boss="vesper">512×512 PNG로 저장</button>
+  </div>
+  <div class="txt">
+    <p class="eyebrow">2·8스테이지</p>
+    <h2>베스퍼 <small>황혼의 추적자</small></h2>
+    <p class="concept">해가 지는 시간에 사냥감을 찍어 끝까지 쫓는 추적자. 초승달 같은 호를 그리며 베고, 잔상을 남깁니다.</p>
+    <dl><div class="fld"><dt>외형 키워드</dt><dd>초승달 모양의 몸 또는 낫 같은 칼날, 노을빛 칼날, 바람에 날리는 망토, 잔상</dd></div><div class="fld"><dt>팔레트</dt><dd><div class="sws"><button type="button" class="sw" data-hex="#ffd9c2" title="#ffd9c2 복사"><i style="background:#ffd9c2"></i><span class="hx">#ffd9c2</span><span class="sl">밝은 면</span></button><button type="button" class="sw" data-hex="#e0785a" title="#e0785a 복사"><i style="background:#e0785a"></i><span class="hx">#e0785a</span><span class="sl">주색</span></button><button type="button" class="sw" data-hex="#4a1630" title="#4a1630 복사"><i style="background:#4a1630"></i><span class="hx">#4a1630</span><span class="sl">그림자</span></button><button type="button" class="sw" data-hex="#170f1c" title="#170f1c 복사"><i style="background:#170f1c"></i><span class="hx">#170f1c</span><span class="sl">시계판</span></button><button type="button" class="sw" data-hex="#ff8f6b" title="#ff8f6b 복사"><i style="background:#ff8f6b"></i><span class="hx">#ff8f6b</span><span class="sl">강조</span></button></div><p class=note>노을 주홍·짙은 자주</p></dd></div><div class="fld"><dt>크기·움직임</dt><dd>지름 약 96px (작고 날렵함) · 짧게 순간 돌진하며 이동</dd></div></dl>
+    <div class="tw"><table><thead><tr><th>기술</th><th>구분</th><th>연출 포인트</th></tr></thead><tbody><tr><th scope="row">황혼 사냥</th><td><span class="tag gim">무적 기믹</span></td><td>한 명을 사냥감으로 찍고, 멈춘 자리에 원과 십자 참격</td></tr><tr><th scope="row">초승달 베기</th><td><span class="tag main">전용</span></td><td>초승달 모양 호를 앞, 뒤 순서로 베기</td></tr><tr><th scope="row">잔상 습격</th><td><span class="tag main">전용</span></td><td>세 잔상이 서로 다른 방향에서 한 점으로 돌진</td></tr><tr><th scope="row">도약 강습 / 연속 돌진 / 삼연참</th><td><span class="tag com">공통</span></td><td>가끔 섞여 나옴</td></tr><tr><th scope="row">연속 도약 / 시간 도약</th><td><span class="tag move">이동기</span></td><td>착지 지점에 피해</td></tr></tbody></table></div>
+  </div>
+</section><section class="boss" id="klepsy" style="--b0:#f7e1a8;--b4:#f2c46b">
+  <div class="stage">
+    <canvas class="bz big" data-boss="klepsy" width="360" height="360" aria-label="클렙시 게임 내 모습"></canvas>
+    <p class="cap">지금 게임에 나오는 모습 · 반지름 62 (지름 124px)</p>
+    <button type="button" class="png" data-boss="klepsy">512×512 PNG로 저장</button>
+  </div>
+  <div class="txt">
+    <p class="eyebrow">3·9스테이지</p>
+    <h2>클렙시 <small>모래시계 여왕</small></h2>
+    <p class="concept">흘러내리는 모래로 시간을 다스리는 여왕. 모래 늪과 모래벽으로 도망칠 길을 조금씩 막습니다.</p>
+    <dl><div class="fld"><dt>외형 키워드</dt><dd>가슴에 모래시계, 흘러내리는 모래, 왕관·베일, 청록빛 보석, 사막 여왕</dd></div><div class="fld"><dt>팔레트</dt><dd><div class="sws"><button type="button" class="sw" data-hex="#f7e1a8" title="#f7e1a8 복사"><i style="background:#f7e1a8"></i><span class="hx">#f7e1a8</span><span class="sl">밝은 면</span></button><button type="button" class="sw" data-hex="#c9a35a" title="#c9a35a 복사"><i style="background:#c9a35a"></i><span class="hx">#c9a35a</span><span class="sl">주색</span></button><button type="button" class="sw" data-hex="#3e6f70" title="#3e6f70 복사"><i style="background:#3e6f70"></i><span class="hx">#3e6f70</span><span class="sl">그림자</span></button><button type="button" class="sw" data-hex="#14232a" title="#14232a 복사"><i style="background:#14232a"></i><span class="hx">#14232a</span><span class="sl">시계판</span></button><button type="button" class="sw" data-hex="#f2c46b" title="#f2c46b 복사"><i style="background:#f2c46b"></i><span class="hx">#f2c46b</span><span class="sl">강조</span></button></div><p class=note>모래빛·청록</p></dd></div><div class="fld"><dt>크기·움직임</dt><dd>지름 약 124px · 플레이어 주위를 빠르게 돌며 이동</dd></div></dl>
+    <div class="tw"><table><thead><tr><th>기술</th><th>구분</th><th>연출 포인트</th></tr></thead><tbody><tr><th scope="row">모래 해일</th><td><span class="tag gim">무적 기믹</span></td><td>화면을 가로지르는 모래벽, 틈으로만 피할 수 있음</td></tr><tr><th scope="row">모래 늪</th><td><span class="tag main">주력</span></td><td>플레이어를 따라다니다 멈추면 남는 늪 장판</td></tr><tr><th scope="row">모래 장벽</th><td><span class="tag main">주력</span></td><td>한 줄로 생기는 모래벽, 틈 하나</td></tr><tr><th scope="row">모래 소용돌이</th><td><span class="tag main">주력</span></td><td>보스 쪽으로 끌어당기는 소용돌이</td></tr><tr><th scope="row">휩쓸기 / 그림자 표식 / 정오의 빛 / 피난처</th><td><span class="tag com">공통</span></td><td>가끔 섞여 나옴</td></tr><tr><th scope="row">시간 도약</th><td><span class="tag move">이동기</span></td><td>사라졌다 다른 곳에 나타남</td></tr></tbody></table></div>
+  </div>
+</section><section class="boss" id="astra" style="--b0:#e4ecff;--b4:#a9c1ff">
+  <div class="stage">
+    <canvas class="bz big" data-boss="astra" width="360" height="360" aria-label="아스트라 게임 내 모습"></canvas>
+    <p class="cap">지금 게임에 나오는 모습 · 반지름 58 (지름 116px)</p>
+    <button type="button" class="png" data-boss="astra">512×512 PNG로 저장</button>
+  </div>
+  <div class="txt">
+    <p class="eyebrow">3·9스테이지</p>
+    <h2>아스트라 <small>별자리 점성가</small></h2>
+    <p class="concept">밤하늘의 별자리로 미래를 읽는 점성가. 별을 잇는 선과 유성으로 바닥을 심판합니다.</p>
+    <dl><div class="fld"><dt>외형 키워드</dt><dd>몸 주위를 도는 작은 별 5개, 천체의 고리, 오브·수정구, 별자리 무늬 로브</dd></div><div class="fld"><dt>팔레트</dt><dd><div class="sws"><button type="button" class="sw" data-hex="#e4ecff" title="#e4ecff 복사"><i style="background:#e4ecff"></i><span class="hx">#e4ecff</span><span class="sl">밝은 면</span></button><button type="button" class="sw" data-hex="#8ea6e8" title="#8ea6e8 복사"><i style="background:#8ea6e8"></i><span class="hx">#8ea6e8</span><span class="sl">주색</span></button><button type="button" class="sw" data-hex="#2c2f6e" title="#2c2f6e 복사"><i style="background:#2c2f6e"></i><span class="hx">#2c2f6e</span><span class="sl">그림자</span></button><button type="button" class="sw" data-hex="#10122a" title="#10122a 복사"><i style="background:#10122a"></i><span class="hx">#10122a</span><span class="sl">시계판</span></button><button type="button" class="sw" data-hex="#a9c1ff" title="#a9c1ff 복사"><i style="background:#a9c1ff"></i><span class="hx">#a9c1ff</span><span class="sl">강조</span></button></div><p class=note>별빛·밤하늘 남색</p></dd></div><div class="fld"><dt>크기·움직임</dt><dd>지름 약 116px · 순간이동으로 자리를 바꿈</dd></div></dl>
+    <div class="tw"><table><thead><tr><th>기술</th><th>구분</th><th>연출 포인트</th></tr></thead><tbody><tr><th scope="row">성좌 심판</th><td><span class="tag gim">무적 기믹</span></td><td>바닥이 6칸 별자리 판으로 나뉘고, 초록 칸 가운데만 안전</td></tr><tr><th scope="row">별자리 잇기</th><td><span class="tag main">전용</span></td><td>별 5개를 잇는 선 위가 위험</td></tr><tr><th scope="row">추적 유성</th><td><span class="tag main">전용</span></td><td>0.55초마다 각자 자리에 유성 낙하</td></tr><tr><th scope="row">반발 / 공명 / 소용돌이 / 사분면 심판 / 피난처</th><td><span class="tag com">공통</span></td><td>가끔 섞여 나옴</td></tr><tr><th scope="row">시간 도약</th><td><span class="tag move">이동기</span></td><td>사라졌다 다른 곳에 나타남</td></tr></tbody></table></div>
+  </div>
+</section><section class="boss" id="mekan" style="--b0:#f0b98a;--b4:#ffae5c">
+  <div class="stage">
+    <canvas class="bz big" data-boss="mekan" width="360" height="360" aria-label="메카니카 게임 내 모습"></canvas>
+    <p class="cap">지금 게임에 나오는 모습 · 반지름 60 (지름 120px)</p>
+    <button type="button" class="png" data-boss="mekan">512×512 PNG로 저장</button>
+  </div>
+  <div class="txt">
+    <p class="eyebrow">4·10스테이지</p>
+    <h2>메카니카 <small>태엽 인형사</small></h2>
+    <p class="concept">태엽과 톱니로 병정을 만들어 움직이는 인형사. 직접 싸우기보다 꼭두각시와 분신을 앞세웁니다.</p>
+    <dl><div class="fld"><dt>외형 키워드</dt><dd>몸 둘레를 도는 톱니바퀴, 등 뒤의 태엽 손잡이, 구리로 만든 기계 몸, 인형 조종 실</dd></div><div class="fld"><dt>팔레트</dt><dd><div class="sws"><button type="button" class="sw" data-hex="#f0b98a" title="#f0b98a 복사"><i style="background:#f0b98a"></i><span class="hx">#f0b98a</span><span class="sl">밝은 면</span></button><button type="button" class="sw" data-hex="#b56a35" title="#b56a35 복사"><i style="background:#b56a35"></i><span class="hx">#b56a35</span><span class="sl">주색</span></button><button type="button" class="sw" data-hex="#4d2a14" title="#4d2a14 복사"><i style="background:#4d2a14"></i><span class="hx">#4d2a14</span><span class="sl">그림자</span></button><button type="button" class="sw" data-hex="#1c1612" title="#1c1612 복사"><i style="background:#1c1612"></i><span class="hx">#1c1612</span><span class="sl">시계판</span></button><button type="button" class="sw" data-hex="#ffae5c" title="#ffae5c 복사"><i style="background:#ffae5c"></i><span class="hx">#ffae5c</span><span class="sl">강조</span></button></div><p class=note>구리·주황</p></dd></div><div class="fld"><dt>크기·움직임</dt><dd>지름 약 120px · 느리게 걸어서 접근</dd></div><div class="fld"><dt>추가 이미지(선택)</dt><dd>태엽 병정(소환물), 태엽 분신</dd></div></dl>
+    <div class="tw"><table><thead><tr><th>기술</th><th>구분</th><th>연출 포인트</th></tr></thead><tbody><tr><th scope="row">시한 태엽 폭탄</th><td><span class="tag gim">무적 기믹</span></td><td>숫자가 적힌 태엽 폭탄이 순서대로 터짐</td></tr><tr><th scope="row">태엽 병정 소환</th><td><span class="tag main">주력</span></td><td>작은 병정을 불러내고, 병정이 있는 동안 보스가 단단해짐</td></tr><tr><th scope="row">태엽 분신</th><td><span class="tag main">주력</span></td><td>분신을 제한 시간 안에 부수지 못하면 폭발</td></tr><tr><th scope="row">톱니 투석</th><td><span class="tag main">주력</span></td><td>톱니바퀴 3개가 일직선으로 날아감</td></tr><tr><th scope="row">태엽 팔 회전</th><td><span class="tag main">주력</span></td><td>긴 팔이 몸 주위를 3번에 나눠 휩쓺</td></tr><tr><th scope="row">용수철 도약</th><td><span class="tag main">주력</span></td><td>먼 사람에게 뛰어 착지한 뒤 십자로 톱니가 튐</td></tr><tr><th scope="row">내려찍기 / 철퇴 / 시간 도약</th><td><span class="tag com">공통</span></td><td>가끔 섞여 나옴</td></tr></tbody></table></div>
+  </div>
+</section><section class="boss" id="ferrum" style="--b0:#e2e6ec;--b4:#ffb347">
+  <div class="stage">
+    <canvas class="bz big" data-boss="ferrum" width="360" height="360" aria-label="페룸 게임 내 모습"></canvas>
+    <p class="cap">지금 게임에 나오는 모습 · 반지름 62 (지름 124px)</p>
+    <button type="button" class="png" data-boss="ferrum">512×512 PNG로 저장</button>
+  </div>
+  <div class="txt">
+    <p class="eyebrow">4·10스테이지</p>
+    <h2>페룸 <small>강철 진자</small></h2>
+    <p class="concept">거대한 진자시계의 추가 깨어난 강철 거인. 무겁고 느리지만, 한 번 휘두르면 바닥 전체를 쓸고 갑니다.</p>
+    <dl><div class="fld"><dt>외형 키워드</dt><dd>모루·강철판을 두른 묵직한 몸, 네 방향 장갑판, 주황빛 열기, 시계추·사슬</dd></div><div class="fld"><dt>팔레트</dt><dd><div class="sws"><button type="button" class="sw" data-hex="#e2e6ec" title="#e2e6ec 복사"><i style="background:#e2e6ec"></i><span class="hx">#e2e6ec</span><span class="sl">밝은 면</span></button><button type="button" class="sw" data-hex="#8c96a6" title="#8c96a6 복사"><i style="background:#8c96a6"></i><span class="hx">#8c96a6</span><span class="sl">주색</span></button><button type="button" class="sw" data-hex="#3a414e" title="#3a414e 복사"><i style="background:#3a414e"></i><span class="hx">#3a414e</span><span class="sl">그림자</span></button><button type="button" class="sw" data-hex="#15181e" title="#15181e 복사"><i style="background:#15181e"></i><span class="hx">#15181e</span><span class="sl">시계판</span></button><button type="button" class="sw" data-hex="#ffb347" title="#ffb347 복사"><i style="background:#ffb347"></i><span class="hx">#ffb347</span><span class="sl">강조</span></button></div><p class=note>강철 회색·달궈진 주황</p></dd></div><div class="fld"><dt>크기·움직임</dt><dd>지름 약 124px · 진자처럼 좌우로 흔들리며 접근</dd></div><div class="fld"><dt>추가 이미지(선택)</dt><dd>거대 진자의 추(화면 위에 매달려 왕복)</dd></div></dl>
+    <div class="tw"><table><thead><tr><th>기술</th><th>구분</th><th>연출 포인트</th></tr></thead><tbody><tr><th scope="row">강철 압착</th><td><span class="tag gim">무적 기믹</span></td><td>양쪽 벽이 좁혀 오고 열린 통로가 좌우로 크게 옮겨 감</td></tr><tr><th scope="row">거대 진자</th><td><span class="tag main">전용</span></td><td>화면 위에 매달린 추가 왕복, 돌아올 때는 다른 높이</td></tr><tr><th scope="row">모루 투하</th><td><span class="tag main">전용</span></td><td>각자 자리에 모루가 떨어진 뒤 충격파가 퍼짐</td></tr><tr><th scope="row">철퇴 / 톱니 투석 / 용수철 도약 / 돌진</th><td><span class="tag com">공통</span></td><td>가끔 섞여 나옴</td></tr><tr><th scope="row">연속 도약 / 시간 도약</th><td><span class="tag move">이동기</span></td><td>착지 지점에 피해</td></tr></tbody></table></div>
+  </div>
+</section><section class="boss" id="dualis" style="--b0:#fff1c9;--b4:#b892ff">
+  <div class="stage">
+    <canvas class="bz big" data-boss="dualis" width="360" height="360" aria-label="듀얼리스 게임 내 모습"></canvas>
+    <p class="cap">지금 게임에 나오는 모습 · 반지름 60 (지름 120px)</p>
+    <button type="button" class="png" data-boss="dualis">512×512 PNG로 저장</button>
+  </div>
+  <div class="txt">
+    <p class="eyebrow">5·11스테이지</p>
+    <h2>듀얼리스 <small>쌍극의 시계</small></h2>
+    <p class="concept">빛과 그림자, 두 극을 한 몸에 담은 시계. 협동 패턴(모이기·흩어지기·색 나눠 서기)이 중심입니다.</p>
+    <dl><div class="fld"><dt>외형 키워드</dt><dd>몸이 반은 흰 빛·반은 보라 그림자로 나뉘어짐, 반대로 도는 두 바늘, 해와 달 문양</dd></div><div class="fld"><dt>팔레트</dt><dd><div class="sws"><button type="button" class="sw" data-hex="#fff1c9" title="#fff1c9 복사"><i style="background:#fff1c9"></i><span class="hx">#fff1c9</span><span class="sl">밝은 면</span></button><button type="button" class="sw" data-hex="#d9b25c" title="#d9b25c 복사"><i style="background:#d9b25c"></i><span class="hx">#d9b25c</span><span class="sl">주색</span></button><button type="button" class="sw" data-hex="#5a3f9e" title="#5a3f9e 복사"><i style="background:#5a3f9e"></i><span class="hx">#5a3f9e</span><span class="sl">그림자</span></button><button type="button" class="sw" data-hex="#151229" title="#151229 복사"><i style="background:#151229"></i><span class="hx">#151229</span><span class="sl">시계판</span></button><button type="button" class="sw" data-hex="#b892ff" title="#b892ff 복사"><i style="background:#b892ff"></i><span class="hx">#b892ff</span><span class="sl">강조</span></button></div><p class=note>황금 빛·보라 그림자</p></dd></div><div class="fld"><dt>크기·움직임</dt><dd>지름 약 120px · 순간이동으로 자리를 바꿈</dd></div></dl>
+    <div class="tw"><table><thead><tr><th>기술</th><th>구분</th><th>연출 포인트</th></tr></thead><tbody><tr><th scope="row">일식</th><td><span class="tag gim">무적 기믹</span></td><td>화면이 어두워지고 움직이는 빛 원 안만 안전</td></tr><tr><th scope="row">공명</th><td><span class="tag main">주력</span></td><td>표시된 인원만큼 한 원에 모여야 하는 모이기</td></tr><tr><th scope="row">반발</th><td><span class="tag main">주력</span></td><td>서로 떨어져야 하는 흩어지기</td></tr><tr><th scope="row">명암 반전</th><td><span class="tag main">주력</span></td><td>화면이 빛·그림자 반쪽으로 나뉘고 내 색 쪽으로</td></tr><tr><th scope="row">피난처</th><td><span class="tag main">주력</span></td><td>초록 원 안만 안전</td></tr><tr><th scope="row">내려찍기 / 돌진 / 정오의 빛 / 철퇴</th><td><span class="tag com">공통</span></td><td>가끔 섞여 나옴</td></tr><tr><th scope="row">연속 도약 / 시간 도약</th><td><span class="tag move">이동기</span></td><td>착지 지점에 피해</td></tr></tbody></table></div>
+  </div>
+</section><section class="boss" id="umbra" style="--b0:#d8ccff;--b4:#c38bff">
+  <div class="stage">
+    <canvas class="bz big" data-boss="umbra" width="360" height="360" aria-label="움브라 게임 내 모습"></canvas>
+    <p class="cap">지금 게임에 나오는 모습 · 반지름 58 (지름 116px)</p>
+    <button type="button" class="png" data-boss="umbra">512×512 PNG로 저장</button>
+  </div>
+  <div class="txt">
+    <p class="eyebrow">5·11스테이지</p>
+    <h2>움브라 <small>그림자 시계공</small></h2>
+    <p class="concept">그림자로 시계를 만드는 장인. 분신을 부리고, 시간을 되감아 플레이어를 과거의 자리로 돌려놓습니다.</p>
+    <dl><div class="fld"><dt>외형 키워드</dt><dd>몸 주위에 피어오르는 보라 연기, 두건을 쓴 장인, 손에 든 작은 시계 부품·공구, 어둠 속 빛나는 눈</dd></div><div class="fld"><dt>팔레트</dt><dd><div class="sws"><button type="button" class="sw" data-hex="#d8ccff" title="#d8ccff 복사"><i style="background:#d8ccff"></i><span class="hx">#d8ccff</span><span class="sl">밝은 면</span></button><button type="button" class="sw" data-hex="#7c6bc4" title="#7c6bc4 복사"><i style="background:#7c6bc4"></i><span class="hx">#7c6bc4</span><span class="sl">주색</span></button><button type="button" class="sw" data-hex="#251a4a" title="#251a4a 복사"><i style="background:#251a4a"></i><span class="hx">#251a4a</span><span class="sl">그림자</span></button><button type="button" class="sw" data-hex="#0c0a18" title="#0c0a18 복사"><i style="background:#0c0a18"></i><span class="hx">#0c0a18</span><span class="sl">시계판</span></button><button type="button" class="sw" data-hex="#c38bff" title="#c38bff 복사"><i style="background:#c38bff"></i><span class="hx">#c38bff</span><span class="sl">강조</span></button></div><p class=note>연보라·짙은 밤</p></dd></div><div class="fld"><dt>크기·움직임</dt><dd>지름 약 116px · 순간이동으로 자리를 바꿈</dd></div><div class="fld"><dt>추가 이미지(선택)</dt><dd>그림자 분신 (보스를 반투명하게 한 모습도 충분)</dd></div></dl>
+    <div class="tw"><table><thead><tr><th>기술</th><th>구분</th><th>연출 포인트</th></tr></thead><tbody><tr><th scope="row">암전</th><td><span class="tag gim">무적 기믹</span></td><td>화면 전체가 어두워져 내 주변만 보이고, 그림자 창이 날아옴</td></tr><tr><th scope="row">그림자 삼중참</th><td><span class="tag main">전용</span></td><td>보스와 분신 둘이 세 방향에서 한 점을 베기</td></tr><tr><th scope="row">과거의 그림자</th><td><span class="tag main">전용</span></td><td>자리를 기억했다가 모두를 그 자리로 되돌리고 터뜨림</td></tr><tr><th scope="row">그림자 표식 / 내려찍기 / 명암 반전 / 삼연참 / 종소리 파문</th><td><span class="tag com">공통</span></td><td>가끔 섞여 나옴</td></tr><tr><th scope="row">연속 도약 / 시간 도약</th><td><span class="tag move">이동기</span></td><td>착지 지점에 피해</td></tr></tbody></table></div>
+  </div>
+</section><section class="boss" id="tollia" style="--b0:#e6f4ff;--b4:#9fd8ff">
+  <div class="stage">
+    <canvas class="bz big" data-boss="tollia" width="360" height="360" aria-label="톨리아 게임 내 모습"></canvas>
+    <p class="cap">지금 게임에 나오는 모습 · 반지름 60 (지름 120px)</p>
+    <button type="button" class="png" data-boss="tollia">512×512 PNG로 저장</button>
+  </div>
+  <div class="txt">
+    <p class="eyebrow">6·12스테이지</p>
+    <h2>톨리아 <small>종탑의 집행자</small></h2>
+    <p class="concept">종탑의 대종을 울려 형을 집행하는 수호자. 종소리가 파문이 되어 바닥 전체로 퍼져 나갑니다.</p>
+    <dl><div class="fld"><dt>외형 키워드</dt><dd>종 모양 몸, 몸 밖으로 퍼지는 파문 고리, 사제·집행자의 둔기, 차가운 하늘색</dd></div><div class="fld"><dt>팔레트</dt><dd><div class="sws"><button type="button" class="sw" data-hex="#e6f4ff" title="#e6f4ff 복사"><i style="background:#e6f4ff"></i><span class="hx">#e6f4ff</span><span class="sl">밝은 면</span></button><button type="button" class="sw" data-hex="#7fb2d9" title="#7fb2d9 복사"><i style="background:#7fb2d9"></i><span class="hx">#7fb2d9</span><span class="sl">주색</span></button><button type="button" class="sw" data-hex="#2b4a6e" title="#2b4a6e 복사"><i style="background:#2b4a6e"></i><span class="hx">#2b4a6e</span><span class="sl">그림자</span></button><button type="button" class="sw" data-hex="#101a2b" title="#101a2b 복사"><i style="background:#101a2b"></i><span class="hx">#101a2b</span><span class="sl">시계판</span></button><button type="button" class="sw" data-hex="#9fd8ff" title="#9fd8ff 복사"><i style="background:#9fd8ff"></i><span class="hx">#9fd8ff</span><span class="sl">강조</span></button></div><p class=note>은청·하늘색</p></dd></div><div class="fld"><dt>크기·움직임</dt><dd>지름 약 120px · 진자처럼 좌우로 흔들리며 접근</dd></div></dl>
+    <div class="tw"><table><thead><tr><th>기술</th><th>구분</th><th>연출 포인트</th></tr></thead><tbody><tr><th scope="row">대종 공명</th><td><span class="tag gim">무적 기믹</span></td><td>세 곳의 종에서 파문이 겹쳐 퍼짐</td></tr><tr><th scope="row">종소리 파문</th><td><span class="tag main">주력</span></td><td>보스에서 고리가 차례로 퍼져 나감</td></tr><tr><th scope="row">피난처</th><td><span class="tag main">주력</span></td><td>초록 원 안만 안전</td></tr><tr><th scope="row">내려찍기 / 그림자 표식 / 휩쓸기 / 철퇴 / 반발 / 돌진 / 사분면 심판 / 공명</th><td><span class="tag com">공통</span></td><td>가끔 섞여 나옴</td></tr><tr><th scope="row">연속 도약 / 시간 도약</th><td><span class="tag move">이동기</span></td><td>착지 지점에 피해</td></tr></tbody></table></div>
+  </div>
+</section><section class="boss" id="aeon" style="--b0:#fff6dc;--b4:#ff6f7d">
+  <div class="stage">
+    <canvas class="bz big" data-boss="aeon" width="360" height="360" aria-label="에온 게임 내 모습"></canvas>
+    <p class="cap">지금 게임에 나오는 모습 · 반지름 64 (지름 128px)</p>
+    <button type="button" class="png" data-boss="aeon">512×512 PNG로 저장</button>
+  </div>
+  <div class="txt">
+    <p class="eyebrow">6·12스테이지</p>
+    <h2>에온 <small>영겁의 종언</small></h2>
+    <p class="concept">시간 그 자체가 형체를 얻은 최종 보스. 서로 반대로 도는 바깥 고리들과 시침·분침을 두르고 있으며, 시간을 부수고 되감아 전장을 지배한다. 해시계 레이드의 마지막 문을 지키는 존재.</p>
+    <dl><div class="fld"><dt>외형 키워드</dt><dd>서로 반대 방향으로 회전하는 여러 겹의 황금 고리, 중앙의 빛나는 시계 핵, 시침·분침 형태의 거대한 바늘 두 개, 금이 간 유리 같은 시간 파편이 주위에 떠다님, 위엄 있고 신성한 느낌</dd></div><div class="fld"><dt>팔레트</dt><dd><div class="sws"><button type="button" class="sw" data-hex="#fff6dc" title="#fff6dc 복사"><i style="background:#fff6dc"></i><span class="hx">#fff6dc</span><span class="sl">밝은 면</span></button><button type="button" class="sw" data-hex="#d7b46a" title="#d7b46a 복사"><i style="background:#d7b46a"></i><span class="hx">#d7b46a</span><span class="sl">주색</span></button><button type="button" class="sw" data-hex="#5b3a1a" title="#5b3a1a 복사"><i style="background:#5b3a1a"></i><span class="hx">#5b3a1a</span><span class="sl">그림자</span></button><button type="button" class="sw" data-hex="#120e08" title="#120e08 복사"><i style="background:#120e08"></i><span class="hx">#120e08</span><span class="sl">시계판</span></button><button type="button" class="sw" data-hex="#ff6f7d" title="#ff6f7d 복사"><i style="background:#ff6f7d"></i><span class="hx">#ff6f7d</span><span class="sl">강조</span></button></div><p class=note>붉은 균열</p></dd></div><div class="fld"><dt>크기·움직임</dt><dd>반지름 64 → 게임 내 약 128px로 가장 큼. 전장 중앙 주위를 천천히 공전하며, 고리는 항상 회전 상태. 순간 도약 시 잔상이 남는 연출 권장.</dd></div></dl>
+    <div class="tw"><table><thead><tr><th>기술</th><th>구분</th><th>연출 포인트</th></tr></thead><tbody><tr><th scope="row">시간 파편 폭풍</th><td><span class="tag gim">무적 기믹</span></td><td>9초간 화면 전체에 작은 파편이 순차적으로 빠르게 쏟아짐. 보스는 고리가 빛나며 공중에 고정</td></tr><tr><th scope="row">시침과 분침</th><td><span class="tag main">전용</span></td><td>두 바늘이 서로 반대 방향으로 회전하며 전장을 쓸어냄</td></tr><tr><th scope="row">시간 되감기</th><td><span class="tag main">전용</span></td><td>원형 폭발이 차례로 터진 뒤, 같은 위치가 역순으로 다시 터짐 (되감기 이펙트)</td></tr><tr><th scope="row">종소리 파문</th><td><span class="tag com">공통</span></td><td>몸체에서 퍼지는 고리 모양 충격파</td></tr><tr><th scope="row">돌진</th><td><span class="tag com">공통</span></td><td>고리를 접고 직선으로 돌진</td></tr><tr><th scope="row">사분면 심판</th><td><span class="tag com">공통</span></td><td>전장 4분할 중 일부를 내려침</td></tr><tr><th scope="row">피난처</th><td><span class="tag com">공통</span></td><td>안전 지대 외 전체 공격</td></tr><tr><th scope="row">공명</th><td><span class="tag com">공통</span></td><td>표시된 인원만큼 한 원에 모여야 하는 모이기</td></tr><tr><th scope="row">시간 도약 · 연속 도약</th><td><span class="tag move">이동기</span></td><td>사라졌다가 다른 위치에 나타남 (연속 도약은 여러 번 반복)</td></tr></tbody></table></div>
+  </div>
+</section>
+<footer>구분 표시 · <span class="tag gim">무적 기믹</span> 보스가 무적이 되는 고유 패턴 · <span class="tag main">주력/전용</span> 그 보스만의 기술 · <span class="tag com">공통</span> 다른 보스와 함께 쓰는 기술 · <span class="tag move">이동기</span></footer>
+</div>
+<script>
+const TAU = Math.PI * 2;
+let ctx;
+function drawBossBody(look, pal, r, f, T, ph, rec, flash) {
+  const ag = ctx.createRadialGradient(-r * .28, -r * .3, r * .15, 0, 0, r);
+  ag.addColorStop(0, pal[0]); ag.addColorStop(.6, pal[1]); ag.addColorStop(1, pal[2]);
+  // facing gnomon
+  ctx.save(); ctx.rotate(f);
+  ctx.fillStyle = pal[1]; ctx.beginPath(); ctx.moveTo(r + 26, 0); ctx.lineTo(r - 6, -16); ctx.lineTo(r - 6, 16); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = "#1a1208"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
+  if (look === "lantern") {   // flickering flame above, warm halo
+    const fl = 1 + Math.sin(T * 9) * .08 + Math.sin(T * 23) * .04;
+    ctx.fillStyle = "rgba(255,209,102,.12)"; ctx.beginPath(); ctx.arc(0, 0, r + 22 * fl, 0, TAU); ctx.fill();
+    ctx.fillStyle = pal[4]; ctx.beginPath(); ctx.moveTo(-12, -r + 4); ctx.quadraticCurveTo(0, -r - 34 * fl, 12, -r + 4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#fff3c4"; ctx.beginPath(); ctx.moveTo(-6, -r + 2); ctx.quadraticCurveTo(0, -r - 18 * fl, 6, -r + 2); ctx.closePath(); ctx.fill();
+  }
+  if (look === "orb") {   // orbiting stars
+    for (let i = 0; i < 5; i++) { const an = T * .9 + i * TAU / 5, rr = r + 14 + Math.sin(T * 2 + i) * 4; ctx.fillStyle = pal[4]; ctx.beginPath(); ctx.arc(Math.cos(an) * rr, Math.sin(an) * rr, 4, 0, TAU); ctx.fill(); }
+    ctx.strokeStyle = "rgba(169,193,255,.35)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(0, 0, r + 14, 0, TAU); ctx.stroke();
+  }
+  if (look === "anvil") {   // heavy plates
+    ctx.save(); ctx.rotate(Math.sin(T * 1.2) * .25); ctx.fillStyle = pal[2];
+    for (let i = 0; i < 4; i++) { ctx.save(); ctx.rotate(i * TAU / 4 + Math.PI / 4); ctx.fillRect(r - 10, -16, 20, 32); ctx.strokeStyle = "#0d0f14"; ctx.lineWidth = 2; ctx.strokeRect(r - 10, -16, 20, 32); ctx.restore(); }
+    ctx.restore();
+  }
+  if (look === "shade") {   // smoky tendrils
+    for (let i = 0; i < 7; i++) { const an = i * TAU / 7 + T * .4, w = Math.sin(T * 2.5 + i * 1.7); ctx.fillStyle = "rgba(124,107,196," + (.18 + w * .08) + ")"; ctx.beginPath(); ctx.arc(Math.cos(an) * (r + 6 + w * 8), Math.sin(an) * (r + 6 + w * 8), 14 + w * 4, 0, TAU); ctx.fill(); }
+  }
+  if (look === "aeon") {   // counter-rotating outer rings
+    ctx.lineWidth = 3;
+    ctx.save(); ctx.rotate(T * .5); ctx.strokeStyle = pal[1]; for (let i = 0; i < 12; i++) { ctx.beginPath(); ctx.arc(0, 0, r + 12, i * TAU / 12, i * TAU / 12 + .35); ctx.stroke(); } ctx.restore();
+    ctx.save(); ctx.rotate(-T * .8); ctx.strokeStyle = pal[4]; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(0, 0, r + 22, i * TAU / 4, i * TAU / 4 + .7); ctx.stroke(); } ctx.restore();
+  }
+  if (look === "bell") {
+    for (let k = 0; k < 2; k++) { const u = ((T * .6 + k * .5) % 1); ctx.strokeStyle = "rgba(159,216,255," + (1 - u) * .6 + ")"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, r + 6 + u * 40, 0, TAU); ctx.stroke(); }
+  }
+  if (look === "gear") {
+    ctx.save(); ctx.rotate(T * .6); ctx.fillStyle = pal[1];
+    for (let i = 0; i < 14; i++) { ctx.save(); ctx.rotate(i * TAU / 14); ctx.fillRect(r - 4, -7, 14, 14); ctx.restore(); }
+    ctx.restore();
+  }
+  if (look === "dual") {
+    ctx.save(); ctx.rotate(f + Math.PI / 2);
+    ctx.fillStyle = pal[0]; ctx.beginPath(); ctx.arc(0, 0, r, Math.PI, TAU); ctx.fill();
+    ctx.fillStyle = pal[2]; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI); ctx.fill();
+    ctx.restore();
+  } else { ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill(); }
+  ctx.lineWidth = 3; ctx.strokeStyle = "#1a1208"; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.stroke();
+  const ir = r * .7;
+  ctx.fillStyle = rec ? "#2a2f45" : pal[3]; ctx.beginPath(); ctx.arc(0, 0, ir, 0, TAU); ctx.fill();
+  ctx.strokeStyle = pal[4]; ctx.lineWidth = 2;
+  for (let i = 0; i < 12; i++) { const a = i * TAU / 12; ctx.beginPath(); ctx.moveTo(Math.cos(a) * (ir - 7), Math.sin(a) * (ir - 7)); ctx.lineTo(Math.cos(a) * (ir - 2), Math.sin(a) * (ir - 2)); ctx.stroke(); }
+  ctx.lineCap = "round";
+  if (look === "hourglass") {
+    const s = T * .8;
+    ctx.save(); ctx.rotate(Math.sin(s) * .2);
+    ctx.fillStyle = pal[4]; ctx.beginPath(); ctx.moveTo(-14, -22); ctx.lineTo(14, -22); ctx.lineTo(2, 0); ctx.lineTo(14, 22); ctx.lineTo(-14, 22); ctx.lineTo(-2, 0); ctx.closePath(); ctx.globalAlpha = .9; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.fillStyle = pal[3]; const lvl = (s * .3) % 1; ctx.fillRect(-14, -22, 28, 22 * lvl);
+    ctx.restore();
+  } else if (look === "blade") {
+    ctx.strokeStyle = pal[4]; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(T * 6) * (r + 14), Math.sin(T * 6) * (r + 14)); ctx.stroke();
+    ctx.strokeStyle = pal[0]; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(T * .5 - 1.57) * 18, Math.sin(T * .5 - 1.57) * 18); ctx.stroke();
+  } else {
+    ctx.strokeStyle = "#f3e6c8"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(T * .5 - 1.57) * ir * .5, Math.sin(T * .5 - 1.57) * ir * .5); ctx.stroke();
+    ctx.strokeStyle = ph === 2 ? "#ff6f7d" : pal[4]; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(T * 3 - 1.57) * ir * .8, Math.sin(T * 3 - 1.57) * ir * .8); ctx.stroke();
+    if (look === "dual") { ctx.strokeStyle = pal[0]; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-Math.cos(T * 3 - 1.57) * ir * .8, -Math.sin(T * 3 - 1.57) * ir * .8); ctx.stroke(); }
+  }
+  if (look === "crescent") {   // a dark bite out of the face makes the moon
+    ctx.fillStyle = pal[3]; ctx.globalAlpha = .85; ctx.beginPath(); ctx.arc(r * .38, -r * .2, r * .62, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = pal[4]; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, r - 5, Math.PI * .55, Math.PI * 1.45); ctx.stroke();
+  }
+  ctx.fillStyle = pal[4]; ctx.beginPath(); ctx.arc(0, 0, 4, 0, TAU); ctx.fill();
+  if (flash > 0) { ctx.fillStyle = "rgba(255,255,255," + flash + ")"; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill(); }
+}
+
+const BOSSES = {"hora": {"look": "sundial", "r": 58, "pal": ["#f6d595", "#c48f3c", "#7a5220", "#181d33", "#e8b45a"]}, "seka": {"look": "blade", "r": 50, "pal": ["#eef0f6", "#9aa3b8", "#5a1622", "#1a1420", "#ff5d6c"]}, "klepsy": {"look": "hourglass", "r": 62, "pal": ["#f7e1a8", "#c9a35a", "#3e6f70", "#14232a", "#f2c46b"]}, "mekan": {"look": "gear", "r": 60, "pal": ["#f0b98a", "#b56a35", "#4d2a14", "#1c1612", "#ffae5c"]}, "dualis": {"look": "dual", "r": 60, "pal": ["#fff1c9", "#d9b25c", "#5a3f9e", "#151229", "#b892ff"]}, "tollia": {"look": "bell", "r": 60, "pal": ["#e6f4ff", "#7fb2d9", "#2b4a6e", "#101a2b", "#9fd8ff"]}, "lumen": {"look": "lantern", "r": 56, "pal": ["#fff3c4", "#f2b84b", "#8a4a12", "#1d1710", "#ffd166"]}, "vesper": {"look": "crescent", "r": 48, "pal": ["#ffd9c2", "#e0785a", "#4a1630", "#170f1c", "#ff8f6b"]}, "astra": {"look": "orb", "r": 58, "pal": ["#e4ecff", "#8ea6e8", "#2c2f6e", "#10122a", "#a9c1ff"]}, "ferrum": {"look": "anvil", "r": 62, "pal": ["#e2e6ec", "#8c96a6", "#3a414e", "#15181e", "#ffb347"]}, "umbra": {"look": "shade", "r": 58, "pal": ["#d8ccff", "#7c6bc4", "#251a4a", "#0c0a18", "#c38bff"]}, "aeon": {"look": "aeon", "r": 64, "pal": ["#fff6dc", "#d7b46a", "#5b3a1a", "#120e08", "#ff6f7d"]}};
+const SPAN = 64 + 50;               // biggest boss radius + effects, shared scale so sizes compare
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function paint(cv, key, T) {
+  const b = BOSSES[key]; const W = cv.width;
+  ctx = cv.getContext("2d");
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, W);
+  const s = (W / 2) / SPAN;
+  ctx.setTransform(s, 0, 0, s, W / 2, W / 2);
+  drawBossBody(b.look, b.pal, b.r, 0, T, 0, false, 0);
+}
+const cvs = [...document.querySelectorAll("canvas.bz")];
+const dpr = Math.min(2, window.devicePixelRatio || 1);
+cvs.forEach(c => { c.width = c.width * dpr; c.height = c.height * dpr; });
+const vis = new Set();
+const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? vis.add(e.target) : vis.delete(e.target))) : null;
+cvs.forEach(c => { paint(c, c.dataset.boss, 1.2); io ? io.observe(c) : vis.add(c); });
+if (!still) {
+  const t0 = performance.now();
+  (function loop(now) { const T = 1.2 + (now - t0) / 1000; vis.forEach(c => paint(c, c.dataset.boss, T)); requestAnimationFrame(loop); })(t0);
+}
+document.addEventListener("click", e => {
+  const sw = e.target.closest(".sw");
+  if (sw) {
+    const h = sw.dataset.hex;
+    const done = () => { sw.classList.add("ok"); setTimeout(() => sw.classList.remove("ok"), 1200); };
+    try { navigator.clipboard.writeText(h).then(done, () => { selectText(sw.querySelector(".hx")); }); } catch (_) { selectText(sw.querySelector(".hx")); }
+    return;
+  }
+  const pb = e.target.closest(".png");
+  if (pb) {
+    const c = document.createElement("canvas"); c.width = c.height = 512;
+    paint(c, pb.dataset.boss, 1.2);
+    const a = document.createElement("a"); a.href = c.toDataURL("image/png"); a.download = "boss-" + pb.dataset.boss + "-ingame.png";
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+});
+function selectText(el) { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+</script>
+</body></html>
