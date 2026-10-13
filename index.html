@@ -118,6 +118,21 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #optPanel .fbFoot{display:flex;justify-content:flex-end}
 .optRow input[type=range]{width:100%;accent-color:var(--brass)}
 .optRow output{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);text-align:right}
+#pnModal{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:16px;background:rgba(5,8,18,.62)}
+#pnPanel{width:min(600px,100%);max-height:min(82vh,760px);box-sizing:border-box;padding:18px 18px 14px;display:flex;flex-direction:column;gap:10px}
+#pnPanel h3{margin:0;font-family:var(--f-ko);font-size:18px}
+#pnList{overflow-y:auto;min-height:0;display:flex;flex-direction:column;gap:14px;padding-right:6px}
+.pnItem{border-top:1px solid rgba(232,180,90,.18);padding-top:10px}
+.pnItem:first-child{border-top:0;padding-top:0}
+.pnHead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.pnTitle{font-weight:700;font-size:14.5px;line-height:1.45}
+.pnDate{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.pnItem ul{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.55;color:#d7d9e3}
+.pnItem ul ul{margin-top:2px;color:#b9bccb}
+.pnNew{display:inline-block;margin-left:6px;font:700 10px/1 var(--f-mono);color:#1a1208;background:var(--gold);border-radius:3px;padding:3px 5px;vertical-align:middle}
+#pnStatus{font-size:13px;color:var(--muted)}
+#pnPanel .fbFoot{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#pnPanel .fbFoot a{color:var(--brass);font-size:12.5px}
 #fbModal{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:16px;background:rgba(5,8,18,.62)}
 #fbForm{width:min(520px,100%);box-sizing:border-box;padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px}
 #fbForm h3{margin:0;font-family:var(--f-ko);font-size:18px}
@@ -247,11 +262,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <button class="btn" id="soloBtn">혼자 연습</button>
         <button class="btn" id="fbMenuBtn">피드백 보내기</button>
         <button class="btn" id="optMenuBtn">옵션</button>
+        <button class="btn" id="pnMenuBtn">패치노트</button>
       </div>
       <div class="status" id="status">연결 라이브러리를 불러오는 중…</div>
       <p class="touchnote">이 프로토타입은 키보드와 마우스가 있는 컴퓨터에서 플레이할 수 있어요.</p>
       <dl class="keys">
-        <dt>마우스 오른쪽</dt><dd>땅: 그 지점으로 이동 · 적: 그 적 바로 앞까지 따라감</dd>
+        <dt>마우스 오른쪽</dt><dd>땅: 그 지점으로 이동 · 적: 클릭한 순간 그 적이 있던 자리 앞까지 이동</dd>
         <dt>S · H</dt><dd>정지 · 제자리 유지</dd>
         <dt>Q</dt><dd>주력기 (커서 방향). 기본 공격은 없고, 누르고 있으면 재사용 대기시간마다 연속 사용</dd>
         <dt>W · E · R</dt><dd>공격 · 보조 · 결정 스킬 (커서 방향). R은 누르고 있다 놓는 채널링 · 3단 충전</dd>
@@ -281,6 +297,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="top">
       <h2>대기실</h2>
       <span class="status" id="lobbyHint"></span>
+      <button class="btn" type="button" id="pnLobbyBtn">패치노트</button>
     </div>
     <div class="chips" id="chips"></div>
     <div class="row" id="diffRow" role="group" aria-label="난이도">
@@ -336,6 +353,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div class="optRow"><label for="volMusic">배경 음악</label><input type="range" id="volMusic" min="0" max="100" step="1" data-k="music"><output id="volMusicOut"></output></div>
       <p class="fbNote">이 브라우저에만 저장돼요. 단축키: M 소리 끄기 · N 음악 끄기</p>
       <div class="fbFoot"><span></span><button type="button" class="btn primary" id="optClose">닫기</button></div>
+    </div>
+  </div>
+  <div id="pnModal" hidden>
+    <div id="pnPanel" class="panel" role="dialog" aria-modal="true" aria-labelledby="pnTitle">
+      <h3 id="pnTitle">패치노트</h3>
+      <div id="pnStatus" aria-live="polite"></div>
+      <div id="pnList"></div>
+      <div class="fbFoot"><a href="https://github.com/Detis9204/sundial-raid/commits/main" target="_blank" rel="noopener">전체 기록 보기</a><button type="button" class="btn primary" id="pnClose">닫기</button></div>
     </div>
   </div>
   <div id="fbModal" hidden>
@@ -2604,7 +2629,7 @@ const mouse = { x: 640, y: 300, in: false };
 let queued = new Set(), released = new Set(), armed = false;
 function inGame() { return net.mode !== "off"; }
 const SKILL_KEYS = ["KeyW", "KeyE", "KeyR"];
-function fbOpen() { const m = document.getElementById("fbModal"), o = document.getElementById("optModal"); return !!((m && !m.hidden) || (o && !o.hidden)); }
+function fbOpen() { const m = document.getElementById("fbModal"), o = document.getElementById("optModal"), pn = document.getElementById("pnModal"); return !!((m && !m.hidden) || (o && !o.hidden) || (pn && !pn.hidden)); }
 addEventListener("keydown", e => {
   if (!inGame() || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || fbOpen()) return;
   if (["Space", "Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
@@ -4115,6 +4140,69 @@ for (const k in VOL_IDS) $("#" + VOL_IDS[k]).addEventListener("input", e => { SF
 $("#volSfx").addEventListener("change", () => SFX.play("hit", 1));
 $("#optBtn").addEventListener("click", () => optShow(true));
 $("#optMenuBtn").addEventListener("click", () => optShow(true));
+/* ---------- 패치노트: 깃허브 커밋 메시지를 그대로 보여줌 (디스코드 패치노트와 같은 내용) ---------- */
+const PN = { url: "https://api.github.com/repos/Detis9204/sundial-raid/commits?per_page=40", list: null, loading: false };
+function pnParse(c) {
+  const lines = String(c.commit.message || "").split("\n").filter(l => !/^(Co-Authored-By|Claude-Session):/i.test(l.trim()));
+  return { sha: c.sha, title: (lines[0] || "").trim(), date: c.commit.author && c.commit.author.date, body: lines.slice(1).filter(l => l.trim()) };
+}
+function pnDate(iso) { const d = new Date(iso); if (isNaN(d)) return ""; return (d.getMonth() + 1) + "월 " + d.getDate() + "일 " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
+function pnRender() {
+  const box = $("#pnList"); box.textContent = "";
+  const seen = load("sr.pnSeen", "");
+  let newOn = !!seen;
+  for (const it of PN.list) {
+    if (it.sha === seen) newOn = false;
+    const el = document.createElement("div"); el.className = "pnItem";
+    const head = document.createElement("div"); head.className = "pnHead";
+    const t = document.createElement("span"); t.className = "pnTitle"; t.textContent = it.title.replace(/^-\s*/, "");
+    if (newOn) { const b = document.createElement("span"); b.className = "pnNew"; b.textContent = "NEW"; t.appendChild(b); }
+    const dt = document.createElement("span"); dt.className = "pnDate"; dt.textContent = pnDate(it.date);
+    head.append(t, dt); el.appendChild(head);
+    let ul = null, sub = null;
+    for (const raw of it.body) {
+      const nested = /^\s{2,}[·\-*]/.test(raw), txt = raw.trim().replace(/^[-·*]\s*/, "");
+      if (!ul) { ul = document.createElement("ul"); el.appendChild(ul); }
+      const li = document.createElement("li"); li.textContent = txt;
+      if (nested && ul.lastElementChild) { if (!sub || sub.parentNode !== ul.lastElementChild) { sub = document.createElement("ul"); ul.lastElementChild.appendChild(sub); } sub.appendChild(li); }
+      else { ul.appendChild(li); sub = null; }
+    }
+    box.appendChild(el);
+  }
+  if (PN.list.length) save("sr.pnSeen", PN.list[0].sha);
+  pnBadge();
+}
+function pnBadge() {   // 안 읽은 패치가 있으면 버튼에 표시
+  const fresh = PN.list && PN.list.length && PN.list[0].sha !== load("sr.pnSeen", "");
+  for (const id of ["#pnMenuBtn", "#pnLobbyBtn"]) { const b = $(id); if (b) b.textContent = fresh ? "패치노트 · NEW" : "패치노트"; }
+}
+async function pnFetch() {
+  if (PN.list || PN.loading) return; PN.loading = true;
+  try {
+    let cached = null; try { cached = JSON.parse(sessionStorage.getItem("sr.pn") || "null"); } catch (e) {}
+    if (cached && Date.now() - cached.t < 5 * 60 * 1000) PN.list = cached.list;
+    else {
+      const r = await fetch(PN.url, { headers: { Accept: "application/vnd.github+json" } });
+      if (!r.ok) throw new Error(r.status);
+      PN.list = (await r.json()).map(pnParse).filter(x => x.title && !/\[skip notes\]/i.test(x.title + x.body.join(" ")));
+      try { sessionStorage.setItem("sr.pn", JSON.stringify({ t: Date.now(), list: PN.list })); } catch (e) {}
+    }
+  } catch (e) { PN.err = true; }
+  PN.loading = false; pnBadge();
+}
+async function pnShow(v) {
+  $("#pnModal").hidden = !v; if (!v) return;
+  keys.clear(); queued.clear(); setTimeout(() => $("#pnClose").focus(), 0);
+  if (!PN.list) { $("#pnStatus").textContent = "불러오는 중…"; $("#pnList").textContent = ""; PN.err = false; await pnFetch(); }
+  if (!PN.list) { $("#pnStatus").textContent = "패치노트를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요."; return; }
+  $("#pnStatus").textContent = ""; pnRender();
+}
+$("#pnMenuBtn").addEventListener("click", () => pnShow(true));
+$("#pnLobbyBtn").addEventListener("click", () => pnShow(true));
+$("#pnClose").addEventListener("click", () => pnShow(false));
+$("#pnModal").addEventListener("mousedown", e => { if (e.target.id === "pnModal") pnShow(false); });
+$("#pnModal").addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); pnShow(false); } });
+pnFetch();
 $("#optClose").addEventListener("click", () => optShow(false));
 $("#optModal").addEventListener("mousedown", e => { if (e.target.id === "optModal") optShow(false); });
 $("#optModal").addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); optShow(false); } });
