@@ -53,6 +53,14 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--bras
 .swatches{display:flex;gap:8px;flex-wrap:wrap}
 .sw{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
 .sw[aria-pressed="true"]{border-color:var(--bone);box-shadow:0 0 0 2px var(--night) inset}
+.lobbyCls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+@media (max-width:560px){.lobbyCls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.lcls{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:30px minmax(0,1fr);grid-template-rows:auto auto;column-gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:5px;background:var(--night);min-width:0}
+.lcls img{grid-row:1/3;width:30px;height:30px;object-fit:contain;image-rendering:pixelated}
+.lcls b{font-family:var(--f-ko);font-size:14px}
+.lcls span{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lcls[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.lcls:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .classes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 @media (max-width:800px){.classes{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:480px){.classes{grid-template-columns:1fr}}
@@ -300,6 +308,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <button class="btn" type="button" id="pnLobbyBtn">패치노트</button>
     </div>
     <div class="chips" id="chips"></div>
+    <div class="field">
+      <span class="lbl" id="lobbyClsLbl">직업 바꾸기</span>
+      <div class="lobbyCls" id="lobbyCls" role="group" aria-labelledby="lobbyClsLbl"></div>
+    </div>
     <div class="row" id="diffRow" role="group" aria-label="난이도">
       <button class="btn" type="button" id="diffNormal" aria-pressed="true">보통</button>
       <button class="btn" type="button" id="diffHard" aria-pressed="false">어려움</button>
@@ -561,9 +573,9 @@ const CONFIG = {
     pounce:   { name: "도약 강습", hard: 0.97,      g: false, warn: 1.1, rec: 1.4, dmg: 30, r: 130, hint: "가장 먼 사람 주의" },
     whirl:    { name: "회전 칼날", hard: 0.65,      g: false, warn: 1.0, minWarn: .9, rec: 1.0, dmg: 20, r: 230, hint: "멀리 벗어나기" },
     /* sandpool: follows each player for `track` seconds, then locks in place and lands `lockWarn` later */
-    sandpool: { name: "모래 늪", hard: 0.38,        g: false, warn: 1.4, track: 2.0, lockWarn: .75, minLockWarn: .65, rec: .9, dmg: 12, r: 85, life: 14, tick: 8, extra: 1, every: 10, hint: "늪이 따라옵니다. 멈추는 순간 벗어나세요" },
-    sandwall: { name: "모래 장벽", hard: 0.25,      g: false, warn: 1.6, rec: 1.1, dmg: 15, r: 70, life: 12, tick: 8, hint: "틈으로 지나가기" },
-    pull:     { name: "모래 소용돌이", hard: 0.63,  g: false, warn: 2.2, rec: 1.6, dmg: 32, r: 230, pull: 70, hint: "바깥으로 버티기" },
+    sandpool: { name: "모래 늪", hard: 0.5,         g: false, warn: 1.4, track: 2.0, lockWarn: .75, minLockWarn: .65, rec: .9, dmg: 12, r: 85, life: 14, tick: 8, extra: 1, every: 10, hint: "늪이 따라옵니다. 멈추는 순간 벗어나세요" },
+    sandwall: { name: "모래 장벽", hard: 0.45,      g: false, warn: 1.6, rec: 1.1, dmg: 15, r: 70, life: 12, tick: 8, hint: "틈으로 지나가기" },
+    pull:     { name: "모래 소용돌이", hard: 0.75,  g: false, warn: 2.2, rec: 1.6, dmg: 32, r: 230, pull: 70, hint: "바깥으로 버티기" },
     summon:   { name: "태엽 병정 소환", g: false, warn: 1.4, rec: 1.8, dmg: 0, count: 2, hint: "병정을 먼저 처치" },
     decoy:    { name: "태엽 분신",      g: false, warn: 9.0, rec: 1.2, dmg: 12, count: 2, bigParty: 3, hint: "분신을 부숴야 함", fixed: true },
     gear:     { name: "톱니 투척", hard: 0.62,      g: false, warn: 1.0, minWarn: .8, rec: .9,  dmg: 20, w: 40, len: 900, hint: "선 사이로" },
@@ -582,7 +594,7 @@ const CONFIG = {
     /* minWarn: hard mode never shortens the warning below this; recover: free time after each slash before the next appears */
     backstab: { name: "배후 참격", hard: 0.89,      gm: true, warn: .9,  minWarn: .85, rec: 0, dmg: 38, r: 210, half: 38, behind: 95, count: 6, gap: 1.2, recover: .55, hint: "무적 · 등 뒤에 나타나 베어 옵니다. 돌아서서 피하세요" },
     /* klepsy: walls of sand sweep across the arena; stand in the gap */
-    sandwave: { name: "모래 해일", hard: 0.38,      gm: true, warn: 1.3, minWarn: 1.15, rec: 0, dmg: 40, bw: 80, gh: 170, gapShift: 220, waves: 3, waveGap: 2.6, minWaveGap: 2.0, band: .11, hint: "무적 · 모래벽의 틈에 서서 해일을 넘기세요" },
+    sandwave: { name: "모래 해일", hard: 0.5,       gm: true, warn: 1.3, minWarn: 1.15, rec: 0, dmg: 40, bw: 80, gh: 170, gapShift: 220, waves: 3, waveGap: 2.6, minWaveGap: 2.0, band: .11, hint: "무적 · 모래벽의 틈에 서서 해일을 넘기세요" },
     /* mekan: numbered clockwork bombs go off in order */
     bomb:     { name: "시한 태엽 폭탄", hard: 0.257, gm: true, warn: 2.0, rec: 0, dmg: 40, r: 110, count: 10, perPlayer: 3, groups: 4, step: .9, hint: "무적 · 숫자 순서대로 터집니다. 이미 터진 자리로" },
     /* dualis: only the moving circle of light is safe */
@@ -640,7 +652,8 @@ const CONFIG = {
                       [["rush", 2], ["flurry", 3], ["pounce", 2], ["whirl", 2], ["heavy", 2], ["hop", 2], ["warp", 1]]],
               force: ["flurry", "pounce", "rush"], gimmicks: ["backstab"],
               move: { style: "dart", dash: .13, pause: [.3, .6], near: [90, 190], spread: 2.6, feint: [1, 2], maxMoves: 4 } },
-    klepsy: { name: "클렙시", title: "모래시계 여왕", look: "hourglass", r: 62, speed: [115, 130, 145],
+    /* tempoMul: 보스 전체 템포 배율(>1이면 느려짐). 경고·간격·빈틈 시간이 길어지고 이동 속도는 그만큼 느려짐 */
+    klepsy: { name: "클렙시", title: "모래시계 여왕", look: "hourglass", r: 62, speed: [100, 110, 120], tempoMul: 1.2,
               pal: ["#f7e1a8", "#c9a35a", "#3e6f70", "#14232a", "#f2c46b"], floor: "242,196,107",
               pools: [[["sandpool", 3], ["spin", 2], ["pull", 1]],
                       [["sandpool", 2], ["spin", 1], ["sandwall", 2], ["pull", 2], ["warp", 2]],
@@ -648,7 +661,7 @@ const CONFIG = {
               force: ["sandpool", "sandwall", "pull"], gimmicks: ["sandwave"],
               /* 경고 시간 보정: [배율, 최소 초]. 클렙시는 장판이 많아 정오의 빛을 볼 여유를 더 줌 (피난처는 모든 보스 3초 고정) */
               warnAdj: { donut: [1.4, 1.1] },
-              move: { style: "orbit", radius: 170, orbit: 1.8, speedMul: 1.6 } },
+              move: { style: "orbit", radius: 170, orbit: 1.3, speedMul: 1.3 } },
     mekan:  { name: "메카니카", title: "태엽 인형사", look: "gear", r: 60, speed: [80, 90, 100],
               pal: ["#f0b98a", "#b56a35", "#4d2a14", "#1c1612", "#ffae5c"], floor: "255,174,92",
               pools: [[["summon", 1], ["gear", 3], ["cleave", 2], ["crank", 2]],
@@ -1269,7 +1282,7 @@ function lobbyState(prev) {
 }
 function becomeHost() { isHost = true; HS = lobbyState(null); }
 const hostL = { pu: {}, target: null, lastKind: "", force: "", combo: false, chain: null, anim: null, pending: [], addDm: {}, augStart: 0, readySince: 0, clearAt: 0, last: 0 };
-function curTempo() { return CONFIG.stages[HS.stage].tempo * (HS.ph === 2 ? CONFIG.stageFlow.phase3TempoMul : 1); }
+function curTempo() { return CONFIG.stages[HS.stage].tempo * (HS.ph === 2 ? CONFIG.stageFlow.phase3TempoMul : 1) * ((BOSSES[HS.boss] || {}).tempoMul || 1); }
 
 function startGame(now) {
   const g = (HS ? HS.game : 0) + 1;
@@ -4058,8 +4071,21 @@ for (const key of Object.keys(CLASSES)) {
   b.innerHTML = '<img class="clsArt" alt="" src="' + CONFIG.sprites[key].src + '">' + "<b>" + C.name + '</b><span class="role">' + C.role + " · 체력 " + C.hp + "</span><p>" + C.desc + "</p><ol>" +
     "<li><span>Q 주력</span>" + C.atk.name + (C.atk.dmg ? " · 피해 " + C.atk.dmg : "") + " · " + C.atk.cd + "초<br><em>" + C.atk.note + "</em></li>" +
     C.skills.map((s, i) => "<li><span>" + "WER"[i] + " " + s.tier + "</span>" + s.name + (s.dmg ? " · 피해 " + s.dmg : "") + " · " + s.cd + "초<br><em>" + s.note + "</em></li>").join("") + "</ol>";
-  b.addEventListener("click", () => { myClass = key; save("sr.class", key); recalcStats(); clsBox.querySelectorAll(".cls").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); });
+  b.addEventListener("click", () => selectClass(key));
   clsBox.appendChild(b);
+  // 대기실에서도 직업을 바꿀 수 있는 작은 버튼
+  const lb = document.createElement("button"); lb.className = "lcls"; lb.type = "button"; lb.dataset.k = key; lb.title = C.desc;
+  lb.setAttribute("aria-pressed", key === myClass ? "true" : "false");
+  lb.innerHTML = '<img alt="" src="' + CONFIG.sprites[key].src + '"><b>' + C.name + "</b><span>" + C.role + " · 체력 " + C.hp + "</span>";
+  lb.addEventListener("click", () => { if (curS && curS.st !== "lobby") return; selectClass(key); SFX.play("orderMove", .6); });
+  $("#lobbyCls").appendChild(lb);
+}
+function selectClass(key) {
+  if (!CLASSES[key]) return;
+  myClass = key; save("sr.class", key); recalcStats(); me.gnN = 0;
+  if (!curS || curS.st === "lobby") { me.mh = CLASSES[key].hp + (me.st ? me.st.hpAdd : 0); me.hp = me.mh; me.cd = [0, 0, 0]; me.atkCd = 0; me.ch = null; }
+  clsBox.querySelectorAll(".cls").forEach(x => x.setAttribute("aria-pressed", x.id === "cls-" + key ? "true" : "false"));
+  document.querySelectorAll(".lcls").forEach(x => x.setAttribute("aria-pressed", x.dataset.k === key ? "true" : "false"));
 }
 const nameIn = $("#name"); nameIn.value = myName;
 nameIn.addEventListener("input", () => { myName = nameIn.value.replace(/[\u0000-\u001f​-‏‪-‮]/g, "").trim().slice(0, 12) || "모험가"; save("sr.name", myName); });
