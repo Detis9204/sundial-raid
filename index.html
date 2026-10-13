@@ -458,8 +458,9 @@ const CONFIG = {
   ],
   /* 7. hard: shorter warnings and openings, harder hits, combos from phase II, one more of everything */
   difficulty: {
-    normal: { name: "보통",   warnMul: 1.0, recMul: 1.0, dmgMul: 1.0,  hpMul: 1.0,  combo: .4, comboFrom: 2, extra: 0 },
-    hard:   { name: "어려움", hideInfo: true, warnMul: .8,  recMul: .8,  dmgMul: 1.25, hpMul: 1.15, combo: .7, comboFrom: 1, extra: 1 },
+    normal: { name: "보통",   warnFloor: [.9, .7], warnMul: 1.0, recMul: 1.0, dmgMul: 1.0,  hpMul: 1.0,  combo: .4, comboFrom: 2, extra: 0 },
+    /* warnFloor: 어려움에서 모든 패턴 경고 시간의 최소값(초). [1스테이지, 12스테이지] 사이를 스테이지에 따라 이어 줌 */
+    hard:   { name: "어려움", hideInfo: true, warnFloor: [.8, .55], warnMul: .8,  recMul: .8,  dmgMul: 1.25, hpMul: 1.15, combo: .7, comboFrom: 1, extra: 1 },
   },
   /* atk = the class's main skill (W / left click). There is no basic attack. */
   classes: {
@@ -1528,7 +1529,7 @@ function startGimmick(T) {
   hostL.gimmickDue = false; hostL.force = ""; hostL.chain = null; hostL.combo = false;
   H.bs = "gimmick"; H.cur = kind;
   hostL.anim = { t0: T, dur: G.moveTime, x0: H.bx, y0: H.by, x1: 640, y1: 360 };
-  const d = Math.round(def.dmg * sc.dmgMul * D.dmgMul), start = T + G.moveTime + .4, warn = def.warn * D.warnMul;
+  const d = Math.round(def.dmg * sc.dmgMul * D.dmgMul), start = T + G.moveTime + .4, warn = Math.max(def.warn * D.warnMul, warnFloor());
   const push = o => H.atk.push(Object.assign({ i: ++H.aid, k: kind, d, x: 640, y: 360, a: 0 }, o));
   let end = start;
   const randIn = (px, py) => [Math.round(px + Math.random() * (AW - px * 2)), Math.round(py + Math.random() * (AH - py * 2))];
@@ -1725,6 +1726,10 @@ function trailAt(peer, t, fb) {   // a player's position at time t (from the hos
 }
 /* 어려움: each pattern's own speed-up (ATK[k].hard) shortens its warnings, steps and their floors */
 function hardScale(kind) { const H = HS, D0 = diffCfg(), m = H && H.diff === "hard" ? (ATK[kind].hard || 1) : 1; return m; }
+function warnFloor() {   // 난이도별 최소 경고 시간: 초반 스테이지일수록 여유 있게
+  const F = diffCfg().warnFloor; if (!F) return 0;
+  const k = clamp(HS.stage / (CONFIG.stages.length - 1), 0, 1); return F[0] + (F[1] - F[0]) * k;
+}
 function scaledDef(kind) {
   const def = ATK[kind], m = hardScale(kind); if (m === 1) return def;
   const o = Object.assign({}, def); for (const k of ["minWarn", "minLockWarn", "minStep", "minWaveGap"]) if (o[k] != null) o[k] = o[k] * m;
@@ -1747,6 +1752,7 @@ function castAttack(kind, T, alive) {
   let warn = Math.max(def.minWarn || 0, (def.fixed ? def.warn : def.warn * tempo) * D.warnMul);
   const wa = (BOSSES[H.boss].warnAdj || {})[kind]; if (wa) warn = Math.max(warn * wa[0], wa[1]);   // 보스별 경고 시간 보정 [배율, 최소 초]
   if (def.minSec) warn = Math.max(warn, def.minSec);   // 난이도와 상관없이 보장하는 최소 경고 시간(초)
+  warn = Math.max(warn, warnFloor());
   const t0 = r3(T), th = r3(T + warn), d = Math.round(def.dmg * sc.dmgMul * D.dmgMul);
   const E = o => { const e = Object.assign({ i: ++H.aid, k: kind, t0, th, x: Math.round(bx), y: Math.round(by), a: face, d }, o || {}); H.atk.push(e); return e; };
   const randPt = (pad) => [Math.round(pad + Math.random() * (AW - pad * 2)), Math.round(pad + 30 + Math.random() * (AH - pad * 2 - 30))];
