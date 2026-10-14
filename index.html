@@ -366,7 +366,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div class="optRow"><label for="volMaster">전체 음량</label><input type="range" id="volMaster" min="0" max="100" step="1" data-k="master"><output id="volMasterOut"></output></div>
       <div class="optRow"><label for="volSfx">효과음</label><input type="range" id="volSfx" min="0" max="100" step="1" data-k="sfx"><output id="volSfxOut"></output></div>
       <div class="optRow"><label for="volMusic">배경 음악</label><input type="range" id="volMusic" min="0" max="100" step="1" data-k="music"><output id="volMusicOut"></output></div>
-      <p class="fbNote">이 브라우저에만 저장돼요. 단축키: M 소리 끄기 · N 음악 끄기</p>
+      <div class="optRow"><label for="allyFade">아군 투명도</label><input type="range" id="allyFade" min="0" max="90" step="5"><output id="allyFadeOut"></output></div>
+      <p class="fbNote">이 브라우저에만 저장돼요. 아군 투명도를 올리면 동료 캐릭터가 흐려져 내 캐릭터와 바닥 경고가 잘 보여요. 단축키: M 소리 끄기 · N 음악 끄기</p>
       <div class="fbFoot"><span></span><button type="button" class="btn primary" id="optClose">닫기</button></div>
     </div>
   </div>
@@ -2041,6 +2042,7 @@ let resolved = new Set(), fxList = [], floats = [], markers = [], disp = new Map
 const bubbles = new Map(), seenSp = new Map(), seenLeg = new Map(), seenDn = new Map();   // peer -> { txt, t }
 const seenSw = new Map(), seenFx = new Map(), seenWd = new Map(), seenHl = new Map(), seenCx = new Map(), seenPu = new Map(), seenTm = new Map(), seenHs = new Map();
 let shake = 0, bossFlash = 0;
+let allyFade = clamp(Number(load("sr.allyFade", "0")) || 0, 0, 90);   // 아군 캐릭터 투명도(%)
 const bossDisp = { x: 640, y: 260, f: Math.PI / 2 };
 
 function baseStats() {
@@ -3445,6 +3447,7 @@ function drawPlayer(x, y, pr, isMe, peer, T) {
   if (pr.ch && pr.dn === 0) drawChannelFloor(k, pr.a, x, y, pr.ch[2], pr.ch[1], pr.ch[0]);
   ctx.save(); ctx.translate(x, y);
   if (pr.dn === 2) { ctx.globalAlpha = .3; }
+  if (!isMe && allyFade) ctx.globalAlpha *= 1 - allyFade / 100;   // 옵션: 아군 투명도
   else if (isMe && me.ifr > 0 && !pr.dn && !(me.stagT > 0) && Math.floor(me.ifr * 14) % 2 === 0) ctx.globalAlpha = .5;
 
   if (!pr.dn) {
@@ -4194,10 +4197,11 @@ async function fbSend() {
 }
 /* ---------- 옵션: volume ---------- */
 const VOL_IDS = { master: "volMaster", sfx: "volSfx", music: "volMusic" };
-function optSync() { const v = SFX.vol; for (const k in VOL_IDS) { const el = $("#" + VOL_IDS[k]); el.value = Math.round(v[k] * 100); $("#" + VOL_IDS[k] + "Out").textContent = el.value + "%"; } }
+function optSync() { $("#allyFade").value = allyFade; $("#allyFadeOut").textContent = allyFade + "%"; const v = SFX.vol; for (const k in VOL_IDS) { const el = $("#" + VOL_IDS[k]); el.value = Math.round(v[k] * 100); $("#" + VOL_IDS[k] + "Out").textContent = el.value + "%"; } }
 function optShow(v) { if (v) { keys.clear(); queued.clear(); optSync(); } $("#optModal").hidden = !v; if (v) setTimeout(() => $("#volMaster").focus(), 0); }
 for (const k in VOL_IDS) $("#" + VOL_IDS[k]).addEventListener("input", e => { SFX.init(); SFX.setVol(k, e.target.value / 100); $("#" + VOL_IDS[k] + "Out").textContent = e.target.value + "%"; });
 $("#volSfx").addEventListener("change", () => SFX.play("hit", 1));
+$("#allyFade").addEventListener("input", e => { allyFade = clamp(Number(e.target.value) || 0, 0, 90); save("sr.allyFade", String(allyFade)); $("#allyFadeOut").textContent = allyFade + "%"; });
 $("#optBtn").addEventListener("click", () => optShow(true));
 $("#optMenuBtn").addEventListener("click", () => optShow(true));
 /* ---------- 패치노트: 깃허브 커밋 메시지를 그대로 보여줌 (디스코드 패치노트와 같은 내용) ---------- */
