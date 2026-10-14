@@ -2776,6 +2776,8 @@ function updateMe(dt, T, S) {
   if (S) {
     if (S.game !== me.game) { me.game = S.game; me.ag = []; me.pk = -1; me.offer = null; me.offerKey = -1; me.rrUsed = 0; recalcStats(); }
     if (S.run !== me.run) { me.run = S.run; resetMe(); }
+    if (S.st === "lobby" && me.lastSt && me.lastSt !== "lobby") resetMe();   // 대기실로 돌아오면 쓰러진 캐릭터도 모두 부활, 체력·재사용 대기시간 초기화
+    me.lastSt = S.st;
   }
   const C = CLASSES[myClass], st = me.st, fighting = S && S.st === "fight";
   me.aim = Math.atan2(mouse.y - me.y, mouse.x - me.x);
