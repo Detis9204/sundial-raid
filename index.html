@@ -4248,7 +4248,7 @@ async function pnFetch() {
     else {
       const r = await fetch(PN.url, { headers: { Accept: "application/vnd.github+json" } });
       if (!r.ok) throw new Error(r.status);
-      PN.list = (await r.json()).map(pnParse).filter(x => x.title && !/\[skip notes\]/i.test(x.title + x.body.join(" ")));
+      PN.list = (await r.json()).map(pnParse).filter(x => x.title && !/\[skip notes\]|\[기획\]/i.test(x.title + x.body.join(" ")));   // 기획 제안 글은 게임 안 패치노트에서 뺌
       try { sessionStorage.setItem("sr.pn", JSON.stringify({ t: Date.now(), list: PN.list })); } catch (e) {}
     }
   } catch (e) { PN.err = true; }
