@@ -1148,7 +1148,7 @@ function sanitize(p) {
     tl: (Array.isArray(p.tl) && p.tl.length >= 2 && typeof p.tl[1] === "string") ? [Math.round(num(p.tl[0], 1, 2, 1)), p.tl[1].slice(0, 64), num(p.tl[2], 0, 60, 0), num(p.tl[3], 0, 3, 0), num(p.tl[4], 0, 50, 0)] : null,
     tm: (Array.isArray(p.tm) && p.tm.length >= 4 && typeof p.tm[1] === "string") ? [num(p.tm[0], 0, 1e9, 0), p.tm[1].slice(0, 64), num(p.tm[2], 0, AW, 0), num(p.tm[3], 0, AH, 0), num(p.tm[4], 0, 200, 0)] : null,
     ge: Array.isArray(p.ge) ? p.ge.slice(-8).filter(v => Array.isArray(v) && v.length >= 4 && typeof v[1] === "string").map(v => [num(v[0], 0, 1e9, 0), v[1].slice(0, 64), Math.round(num(v[2], 0, 3, 0)), num(v[3], 0, 10, 0)]) : null,
-    gs: Array.isArray(p.gs) ? p.gs.slice(0, 8).filter(v => Array.isArray(v) && typeof v[0] === "string").map(v => [v[0].slice(0, 66), Math.round(num(v[1], 0, 9, 0)), num(v[2], 0, 20, 0)]) : null, gn: Math.round(num(p.gn, 0, 9, 0)),
+    gs: Array.isArray(p.gs) ? p.gs.slice(0, 8).filter(v => Array.isArray(v) && typeof v[0] === "string").map(v => [v[0].slice(0, 66), Math.round(num(v[1], 0, 9, 0)), num(v[2], 0, 20, 0), num(v[3], .5, 20, 4)]) : null, gn: Math.round(num(p.gn, 0, 9, 0)),
     ha: p.ha ? 1 : 0, pp: p.pp ? 1 : 0, uid: typeof p.uid === "string" && /^[a-z0-9]{8,16}$/.test(p.uid) ? p.uid : "",
     sp: (Array.isArray(p.sp) && p.sp.length >= 3) ? [num(p.sp[0], 0, 1e9, 0), Math.round(num(p.sp[1], 0, 3, 0)), Math.round(num(p.sp[2], 0, 9, 0))] : null,
     hs: (Array.isArray(p.hs) && p.hs.length >= 4) ? [num(p.hs[0], 0, 1e9, 0), num(p.hs[1], 0, 30, 0), num(p.hs[2], 0, 1, 0), num(p.hs[3], 0, 2, 0), num(p.hs[4], 0, 50, 0)] : null,
@@ -2098,7 +2098,7 @@ function myPresence() {
     gd: me.guardT > 0 ? 1 : 0, bk: me.wardUntil > nowS() ? 1 : 0, ct: me.counterT > 0 ? 1 : 0,
     sw: me.sw, cx: me.cx, fx: me.fx, wd: me.wd, hl: me.hl, pu: me.pu, ag: me.ag, pk: me.pk, ad: me.ad,
     tl: me.tl ? [me.tl.k, me.tl.id, r3(me.tl.buffT), me.tl.buffMul, r3(CLASSES.saint.atk.allyHps * me.st.tlMul)] : null, tm: me.tm, hs: me.hs, sp: me.sp, ge: me.ge && me.ge.length ? me.ge : null,
-    gs: me.seeds && me.seeds.length ? me.seeds.map(sd => [sd.ally ? "p:" + sd.id : "e:" + sd.id, Math.min(sd.care, 9), r3(sd.life)]) : null, gn: myClass === "gardener" ? gardenNeed() : 0, ha: me.hasteT > 0 && !me.dn ? 1 : 0, pp: me.dn === 1 && me.phoenixT > 0 ? 1 : 0,
+    gs: me.seeds && me.seeds.length ? me.seeds.map(sd => [sd.ally ? "p:" + sd.id : "e:" + sd.id, Math.min(sd.care, 9), r3(sd.life), r3(gardenLife())]) : null, gn: myClass === "gardener" ? gardenNeed() : 0, ha: me.hasteT > 0 && !me.dn ? 1 : 0, pp: me.dn === 1 && me.phoenixT > 0 ? 1 : 0,
     ch: me.ch ? [me.ch.i, r3(Math.min(me.ch.t, chSk(myClass, me.ch.i).channel[2] + .01)), me.ch.stage] : null };
 }
 /* 내가 준 피해 숫자: 크게 튀어나왔다가 줄어들며 포물선으로 흩어짐. 피해가 클수록 큼, 강한 일격(2배 이상)은 더 크고 흔들림 */
@@ -3677,24 +3677,30 @@ function drawTethers() {
 /* 씨앗 표시: 모든 정원사의 씨앗을 대상 머리 위에 새싹 + 관리 칸으로 그림 */
 function drawSeeds() {
   const list = [];
-  const mine = me.seeds && me.seeds.length ? { gs: me.seeds.map(sd => [sd.ally ? "p:" + sd.id : "e:" + sd.id, sd.care, sd.life]), gn: gardenNeed() } : null;
+  const mine = me.seeds && me.seeds.length ? { gs: me.seeds.map(sd => [sd.ally ? "p:" + sd.id : "e:" + sd.id, sd.care, sd.life, gardenLife()]), gn: gardenNeed() } : null;
   if (mine) list.push(mine);
   for (const o of others) if (o.presence.gs) list.push(o.presence);
   if (!list.length) return;
   const byTarget = new Map();
-  for (const pr of list) for (const g of pr.gs) { const k = g[0]; if (!byTarget.has(k)) byTarget.set(k, []); byTarget.get(k).push([g[1], g[2], pr.gn || 4]); }
+  for (const pr of list) for (const g of pr.gs) { const k = g[0]; if (!byTarget.has(k)) byTarget.set(k, []); byTarget.get(k).push([g[1], g[2], pr.gn || 4, g[3] || 4]); }
   for (const [k, arr] of byTarget) {
     let q = null, enemy = k.startsWith("e:");
     if (enemy) { const id = k.slice(2); q = findEnemy(id === "b" ? "b" : (isNaN(+id) ? id : +id)); }
     else q = posOf(k.slice(2));
     if (!q) continue;
-    const top = q.y - (q.r || 14) - (enemy ? 18 : 46);
-    arr.forEach(([care, life, need], i) => {
-      const x = q.x + (i - (arr.length - 1) / 2) * 20, y = top, fade = life < 1 ? .4 + .6 * (Math.sin(performance.now() / 80) * .5 + .5) : 1;
-      ctx.save(); ctx.globalAlpha = fade;
+    const top = q.y - (q.r || 14) - (enemy ? 52 : 46);
+    arr.forEach(([care, life, need, maxLife], i) => {
+      // 남은 생존 시간 비율: 100% 초록 → 50% 노랑 → 0% 빨강으로 이어지는 색, 20% 아래부터 점멸 (남을수록 빠르게)
+      const ratio = clamp(life / maxLife, 0, 1), hue = Math.round(120 * ratio), col = "hsl(" + hue + ",85%,58%)";
+      const blink = ratio <= .2 ? (Math.sin(performance.now() / (60 + 140 * ratio / .2)) > 0 ? 1 : .25) : 1;
+      const x = q.x + (i - (arr.length - 1) / 2) * 22, y = top;
+      ctx.save(); ctx.globalAlpha = blink;
+      ctx.strokeStyle = "rgba(13,18,34,.7)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y - 2, 11, 0, TAU); ctx.stroke();   // 남은 시간 고리
+      ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x, y - 2, 11, -Math.PI / 2, -Math.PI / 2 + TAU * ratio); ctx.stroke();
       ctx.fillStyle = "#6b4423"; ctx.beginPath(); ctx.ellipse(x, y + 4, 7, 4, 0, 0, TAU); ctx.fill();
-      ctx.strokeStyle = enemy ? "#ff9a8a" : "#9be36a"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y + 2); ctx.lineTo(x, y - 6 - Math.min(care, need) * 2); ctx.stroke();
-      ctx.fillStyle = enemy ? "#ff9a8a" : "#9be36a"; ctx.beginPath(); ctx.ellipse(x - 4, y - 5 - care * 2, 4, 2.2, -.6, 0, TAU); ctx.ellipse(x + 4, y - 7 - care * 2, 4, 2.2, .6, 0, TAU); ctx.fill();
+      ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y + 2); ctx.lineTo(x, y - 6 - Math.min(care, need) * 2); ctx.stroke();
+      ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(x - 4, y - 5 - care * 2, 4, 2.2, -.6, 0, TAU); ctx.ellipse(x + 4, y - 7 - care * 2, 4, 2.2, .6, 0, TAU); ctx.fill();
+      if (enemy) { ctx.fillStyle = "#ff6f7d"; ctx.beginPath(); ctx.moveTo(x + 9, y + 9); ctx.lineTo(x + 13, y + 5); ctx.lineTo(x + 13, y + 9); ctx.closePath(); ctx.fill(); }   // 적 씨앗 표시
       for (let c = 0; c < need; c++) { ctx.fillStyle = c < care ? "#ffe066" : "rgba(13,18,34,.75)"; ctx.fillRect(x - need * 2.5 + c * 5, y + 10, 4, 3); }
       ctx.restore();
     });
