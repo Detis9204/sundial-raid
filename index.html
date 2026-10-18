@@ -411,7 +411,7 @@ const DEG = Math.PI / 180;
 const CONFIG = {
   arena: { w: 1280, h: 720 },
   /* character art: drawn pixel-crisp, flipped to face the way the character looks. facesRight = which way the source image looks. */
-  sprites: { knight: { src: "assets/knight.png", h: 50, facesRight: true }, paladin: { src: "assets/paladin.png", h: 50, facesRight: true }, rogue: { src: "assets/rogue.png", h: 48, facesRight: true }, gunner: { src: "assets/gunner.png", h: 50, facesRight: true }, gladiator: { src: "assets/gladiator.png", h: 52, facesRight: true }, acrobat: { src: "assets/acrobat.png", h: 46, facesRight: true }, saint: { src: "assets/saint.png", h: 74, facesRight: true, nameY: -66 }, wizard: { src: "assets/wizard.png", h: 56, facesRight: true, nameY: -50 } },
+  sprites: { knight: { src: "assets/knight.png", h: 50, facesRight: true }, paladin: { src: "assets/paladin.png", h: 50, facesRight: true }, rogue: { src: "assets/rogue.png", h: 48, facesRight: true }, gunner: { src: "assets/gunner.png", h: 50, facesRight: true }, gladiator: { src: "assets/gladiator.png", h: 52, facesRight: true }, acrobat: { src: "assets/acrobat.png", h: 46, facesRight: true }, saint: { src: "assets/saint.png", h: 74, facesRight: true, nameY: -66 }, wizard: { src: "assets/wizard.png", h: 56, facesRight: true, nameY: -50 }, gardener: { src: "assets/gardener.png", h: 52, facesRight: true } },
   /* 음악 파일: 이 경로에 mp3를 올리면 그 스테이지는 그 곡을 반복 재생, 파일이 없으면 기본 합성 음악. trackVol: 파일 음악 음량 배율 */
   /* 스테이지마다 다른 곡을 쓰려면 stages의 해당 칸만 "assets/music/stage03.mp3"처럼 바꾸면 됨 */
   tracks: { lobby: "assets/music/bgm.mp3", stages: Array.from({ length: 12 }, () => "assets/music/bgm.mp3"), trackVol: 2.2 },
@@ -561,6 +561,19 @@ const CONFIG = {
         ["공간이여, 접혀라!", "블링크!", "저기로!"],
         ["크큭… 봉인된 오른팔이 욱신거린다…!", "칠흑의 문장이여, 심연에서 깨어나라!", "이 힘… 더는 억누를 수 없다—!", "종장. 어둠의 왕이 명한다 — 「종말의 성흔」!!"],
       ] },
+    /* 정원사: 아군·적에게 씨앗을 심고 Q·E로 관리해 개화시킨다. 적에게서 피면 큰 피해, 아군에게서 피면 스킬 재사용 대기시간 감소 */
+    gardener: {
+      name: "정원사", role: "시너지 서포터 · 서브 딜러", desc: "씨앗을 적이나 아군에게 심고 가지치기와 양분으로 4번 관리하면 꽃이 핀다. 적에게서 피면 큰 피해, 아군에게서 피면 그 아군의 스킬 재사용 대기시간이 줄어든다.",
+      hp: 95,
+      atk: { name: "가지치기", dmg: 26, cd: .9, range: 105, arc: 100, prune: true, allyHeal: 3, refund: .4,
+             note: "앞 부채꼴 · 적: 피해 / 아군: 내 체력 회복 · 씨앗이 심긴 대상을 치면 관리 +1, Q 재사용 대기시간 40% 반환" },
+      skills: [
+        { name: "혼돈의 씨앗", tier: "심기", cd: 2.0, dmg: 0, range: 440, speed: 900, note: "커서 방향으로 씨앗을 던져 처음 맞은 아군·적에게 심음 · 최대 4개, 한 대상에 여러 개 가능" },
+        { name: "양분 주기", tier: "관리", cd: 6, dmg: 40, radius: 170, buff: .3, buffTime: 8, note: "내 주변 · 씨앗 관리 +1 · 적: 피해 40 / 아군: 다음 스킬 피해 +30%" },
+        { name: "강제 개화", tier: "결정", cd: 40, dmg: 0, note: "관리 횟수와 상관없이 내 씨앗을 모두 즉시 개화" },
+      ],
+      /* 씨앗: 생존 4초(관리하면 다시 4초), 4번 관리하면 개화. 적에게서 피면 피해 444, 아군에게서 피면 그 아군 W·E·R 재사용 대기시간 -4초 */
+      seed: { max: 4, life: 4, need: 4, bloomDmg: 444, allyCdr: 4 } },
   },
   /* g: guardable (yellow). c: co-op gimmick colour. dmg is before the stage multiplier. */
   /* 경고 시간 하한(minWarn·minLockWarn)은 "반응 0.35초로 피할 수 있는가" 기준으로 맞춤 */
@@ -754,6 +767,7 @@ const CONFIG = {
     acrobat:   { fit: ["move", "aspd", "dash", "gale", "dashbuff", "rcd", "haste", "lg_chrono"], no: ["close", "focus", "overcharge"] },
     saint:     { fit: ["medic", "regen", "move", "ecd", "rcd", "haste", "hp", "lg_phoenix"], no: ["close", "focus", "overcharge", "leech", "atk", "dashbuff", "gap", "aspd", "lg_berserk"] },
     wizard:    { fit: ["rcd", "qcd", "gap", "atk", "haste", "dash"], no: ["close", "focus", "overcharge"] },
+    gardener:  { fit: ["ecd", "rcd", "qcd", "aspd", "medic", "regen", "move", "haste"], no: ["focus", "overcharge"] },
   } },
   /* 증강 다시 뽑기: 기본 base회 + 보스 every명 처치마다 1회 */
   augReroll: { base: 1, every: 3 },
@@ -825,6 +839,10 @@ const CONFIG = {
     { id: "sa_legend", g: "唱", name: "천상의 합창",    rar: 3, cls: "saint",     v: [5, 4], desc: v => `찬가 지속 +${v[0]}초, 찬가를 받은 아군은 매초 체력 ${v[1]} 회복`, fx: (s, v) => { s.hsTime += v[0]; s.hsRegen += v[1]; } },
     { id: "wz_legend", g: "禁", name: "금지된 영창",    rar: 3, cls: "wizard",    v: [.2, 1], desc: v => `사중 영창 단계 사이 대기 10초 → ${10 * v[0]}초, 종장 피해 +${pc(v[1])}`, fx: (s, v) => { s.wzGapMul *= v[0]; s.wzFinMul *= 1 + v[1]; } },
     { id: "gn_snipe", g: "狙", name: "명사수",       rar: 2, cls: "gunner",  v: [.5, .4], desc: v => `정밀 저격 최대 충전 피해 +${pc(v[0])}, 최대 충전으로 쏘면 재사용 대기시간 ${pc(v[1])} 즉시 감소`, fx: (s, v) => { s.snipeMax += v[0]; s.snipeRefund = v[1]; } },
+    { id: "gd_shear", g: "剪", name: "넓은 가위",    rar: 0, cls: "gardener", v: [30, 20], desc: v => `가지치기 각도 +${v[0]}°, 사거리 +${v[1]}`, fx: (s, v) => { s.arcAdd += v[0]; s.gdQRange += v[1]; } },
+    { id: "gd_bloom", g: "花", name: "풍성한 꽃",    rar: 1, cls: "gardener", v: [.3, 1], desc: v => `개화 피해 +${pc(v[0])}, 아군 개화의 재사용 대기시간 감소 +${v[1]}초`, fx: (s, v) => { s.gdBloomMul *= 1 + v[0]; s.gdCdr += v[1]; } },
+    { id: "gd_many",  g: "苗", name: "다산",         rar: 2, cls: "gardener", v: [1, 1.5], desc: v => `씨앗 최대 개수 +${v[0]}, 씨앗 생존 시간 +${v[1]}초`, fx: (s, v) => { s.gdMax += v[0]; s.gdLife += v[1]; } },
+    { id: "gd_legend",g: "樹", name: "세계수의 축복", rar: 3, cls: "gardener", v: [3, 12], desc: v => `씨앗이 ${v[0]}번 관리로 개화, 꽃이 필 때마다 내 체력 ${v[1]} 회복`, fx: (s, v) => { s.gdNeed = s.gdNeed ? Math.min(s.gdNeed, v[0]) : v[0]; s.gdBloomHeal += v[1]; } },
   ],
 };
 function pc(v) { return Math.round(v * 100) + "%"; }
@@ -1077,7 +1095,7 @@ const SFX = (() => {
   };
 })();
 /* effects: 0 swing,1 parry,2 spin,3 lunge,4 quake,5 stab,6 blink,7 exec,8 bash,9 ward,10 hammer,11 break */
-const FX_SOUND = ["swing", "parry", "spin", "lunge", "quake", "stab", "blink", "exec", "bash", "ward", "hammer", "interrupt", "pierce", "snipe", "shot", "push", "", "quake", "ward", "pierce", "hammer", "exec", "spin", "crit", "hammer", ""];
+const FX_SOUND = ["swing", "parry", "spin", "lunge", "quake", "stab", "blink", "exec", "bash", "ward", "hammer", "interrupt", "pierce", "snipe", "shot", "push", "", "quake", "ward", "pierce", "hammer", "exec", "spin", "crit", "hammer", "", "shot", "ward", "hammer"];
 
 /* ---------- storage (per-viewer convenience) ---------- */
 function load(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
@@ -1129,6 +1147,8 @@ function sanitize(p) {
     pk: Math.round(num(p.pk, -1, 1e9, -1)), ad,
     tl: (Array.isArray(p.tl) && p.tl.length >= 2 && typeof p.tl[1] === "string") ? [Math.round(num(p.tl[0], 1, 2, 1)), p.tl[1].slice(0, 64), num(p.tl[2], 0, 60, 0), num(p.tl[3], 0, 3, 0), num(p.tl[4], 0, 50, 0)] : null,
     tm: (Array.isArray(p.tm) && p.tm.length >= 4 && typeof p.tm[1] === "string") ? [num(p.tm[0], 0, 1e9, 0), p.tm[1].slice(0, 64), num(p.tm[2], 0, AW, 0), num(p.tm[3], 0, AH, 0), num(p.tm[4], 0, 200, 0)] : null,
+    ge: Array.isArray(p.ge) ? p.ge.slice(-8).filter(v => Array.isArray(v) && v.length >= 4 && typeof v[1] === "string").map(v => [num(v[0], 0, 1e9, 0), v[1].slice(0, 64), Math.round(num(v[2], 0, 3, 0)), num(v[3], 0, 10, 0)]) : null,
+    gs: Array.isArray(p.gs) ? p.gs.slice(0, 8).filter(v => Array.isArray(v) && typeof v[0] === "string").map(v => [v[0].slice(0, 66), Math.round(num(v[1], 0, 9, 0)), num(v[2], 0, 20, 0)]) : null, gn: Math.round(num(p.gn, 0, 9, 0)),
     ha: p.ha ? 1 : 0, pp: p.pp ? 1 : 0, uid: typeof p.uid === "string" && /^[a-z0-9]{8,16}$/.test(p.uid) ? p.uid : "",
     sp: (Array.isArray(p.sp) && p.sp.length >= 3) ? [num(p.sp[0], 0, 1e9, 0), Math.round(num(p.sp[1], 0, 3, 0)), Math.round(num(p.sp[2], 0, 9, 0))] : null,
     hs: (Array.isArray(p.hs) && p.hs.length >= 4) ? [num(p.hs[0], 0, 1e9, 0), num(p.hs[1], 0, 30, 0), num(p.hs[2], 0, 1, 0), num(p.hs[3], 0, 2, 0), num(p.hs[4], 0, 50, 0)] : null,
@@ -2040,13 +2060,14 @@ const me = { x: 640, y: 600, hp: 100, mh: 100, dn: 0, downT: 0, ifr: 0, stagT: 0
   tp: null, tl: null, tm: null, hs: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, hasteSpd: 0, hasteAmp: 0, pend: [], rs: null, sp: null, spN: 0, rrUsed: 0, fb: null, gnQ: null, dashSpare: 0, danger: 0, combo2: null };
 let resolved = new Set(), fxList = [], floats = [], markers = [], disp = new Map(), addDisp = new Map();
 const bubbles = new Map(), seenSp = new Map(), seenLeg = new Map(), seenDn = new Map();   // peer -> { txt, t }
+const seenGe = new Map();
 const seenSw = new Map(), seenFx = new Map(), seenWd = new Map(), seenHl = new Map(), seenCx = new Map(), seenPu = new Map(), seenTm = new Map(), seenHs = new Map();
 let shake = 0, bossFlash = 0;
 let allyFade = clamp(Number(load("sr.allyFade", "0")) || 0, 0, 90);   // 아군 캐릭터 투명도(%)
 const bossDisp = { x: 640, y: 260, f: Math.PI / 2 };
 
 function baseStats() {
-  return { dmgVarAdd: 0, gnEvery: 0, gnEmpAdd: 0, atkMul: 1, aspdMul: 1, moveMul: 1, hpAdd: 0, dashCdMul: 1, chargeMul: 1, guardAdd: 0, recBonus: 0, regen: 0, cdMul: [1, 1, 1],
+  return { gdQRange: 0, gdBloomMul: 1, gdCdr: 0, gdMax: 0, gdLife: 0, gdNeed: 0, gdBloomHeal: 0, dmgVarAdd: 0, gnEvery: 0, gnEmpAdd: 0, atkMul: 1, aspdMul: 1, moveMul: 1, hpAdd: 0, dashCdMul: 1, chargeMul: 1, guardAdd: 0, recBonus: 0, regen: 0, cdMul: [1, 1, 1],
     counterAdd: 0, counterTimeAdd: 0, dashBuff: 0, dashBuffTime: 0, lifesteal: 0, closeBonus: 0, reviveSpd: 1, reviveHp: 0,
     parryIframe: 0, parryReset: false, perfectCounter: 0, undying: 0, maxChargeBonus: 0,
     arcAdd: 0, spinRange: 1, spinMul: 1, quakeEcho: 0, poisonTime: 0, poisonDps: 0, shadowBack: 0, execLow: 0, execMul: 0,
@@ -2064,7 +2085,7 @@ function resetMe() {
   const C = CLASSES[myClass];
   me.mh = C.hp + (me.st ? me.st.hpAdd : 0); me.hp = me.mh; me.dn = 0; me.downT = 0; me.ifr = 1; me.dm = 0; me.ad = {};
   me.x = 460 + Math.random() * 360; me.y = 610; me.order = null; me.eng = null;
-  Object.assign(me, { gnN: 0, cd: [0, 0, 0], atkCd: 0, dashCd: 0, dashT: 0, stagT: 0, stagQ: null, guardT: 0, guardCd: 0, counterT: 0, wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0,
+  Object.assign(me, { seeds: [], seedShots: [], ge: [], nourish: null, nourishCast: null, gnN: 0, cd: [0, 0, 0], atkCd: 0, dashCd: 0, dashT: 0, stagT: 0, stagQ: null, guardT: 0, guardCd: 0, counterT: 0, wardUntil: 0, dashBuffT: 0, shadowT: 0, poisonT: 0, regenT: 0, undyingUsed: false, phoenixUsed: false, phoenixT: 0,
     cast: null, move: null, multi: null, burst: null, ch: null, rv: null, rvT: null, rvP: 0, poolT: 0, shots: [], shotN: 0, pushCd: 0, kb: null,
     tp: null, tl: null, linkHps: 0, linkBuff: 0, linkAcc: 0, hasteT: 0, pend: [], rs: null, fb: null, gnQ: null, dashSpare: 0 });
   resolved = new Set();
@@ -2076,7 +2097,8 @@ function myPresence() {
     hp: Math.round(me.hp), mh: me.mh, dn: me.dn, bo: Math.round(me.downT * 10) / 10, dm: me.dm, r: me.run, game: me.game, rv: me.rv,
     gd: me.guardT > 0 ? 1 : 0, bk: me.wardUntil > nowS() ? 1 : 0, ct: me.counterT > 0 ? 1 : 0,
     sw: me.sw, cx: me.cx, fx: me.fx, wd: me.wd, hl: me.hl, pu: me.pu, ag: me.ag, pk: me.pk, ad: me.ad,
-    tl: me.tl ? [me.tl.k, me.tl.id, r3(me.tl.buffT), me.tl.buffMul, r3(CLASSES.saint.atk.allyHps * me.st.tlMul)] : null, tm: me.tm, hs: me.hs, sp: me.sp, ha: me.hasteT > 0 && !me.dn ? 1 : 0, pp: me.dn === 1 && me.phoenixT > 0 ? 1 : 0,
+    tl: me.tl ? [me.tl.k, me.tl.id, r3(me.tl.buffT), me.tl.buffMul, r3(CLASSES.saint.atk.allyHps * me.st.tlMul)] : null, tm: me.tm, hs: me.hs, sp: me.sp, ge: me.ge && me.ge.length ? me.ge : null,
+    gs: me.seeds && me.seeds.length ? me.seeds.map(sd => [sd.ally ? "p:" + sd.id : "e:" + sd.id, Math.min(sd.care, 9), r3(sd.life)]) : null, gn: myClass === "gardener" ? gardenNeed() : 0, ha: me.hasteT > 0 && !me.dn ? 1 : 0, pp: me.dn === 1 && me.phoenixT > 0 ? 1 : 0,
     ch: me.ch ? [me.ch.i, r3(Math.min(me.ch.t, chSk(myClass, me.ch.i).channel[2] + .01)), me.ch.stage] : null };
 }
 /* 내가 준 피해 숫자: 크게 튀어나왔다가 줄어들며 포물선으로 흩어짐. 피해가 클수록 큼, 강한 일격(2배 이상)은 더 크고 흔들림 */
@@ -2150,6 +2172,7 @@ function dealCore(e, base, opts) {
   if (me.dashBuffT > 0 && !opts.noBuff) { mult *= 1 + st.dashBuff; me.dashBuffT = 0; tag += "돌격 "; col = "#ffd166"; }
   if (st.closeBonus && edgeDist(e) <= CONFIG.combat.closeRange) mult *= 1 + st.closeBonus;
   if (me.hasteT > 0 && me.hasteAmp) { mult *= 1 + me.hasteAmp; tag += "찬가 "; if (col === "#f3e6c8") col = "#ffd166"; }
+  if (me.nourishCast && !opts.basic) { mult *= 1 + me.nourishCast.mul; tag += "양분 "; if (col === "#f3e6c8") col = "#9be36a"; }
   if (me.linkBuff) { mult *= 1 + me.linkBuff; tag += "맥동 "; if (col === "#f3e6c8") col = "#ffd166"; }   // 성녀 맥동
   if (practice) { dmgFloat(fx, fy, Math.max(1, Math.round(base * mult * (1 + (Math.random() * 2 - 1) * (CONFIG.combat.dmgVar + st.dmgVarAdd)))), tag, tag ? col : "#8f97b3", false); SFX.play("hit", .6); return 0; }
   if (e.boss) {
@@ -2226,6 +2249,70 @@ function tetherTarget(tl) {
   if (tl[0] === 1) return posOf(tl[1]);
   const e = enemies().find(x => String(x.id) === tl[1]); return e ? { x: e.x, y: e.y, r: e.r, e } : null;
 }
+/* ---------- 정원사: 씨앗 ---------- */
+function gardenMax() { return CLASSES.gardener.seed.max + me.st.gdMax; }
+function gardenNeed() { return me.st.gdNeed || CLASSES.gardener.seed.need; }
+function gardenLife() { return CLASSES.gardener.seed.life + me.st.gdLife; }
+function allyTargets() {   // 살아 있는 동료 (나 제외)
+  const out = [], S = curS;
+  for (const o of others) { const pr = o.presence; if (pr.dn || (S && S.st === "fight" && pr.r !== me.run)) continue; const q = posOf(o.peer); if (q) out.push({ peer: o.peer, x: q.x, y: q.y, r: CONFIG.player.radius }); }
+  return out;
+}
+function seedPos(sd) {   // 씨앗이 심긴 대상의 현재 위치 (사라졌으면 null)
+  if (sd.ally) { const q = posOf(sd.id); return q ? { x: q.x, y: q.y, r: CONFIG.player.radius } : null; }
+  return findEnemy(sd.id);
+}
+function gardenEvent(peer, type, val) {   // 아군에게 보내는 효과: 1 = 재사용 대기시간 감소(초), 2 = 다음 스킬 피해 증가
+  me.ge.push([++me.evId, peer, type, r3(val)]); if (me.ge.length > 8) me.ge.shift();
+}
+function plantSeed(target, ally) {
+  if (me.seeds.length >= gardenMax()) return;
+  const sd = { id: ally ? target.peer : target.id, ally, care: 0, life: gardenLife() };
+  me.seeds.push(sd);
+  float(target.x, target.y - (target.r || 12) - 26, "씨앗", ally ? "#9be36a" : "#ffb38a"); SFX.play("ward", .5);
+}
+function seedCare(sd) {
+  sd.care++; sd.life = gardenLife();
+  const q = seedPos(sd); if (q) float(q.x + (Math.random() - .5) * 16, q.y - (q.r || 12) - 30, "관리 " + Math.min(sd.care, gardenNeed()) + "/" + gardenNeed(), "#c8f29a");
+  if (sd.care >= gardenNeed()) seedBloom(sd, false);
+}
+function seedBloom(sd, forced) {
+  const G = CLASSES.gardener.seed, st = me.st, q = seedPos(sd);
+  me.seeds = me.seeds.filter(x => x !== sd);
+  if (!q) return;
+  emitFxAt(28, q.x, q.y, sd.ally ? 1 : 0);
+  if (sd.ally) { const v = G.allyCdr + st.gdCdr; gardenEvent(sd.id, 1, v); float(q.x, q.y - 50, "개화 · 재사용 대기 -" + v + "초", "#9be36a", true); }
+  else { const e = findEnemy(sd.id); if (e) deal(e, G.bloomDmg * st.gdBloomMul, { tag: forced ? "강제 개화 " : "개화 " }); }
+  if (st.gdBloomHeal && me.hp < me.mh && !me.dn) { me.hp = Math.min(me.mh, me.hp + st.gdBloomHeal); float(me.x, me.y - 30, "+" + st.gdBloomHeal, "#7fd3a3"); }
+}
+function gardenPrune() {   // 가지치기(Q): 적은 피해, 아군은 내 회복, 씨앗 대상은 관리
+  const C = CLASSES.gardener, A = C.atk, st = me.st, half = (A.arc + st.arcAdd) / 2 * DEG, R = A.range + st.gdQRange;
+  for (const e of enemies()) if (inArc(e, R, half, me.aim)) deal(e, A.dmg, { basic: true });
+  let allies = 0;
+  for (const q of allyTargets()) if (inArc(q, R, half, me.aim)) allies++;
+  if (allies && me.hp < me.mh) { const h = Math.min(me.mh - me.hp, A.allyHeal * allies); me.hp += h; float(me.x, me.y - 30, "+" + h, "#7fd3a3"); }
+  let cared = false;
+  for (const sd of me.seeds.slice()) { const q = seedPos(sd); if (q && inArc(q, R, half, me.aim)) { seedCare(sd); cared = true; } }
+  if (cared) me.atkCd *= 1 - A.refund;
+}
+function updateGarden(dt) {
+  if (myClass !== "gardener") { if (me.seeds && me.seeds.length) me.seeds = []; return; }
+  const sk = CLASSES.gardener.skills[0];
+  for (const sh of me.seedShots) {
+    const step = sk.speed * dt; sh.x += Math.cos(sh.a) * step; sh.y += Math.sin(sh.a) * step; sh.left -= step;
+    let hit = null;
+    for (const e of enemies()) if (dist(sh.x, sh.y, e.x, e.y) <= e.r + 8) { hit = [e, false]; break; }
+    if (!hit) for (const q of allyTargets()) if (dist(sh.x, sh.y, q.x, q.y) <= 22) { hit = [q, true]; break; }
+    if (hit) { sh.dead = true; plantSeed(hit[0], hit[1]); }
+    if (sh.left <= 0) sh.dead = true;
+  }
+  me.seedShots = me.seedShots.filter(sh => !sh.dead);
+  for (const sd of me.seeds) { sd.life -= dt; if (sd.life <= 0 || !seedPos(sd)) sd.dead = true; }
+  for (const sd of me.seeds) if (sd.dead) { const q = seedPos(sd); if (q) float(q.x, q.y - 40, "씨앗 시듦", "#8f97b3"); }
+  me.seeds = me.seeds.filter(sd => !sd.dead);
+}
+/* 양분: 받은 뒤 처음 쓰는 W·E·R의 피해 증가 (시전 뒤 1.2초 동안의 피해에 적용 · 지연 피해 포함) */
+function useNourish() { if (me.nourish && me.nourish.t > 0) { me.nourishCast = { mul: me.nourish.mul, t: 1.2 }; me.nourish = null; } }
 function updateTether(dt) {
   const A = CLASSES[myClass].atk, st = me.st, S = curS;
   if (!A.tether) { me.tp = null; me.tl = null; return; }
@@ -2291,6 +2378,7 @@ function castMain() {
   spawnFx(0, me.x, me.y, me.aim, myColor, myClass, A.ranged ? -1 : st.arcAdd); SFX.play("swing", 1, myClass);
   if (A.tether) { me.tp = { x: me.x + Math.cos(me.aim) * 18, y: me.y + Math.sin(me.aim) * 18 - 8, a: me.aim, left: A.range + st.rangeAdd }; return; }
   if (A.ranged) { fireShot(); return; }
+  if (A.prune) { gardenPrune(); return; }
   const half = (A.arc + st.arcAdd) / 2 * DEG;
   for (const e of enemies()) if (inArc(e, A.range, half, me.aim)) deal(e, A.dmg, { basic: true });
   if (A.hits > 1) me.combo2 = { left: A.hits - 1, t: A.gap };   // 쌍검사: the follow-up stabs
@@ -2483,9 +2571,11 @@ function useSkill(i) {
   const C = CLASSES[myClass], sk = C.skills[i], st = me.st;
   if (me.dn || me.cd[i] > 0 || busy()) return;
   if (sk.channel) { me.ch = { i, t: 0, stage: 0 }; me.order = me.order && me.order.t === "hold" ? me.order : null; SFX.play("chStart"); return; }
+  if (myClass === "gardener" && i === 0 && me.seeds.length + me.seedShots.length >= gardenMax()) { float(me.x, me.y - 44, "씨앗은 최대 " + gardenMax() + "개", "#8f97b3"); SFX.play("clank"); return; }
   if (myClass === "saint" && i === 0 && !me.tl) { float(me.x, me.y - 44, "연결된 대상 없음", "#8f97b3"); SFX.play("clank"); return; }
   if (myClass === "saint" && i === 1 && !(me.tl && me.tl.k === 1 && posOf(me.tl.id))) { float(me.x, me.y - 44, "연결된 아군 없음", "#8f97b3"); SFX.play("clank"); return; }
   me.cd[i] = skillCd(i);
+  useNourish();
   const a = me.aim, ux = Math.cos(a), uy = Math.sin(a);
   me.a = a;
   if (myClass === "knight") {
@@ -2545,6 +2635,20 @@ function useSkill(i) {
       me.hs = [++me.evId, dur, r3(spd), r3(amp), st.hsRegen];
       emitFx(18, 220); applyHaste(dur, spd, amp, st.hsRegen);
     }
+  } else if (myClass === "gardener") {
+    if (i === 0) {   // 혼돈의 씨앗: 날아가서 처음 맞은 대상에게 심김
+      me.seedShots.push({ x: me.x + ux * 16, y: me.y + uy * 16 - 6, a, left: sk.range });
+      me.fx = [++me.fxN, 26, Math.round(me.x), Math.round(me.y), Math.round(a * 100) / 100, sk.range]; SFX.play("shot", .7, myClass);   // 동료 화면용 (내 화면은 실제 씨앗을 그림)
+    } else if (i === 1) {   // 양분 주기
+      const R = sk.radius; emitFx(27, R);
+      hitAll(e => edgeDist(e) <= R, sk.dmg);
+      for (const q of allyTargets()) if (dist(me.x, me.y, q.x, q.y) <= R + CONFIG.player.radius) { gardenEvent(q.peer, 2, sk.buff); float(q.x, q.y - 44, "양분", "#9be36a"); }
+      for (const sd of me.seeds.slice()) { const q = seedPos(sd); if (q && dist(me.x, me.y, q.x, q.y) <= R + (q.r || CONFIG.player.radius)) seedCare(sd); }
+    } else {   // 강제 개화
+      if (!me.seeds.length) float(me.x, me.y - 44, "심은 씨앗 없음", "#8f97b3");
+      for (const sd of me.seeds.slice()) seedBloom(sd, true);
+      shake = .15;
+    }
   } else if (myClass === "wizard") {
     if (i === 0) {   // 운석 낙하
       const p = wizTarget(sk.range), r = sk.radius * st.wzMetRad;
@@ -2588,6 +2692,7 @@ function useSkill(i) {
 function chargeStage(i, t) { const c = chSk(myClass, i).channel; return t >= c[2] ? 3 : t >= c[1] ? 2 : t >= c[0] ? 1 : 0; }
 function releaseChannel() {
   const ch = me.ch; if (!ch) return;
+  if (ch.i < 3) useNourish();
   const C = CLASSES[myClass], sk = chSk(myClass, ch.i), st = me.st, s = ch.stage;
   me.ch = null;
   if (s === 0) { setCd(ch.i, CONFIG.channel.fizzleCd); float(me.x, me.y - 44, "충전 부족", "#8f97b3"); SFX.play("clank"); return; }
@@ -2815,7 +2920,9 @@ function updateMe(dt, T, S) {
   me.atkCd = Math.max(0, me.atkCd - dt * cdRate * (me.fb && me.fb.qcd > 0 ? CLASSES.acrobat.fortune.buffs[2].v : 1));
   for (const k of ["ifr", "dashCd", "pushCd", "guardT", "guardCd", "counterT", "hitT", "stagT", "dashBuffT", "shadowT", "chFlash"]) me[k] = Math.max(0, me[k] - dt);
   for (let i = 0; i < 3; i++) me.cd[i] = Math.max(0, me.cd[i] - dt * cdRate);
-  updateShots(dt); updateTether(dt); updatePend(dt);
+  updateShots(dt); updateTether(dt); updatePend(dt); updateGarden(dt);
+  if (me.nourish) { me.nourish.t -= dt; if (me.nourish.t <= 0) me.nourish = null; }
+  if (me.nourishCast) { me.nourishCast.t -= dt; if (me.nourishCast.t <= 0) me.nourishCast = null; }
 
   if (me.dn === 1 && me.phoenixT > 0) {   // 불사조의 심장
     me.phoenixT -= dt;
@@ -2963,6 +3070,15 @@ function updateMe(dt, T, S) {
     if (fresh(seenPu, pr.pu) && dist(me.x, me.y, pr.pu[1], pr.pu[2]) <= pr.pu[3] + CONFIG.player.radius) knockMe(pr.pu[1], pr.pu[2], CONFIG.push.speed * (pr.pu[4] || 1));
     if (fresh(seenTm, pr.tm) && pr.tm[1] === myPeer) { me.order = null; me.move = null; me.kb = null; if (me.ch) interruptChannel("부름"); startMove(.3, pr.tm[2], pr.tm[3]); if (pr.tm[4] && me.hp < me.mh) { me.hp = Math.min(me.mh, me.hp + pr.tm[4]); float(me.x, me.y - 30, "+" + pr.tm[4], "#7fd3a3"); } float(me.x, me.y - 46, "부름", "#7fd3a3"); SFX.play("heal", .6); }
     if (fresh(seenHs, pr.hs) && !(S && S.st === "fight" && pr.r !== S.run)) applyHaste(pr.hs[1], pr.hs[2], pr.hs[3], pr.hs[4]);
+    if (!pr.ge && !seenGe.has(p.peer)) seenGe.set(p.peer, 0);   // 처음 본 동료: 이후에 오는 효과부터 받음
+    if (pr.ge) {   // 정원사가 보낸 효과 (개화 · 양분)
+      const last = seenGe.get(p.peer), top = Math.max(0, ...pr.ge.map(v => v[0]));
+      if (last !== undefined) for (const v of pr.ge) if (v[0] > last && v[1] === myPeer && !me.dn) {
+        if (v[2] === 1) { for (let k = 0; k < 3; k++) me.cd[k] = Math.max(0, me.cd[k] - v[3]); float(me.x, me.y - 50, "개화 · 재사용 대기 -" + v[3] + "초", "#9be36a", true); SFX.play("heal", .7); }
+        else if (v[2] === 2) { me.nourish = { mul: v[3], t: CLASSES.gardener.skills[1].buffTime }; float(me.x, me.y - 44, "다음 스킬 피해 +" + pc(v[3]), "#9be36a"); }
+      }
+      seenGe.set(p.peer, Math.max(last || 0, top));
+    }
     if (pr.tl && pr.tl[0] === 1 && pr.tl[1] === myPeer && !pr.dn) { hps += pr.tl[4]; if (pr.tl[2] > 0) buff = Math.max(buff, pr.tl[3]); }
   }
   if (buff > 0 && !me.linkBuff) float(me.x, me.y - 44, "공격력 +" + pc(buff), "#ffd166", true);
@@ -3558,6 +3674,32 @@ function drawTethers() {
   }
   ctx.restore();
 }
+/* 씨앗 표시: 모든 정원사의 씨앗을 대상 머리 위에 새싹 + 관리 칸으로 그림 */
+function drawSeeds() {
+  const list = [];
+  const mine = me.seeds && me.seeds.length ? { gs: me.seeds.map(sd => [sd.ally ? "p:" + sd.id : "e:" + sd.id, sd.care, sd.life]), gn: gardenNeed() } : null;
+  if (mine) list.push(mine);
+  for (const o of others) if (o.presence.gs) list.push(o.presence);
+  if (!list.length) return;
+  const byTarget = new Map();
+  for (const pr of list) for (const g of pr.gs) { const k = g[0]; if (!byTarget.has(k)) byTarget.set(k, []); byTarget.get(k).push([g[1], g[2], pr.gn || 4]); }
+  for (const [k, arr] of byTarget) {
+    let q = null, enemy = k.startsWith("e:");
+    if (enemy) { const id = k.slice(2); q = findEnemy(id === "b" ? "b" : (isNaN(+id) ? id : +id)); }
+    else q = posOf(k.slice(2));
+    if (!q) continue;
+    const top = q.y - (q.r || 14) - (enemy ? 18 : 46);
+    arr.forEach(([care, life, need], i) => {
+      const x = q.x + (i - (arr.length - 1) / 2) * 20, y = top, fade = life < 1 ? .4 + .6 * (Math.sin(performance.now() / 80) * .5 + .5) : 1;
+      ctx.save(); ctx.globalAlpha = fade;
+      ctx.fillStyle = "#6b4423"; ctx.beginPath(); ctx.ellipse(x, y + 4, 7, 4, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = enemy ? "#ff9a8a" : "#9be36a"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y + 2); ctx.lineTo(x, y - 6 - Math.min(care, need) * 2); ctx.stroke();
+      ctx.fillStyle = enemy ? "#ff9a8a" : "#9be36a"; ctx.beginPath(); ctx.ellipse(x - 4, y - 5 - care * 2, 4, 2.2, -.6, 0, TAU); ctx.ellipse(x + 4, y - 7 - care * 2, 4, 2.2, .6, 0, TAU); ctx.fill();
+      for (let c = 0; c < need; c++) { ctx.fillStyle = c < care ? "#ffe066" : "rgba(13,18,34,.75)"; ctx.fillRect(x - need * 2.5 + c * 5, y + 10, 4, 3); }
+      ctx.restore();
+    });
+  }
+}
 function drawFx() {
   ctx.lineCap = "round";
   for (const f of fxList) {
@@ -3641,6 +3783,18 @@ function drawFx() {
         ctx.strokeStyle = "rgba(255,209,102," + al + ")"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, 0, R * Math.min(1.1, .4 + u / .2), 0, TAU); ctx.stroke();
         for (let k = 0; k < 8; k++) { const an = k * TAU / 8 + u * 2; ctx.fillStyle = "rgba(255,230,160," + al + ")"; ctx.beginPath(); ctx.arc(Math.cos(an) * R * u * 1.6, Math.sin(an) * R * u * 1.6 - u * 40, 5 * al + 2, 0, TAU); ctx.fill(); }
         break; }
+      case 26: {   // 혼돈의 씨앗: 날아가는 씨앗
+        const L = f.e || 440, p0 = Math.min(L, u * 900); if (p0 >= L) break; const c = Math.cos(f.a), sn = Math.sin(f.a);
+        ctx.fillStyle = "#7a4a22"; ctx.beginPath(); ctx.ellipse(c * p0, sn * p0 - 6, 6, 4, f.a, 0, TAU); ctx.fill();
+        ctx.fillStyle = "#9be36a"; ctx.beginPath(); ctx.arc(c * p0 - sn * 3, sn * p0 + c * 3 - 9, 3, 0, TAU); ctx.fill(); break; }
+      case 27: { const al = 1 - u / .5; if (al <= 0) break; const R = f.e || 170;   // 양분 주기
+        ctx.fillStyle = "rgba(155,227,106," + al * .16 + ")"; ctx.beginPath(); ctx.arc(0, 0, R * Math.min(1, .3 + u / .15), 0, TAU); ctx.fill();
+        ctx.strokeStyle = "rgba(190,240,140," + al + ")"; ctx.lineWidth = 3; ctx.stroke();
+        for (let k = 0; k < 10; k++) { const an = k * TAU / 10 + u * 3, rr = R * (.3 + u * 1.2) % R; ctx.fillStyle = "rgba(120,200,255," + al + ")"; ctx.beginPath(); ctx.arc(Math.cos(an) * rr, Math.sin(an) * rr - u * 20, 3, 0, TAU); ctx.fill(); }
+        break; }
+      case 28: { const al = 1 - u / .6; if (al <= 0) break; const ally = f.e === 1, R = 26 + u * 50;   // 개화
+        for (let k = 0; k < 6; k++) { const an = k * TAU / 6 + u; ctx.fillStyle = (ally ? "rgba(155,227,106," : "rgba(255,120,140,") + al + ")"; ctx.beginPath(); ctx.ellipse(Math.cos(an) * R * .5, Math.sin(an) * R * .5 - 20, R * .35, R * .18, an, 0, TAU); ctx.fill(); }
+        ctx.fillStyle = "rgba(255,236,140," + al + ")"; ctx.beginPath(); ctx.arc(0, -20, 8 * al + 3, 0, TAU); ctx.fill(); break; }
       case 16: { const al = 1 - u / .4; if (al <= 0) break; const B = bossDef(curS);   // boss afterimage
         ctx.globalAlpha = al * .45; ctx.fillStyle = B.pal[1]; ctx.beginPath(); ctx.arc(0, 0, B.r, 0, TAU); ctx.fill();
         ctx.globalAlpha = al * .8; ctx.strokeStyle = B.pal[4]; ctx.lineWidth = 2; ctx.stroke(); break; }
@@ -3654,6 +3808,8 @@ function drawFx() {
     ctx.restore();
   }
   if (me.tp) { const sh = me.tp; ctx.strokeStyle = "#ffe6a0"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sh.x - Math.cos(sh.a) * 26, sh.y - Math.sin(sh.a) * 26); ctx.lineTo(sh.x, sh.y); ctx.stroke(); ctx.fillStyle = "#fff3c4"; ctx.beginPath(); ctx.arc(sh.x, sh.y, 4, 0, TAU); ctx.fill(); }
+  for (const sh of me.seedShots || []) { ctx.fillStyle = "#7a4a22"; ctx.beginPath(); ctx.ellipse(sh.x, sh.y, 6, 4, sh.a, 0, TAU); ctx.fill(); ctx.fillStyle = "#9be36a"; ctx.beginPath(); ctx.arc(sh.x, sh.y - 4, 3, 0, TAU); ctx.fill(); }
+  drawSeeds();
   for (const sh of me.shots) {
     ctx.strokeStyle = sh.head ? "#ffd166" : "#fff3c4"; ctx.lineWidth = sh.head ? 4 : 2.5;
     ctx.beginPath(); ctx.moveTo(sh.x - Math.cos(sh.a) * 22, sh.y - Math.sin(sh.a) * 22); ctx.lineTo(sh.x, sh.y); ctx.stroke();
